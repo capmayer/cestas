@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load mathfilters %}
+
+{% block content %}
+    <head>
+        <style>
+            .font-weight-bold {
+                font-weight: bold;
+            }
+            .header-table {
+                border: 1px solid black;
+                width: 100%;
+                overflow: auto;
+            }
+            .order-product {
+                max-width: 800px;
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .order-product table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .order-product table tr {
+                border-bottom: 1px solid black;
+            }
+            .border-thin {
+                border-style: solid;
+                border-width: thin;
+            }
+            .text-center {
+                text-align: center;
+            }
+            .text-end {
+                text-align: end;
+            }
+            .text-start {
+                text-align: start;
+            }
+            .content {
+                margin: 10px;
+                padding: 10px;
+                border: 1px solid;
+            }
+            .print_button {
+                padding: 5px;
+                border-radius: 4px;
+                border: 2px solid gray;
+                color: black;
+            }
+            @media print {
+                .print_button {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+        <div class="content">
+            <h2 class="text-center"> Relatório de Pedidos por cliente - CCR </h2>
+            <div>
+                <table class="header-table">
+                    <tr>
+                        <td>
+                            Célula: <span class="font-weight-bold">{{ cycle.cell }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Listas de adicionais: <span class="font-weight-bold">{{ cycle }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Número de pedidos adicionais nesta ciclo: <span class="font-weight-bold">{{ cycle.baskets.all|length }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Faturamento do ciclo: <span class="font-weight-bold">R${{total_cycle_value}}</span>
+                        </td>
+                    </tr>
+<!--                    <tr>-->
+<!--                        <td>-->
+<!--                            Peso total de adicionais da semana: <span class="font-weight-bold">{{total_weight}} kg</span>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+                    <tr>
+                        <td class="text-end">
+                            <button class="print_button" onclick="window.print();return false;">Imprimir</button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            {% for basket in baskets %}
+            <p class="border-thin">Consumidor: <span class="font-weight-bold">{{ basket.obj.person.name }}</span></p>
+            <div class="order-product">
+                <h4 class="text-start">Produtos Pedidos</h4>
+                <table>
+                    <tr>
+                        <th>Item</th>
+                        <th>Valor/UNIT.</th>
+                        <th>QTD</th>
+                        <th>Valor</th>
+                    </tr>
+                    {% for product in basket.obj.products.all %}
+                    <tr>
+                        <td class="text-start">{{product.name}}</td>
+                        <td>R${{product.price}}/{{product.unit}}</td>
+                        <td>{{product.requested_quantity}}</td>
+                        <td>R${{ product.price|mul:product.requested_quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                <div class="text-end">
+                    Valor total: <span class="font-weight-bold">R${{ basket.total_value }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <div class="row justify-content-md-center mt-4">
+    <div class="col-8">
+      <div class="row mb-2"><a href="{{ cell.report_url}}" class="btn btn-primary">Gerenciar adicionais</a></div>
+
+      {% for cell in cells %}
+      {{ cell.name }} <a href="{{ cell.report_url}}" class="btn btn-primary">Gerenciar Ciclos</a>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock content %}

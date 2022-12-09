@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <div class="row justify-content-md-center mt-4">
+    <div class="col-8">
+      {% for cycle in cycles %}
+        <div class="row">
+          <div class="col-6">
+            {{ cycle }} da {{ cycle.cell }}
+          </div>
+          <div class="col-3">
+            <a href="{{ cycle.get_detail_url }}" class="btn btn-primary">Relatório</a>
+          </div>
+          <div class="col-3">
+            <a href="{{ cycle.get_additional_products_url }}" class="btn btn-primary">Lista de Adicionais</a>
+          </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock content %}

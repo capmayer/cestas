@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <div class="row justify-content-md-center mt-4">
+    <div class="col-8">
+      {% for basket in baskets %}
+        <div class="row">Cesta #{{ forloop.counter }} {{ basket.created_date }}</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock content %}
