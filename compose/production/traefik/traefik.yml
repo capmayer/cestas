@@ -31,7 +31,7 @@ certificatesResolvers:
 http:
   routers:
     web-secure-router:
-      rule: "Host(`celulasconsumo.ufsc.br`)"
+      rule: "Host(`8.9.30.27`)"
       entryPoints:
         - web-secure
       middlewares:
@@ -42,7 +42,7 @@ http:
         certResolver: letsencrypt
 
     flower-secure-router:
-      rule: "Host(`celulasconsumo.ufsc.br`)"
+      rule: "Host(`8.9.30.27`)"
       entryPoints:
         - flower
       service: flower
