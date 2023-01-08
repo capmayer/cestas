@@ -9,11 +9,10 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
-    image: celulas_responsaveis_production_django
+    image: henriqmayer/cestas
     platform: linux/x86_64
     depends_on:
       - postgres
-      - redis
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
@@ -23,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-    image: celulas_responsaveis_production_postgres
+    image: henriqmayer/cestas-postgres
     volumes:
       - production_postgres_data:/var/lib/postgresql/data:Z
       - production_postgres_data_backups:/backups:z

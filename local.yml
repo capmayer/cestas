@@ -14,7 +14,6 @@ services:
     platform: linux/x86_64
     depends_on:
       - postgres
-      - redis
     volumes:
       - .:/app:z
     env_file:
@@ -36,19 +35,3 @@ services:
     env_file:
       - ./.envs/.local/.postgres
 
-  docs:
-    image: celulas_responsaveis_local_docs
-    container_name: celulas_responsaveis_local_docs
-    platform: linux/x86_64
-    build:
-      context: .
-      dockerfile: ./compose/local/docs/Dockerfile
-    env_file:
-      - ./.envs/.local/.django
-    volumes:
-      - ./docs:/docs:z
-      - ./config:/app/config:z
-      - ./celulas_responsaveis:/app/celulas_responsaveis:z
-    ports:
-      - "9000:9000"
-    command: /start-docs
