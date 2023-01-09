@@ -223,6 +223,7 @@ EMAIL_BACKEND = env(
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
+SENDGRID_API_KEY = env("SENDGRID_API_KEY")
 
 # ADMIN
 # ------------------------------------------------------------------------------
