@@ -302,7 +302,7 @@ SOCIALACCOUNT_FORMS = {"signup": "celulas_responsaveis.users.forms.UserSocialSig
 # We want to use only email.
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
-
+ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
 # django-compressor
