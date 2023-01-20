@@ -22,6 +22,13 @@ def cell_detail(request, cell_slug: str):
     is_organizer = False
 
     if request.user.is_authenticated:
+        is_pending = Application.objects.filter(person=request.user, cell=cell, is_pending=True)
+        
+        context["is_pending"] = is_pending
+
+        if is_pending:
+            return render(request, "cells/cell_detail.html", context)
+
         # If user is a member we don't need to show application button.
         is_member = cell.members.filter(id=request.user.id).exists()
 
@@ -141,9 +148,6 @@ def approve_application(request, cell_slug: str, application_uuid: str):
     application.save()
 
     role = Role.objects.get(name="Consumidor")
-    membership = {
-        'role': role
-    }
 
     cell = Cell.objects.get(slug=cell_slug)
     cell.members.add(application.person, through_defaults=membership)

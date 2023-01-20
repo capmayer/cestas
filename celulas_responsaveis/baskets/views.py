@@ -152,6 +152,10 @@ def additional_products_list(request, cell_slug: str):
     context["is_cycle_over"] = is_cycle_over
 
     products_list = AdditionalProductsList.objects.get(cycle=cycle)
+
+    if not products_list:
+        return HttpResponse("A lista de pedidos adicionais ainda não foi disponibilizada.")
+
     initial_values = []
 
     for product in products_list.products.all():
@@ -164,7 +168,7 @@ def additional_products_list(request, cell_slug: str):
 
     if request.method == "POST":
         if is_cycle_over:
-            return HttpResponse("Oops, os pedidos estão encerrados.")
+            return HttpResponse("Oops, os pedidos estão encerrados para esse ciclo.")
 
         basket_formset = BasketFormSet(request.POST, initial=initial_values)
 
