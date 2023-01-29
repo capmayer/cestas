@@ -60,6 +60,7 @@ def home_producer(request):
 
 
 def additional_products_detail(request, cell_slug: str, cycle_number: int):
+    """Used by productor"""
     cell = Cell.objects.get(slug=cell_slug)
     products_list = AdditionalProductsList.objects.get(cycle__number=cycle_number, cycle__cell=cell)
 
@@ -88,6 +89,7 @@ def cycle_detail(request):
 
 
 def cycle_report_detail(request, cell_slug: str, cycle_number: int):
+    """Used by productor."""
     cell = Cell.objects.get(slug=cell_slug)
     cycle = Cycle.objects.get(cell=cell, number=cycle_number)
     baskets = []
@@ -118,6 +120,7 @@ def cycle_report_detail(request, cell_slug: str, cycle_number: int):
 
 
 def cell_cycles(request, cell_slug: str):
+    """Used by productor."""
     producer = Role.objects.get(name="Produtor")
     cell = Cell.objects.get(slug=cell_slug)
     is_producer = Membership.objects.filter(cell=cell, role=producer, person=request.user).exists()
@@ -139,6 +142,7 @@ def additional_basket_detail(request, basket_uuid: str):
 
 
 def additional_products_list(request, cell_slug: str):
+    """Used by consumer."""
     cell = Cell.objects.get(slug=cell_slug)
     context = {}
     active_cycle = get_active_cycles(cell)
@@ -172,12 +176,12 @@ def additional_products_list(request, cell_slug: str):
 
         basket_formset = BasketFormSet(request.POST, initial=initial_values)
 
-        additional_basket = AdditionalBasket()
-        additional_basket.person = request.user
-        additional_basket.cycle = cycle
-        additional_basket.save()
-
         if basket_formset.is_valid():
+            additional_basket = AdditionalBasket()
+            additional_basket.person = request.user
+            additional_basket.cycle = cycle
+            additional_basket.save()
+
             for form in basket_formset:
                 if form.is_valid():
                     requested_quantity = form.cleaned_data["requested_quantity"]

@@ -6,10 +6,10 @@
       <h3>Células cadastradas:</h3>
 
       <div class="list-group d-grip border-0 w-auto">
-        {% for cell, location in cells %}
+        {% for cell in cells %}
           <a href="{{ cell.get_absolute_url }}" class="list-group-item list-group-item-action rounded-3 py-3">
             <h5 class="mb-1">{{ cell.name }}</h5>
-            <p class="mb-1">{{ location.address }}</p>
+            <p class="mb-1">{{ cell.location.address }}</p>
           </a>
         {% endfor %}
       </div>

@@ -6,27 +6,32 @@
     <div class="col-7">
       <h3>{{ cell.name }}</h3>
       <p>{{ cell.description }}</p>
-      <p>{{ user.name }}
     </div>
     <div class="col-3">
-      <div class="row">
-        {% if is_organizer %}
-          <a href="{{ cell.get_absolute_url }}/membros" type="button" class="btn btn-outline-secondary">MEMBROS</a>
-        {% endif%}
-      </div>
-      <div class="row mt-1">
-        {% if not is_member%}
-          <a href="{{ cell.get_absolute_url }}/aplicar" type="button" class="btn btn-primary">APLICAR</a>
-        {% else %}
+      {% if is_member %}
+        <div class="row">
+          {% if is_organizer %}
+            <a href="{{ cell.get_absolute_url }}/membros" type="button" class="btn btn-outline-secondary">MEMBROS</a>
+          {% endif%}
+        </div>
+        <div class="row mt-1">
           <a href="{{ cell.get_additional_products_list_url }}" type="button" class="btn btn-primary">PEDIR ADICIONAIS</a>
+        </div>
+      {% else %}
+        {% if is_pending%}
+          <a href="" type="button" class="btn btn-primary disabled">APLICADO</a>
+        {% else %}
+          <a href="{{ cell.get_absolute_url }}/aplicar" type="button" class="btn btn-primary">APLICAR</a>
         {% endif %}
-      </div>
+      {% endif %}
     </div>
   </div>
   <div class="row justify-content-md-center mt-4">
     <div class="col-10">
+      {% if cell.localtion %}
       <h5>Localização:</h5>
-      {{ cell_map|safe }}
+      {{ cell.location.address }}
+      {% endif %}
     </div>
   </div>
 {% endblock content %}

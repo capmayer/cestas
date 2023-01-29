@@ -80,6 +80,7 @@ LOCAL_APPS = [
     "celulas_responsaveis.users",
     "celulas_responsaveis.baskets",
     "celulas_responsaveis.cells",
+    "celulas_responsaveis.core",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

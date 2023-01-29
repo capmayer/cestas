@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$USER_HOME$/Downloads/bootstrap-5.2.2-examples/.idea/bootstrap-5.2.2-examples.iml" filepath="$USER_HOME$/Downloads/bootstrap-5.2.2-examples/.idea/bootstrap-5.2.2-examples.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/celulas_responsaveis.iml" filepath="$PROJECT_DIR$/.idea/celulas_responsaveis.iml" />
+      <module fileurl="file://$USER_HOME$/Downloads/celulasconsumo-master/django/.idea/django.iml" filepath="$USER_HOME$/Downloads/celulasconsumo-master/django/.idea/django.iml" />
     </modules>
   </component>
 </project>

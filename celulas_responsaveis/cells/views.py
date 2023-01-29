@@ -16,31 +16,31 @@ def generate_cell_map(latitude: float, longitude: float) -> str:
 
 def cell_detail(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
-    cell_location = CellLocation.objects.get(cell=cell)
 
     is_member = False
     is_organizer = False
 
+    context = {
+        "is_member": is_member,
+        "is_organizer": is_organizer,
+        "cell": cell,
+    }
+
     if request.user.is_authenticated:
-        is_pending = Application.objects.filter(person=request.user, cell=cell, is_pending=True)
-        
+        is_pending = Application.objects.filter(person=request.user, cell=cell, is_pending=True).exists()
+
         context["is_pending"] = is_pending
 
         if is_pending:
             return render(request, "cells/cell_detail.html", context)
 
         # If user is a member we don't need to show application button.
-        is_member = cell.members.filter(id=request.user.id).exists()
+        context["is_member"] = cell.members.filter(id=request.user.id).exists()
 
         organizer = Role.objects.get(name="Organização")
-        is_organizer = cell.members.through.objects.filter(cell=cell, person=request.user, role=organizer).exists()
+        context["is_organizer"] = cell.members.through.objects.filter(cell=cell, person=request.user, role=organizer).exists()
 
-    context = {
-        "is_member": is_member,
-        "is_organizer": is_organizer,
-        "cell": cell,
-        "cell_map": generate_cell_map(cell_location.latitude, cell_location.longitude),
-    }
+
     return render(request, "cells/cell_detail.html", context)
 
 
@@ -73,9 +73,7 @@ def create_cell(request):
 
 
 def list_cells(request):
-    all_cells = Cell.objects.all()
-    cells_location = CellLocation.objects.all()
-    cells = zip(all_cells, cells_location)
+    cells = Cell.objects.all()
     return render(request, "cells/all_cells.html", {"cells": cells})
 
 
@@ -140,7 +138,8 @@ def members(request, cell_slug: str):
 
 
 def approve_application(request, cell_slug: str, application_uuid: str):
-    application = Application.objects.get(uuid=application_uuid)
+    application = get_object_or_404(Application, uuid=application_uuid)
+    cell = get_object_or_404(Cell, slug=cell_slug)
     application.is_pending = False
     application.approved = True
     application.approved_by = request.user
@@ -149,10 +148,12 @@ def approve_application(request, cell_slug: str, application_uuid: str):
 
     role = Role.objects.get(name="Consumidor")
 
-    cell = Cell.objects.get(slug=cell_slug)
-    cell.members.add(application.person, through_defaults=membership)
-    cell.save()
+    membership_content = {
+        "role": role,
+        "is_active": True,
+    }
 
-    # Send email to approved person with info.
+    cell.members.add(application.person, through_defaults=membership_content)
+    cell.save()
 
     return redirect("cells:members", cell_slug=cell_slug)
