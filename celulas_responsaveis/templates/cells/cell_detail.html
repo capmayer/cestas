@@ -9,21 +9,22 @@
     </div>
     <div class="col-3">
       {% if is_member %}
-        <div class="row">
-          {% if is_organizer %}
+        {% if is_organizer %}
+          <div class="row">
             <a href="{{ cell.get_absolute_url }}/membros" type="button" class="btn btn-outline-secondary">MEMBROS</a>
-          {% endif%}
-        </div>
+          </div>
+        {% endif%}
         <div class="row mt-1">
           <a href="{{ cell.get_additional_products_list_url }}" type="button" class="btn btn-primary">PEDIR ADICIONAIS</a>
         </div>
       {% else %}
-        {% if is_pending%}
-          <a href="" type="button" class="btn btn-primary disabled">APLICADO</a>
-        {% else %}
-          <a href="{{ cell.get_absolute_url }}/aplicar" type="button" class="btn btn-primary">APLICAR</a>
-        {% endif %}
+        <div class="row mt-1">
+          <a href="{{ cell.get_new_membership }}" type="button" class="btn btn-primary">ENTRAR</a>
+        </div>
       {% endif %}
+      <div class="row mt-1">
+        <a href="{% url 'account_signup' %}?{{ cell_membership_url }}" class="btn btn-alert">COMPARTILHAR</a>
+      </div>
     </div>
   </div>
   <div class="row justify-content-md-center mt-4">

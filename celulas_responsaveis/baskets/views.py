@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -36,6 +37,7 @@ def check_requests_end(cycle: Cycle) -> bool:
     today = datetime.date.today()
     return today > cycle.requests_end
 
+@login_required
 def home_producer(request):
     producer = Role.objects.get(name="Produtor")
     membership = Membership.objects.filter(person=request.user, role=producer)
@@ -59,6 +61,7 @@ def home_producer(request):
     return render(request, "baskets/home_producer.html", context=context)
 
 
+@login_required
 def additional_products_detail(request, cell_slug: str, cycle_number: int):
     """Used by productor"""
     cell = Cell.objects.get(slug=cell_slug)
@@ -88,6 +91,7 @@ def cycle_detail(request):
     pass
 
 
+@login_required
 def cycle_report_detail(request, cell_slug: str, cycle_number: int):
     """Used by productor."""
     cell = Cell.objects.get(slug=cell_slug)
@@ -119,6 +123,7 @@ def cycle_report_detail(request, cell_slug: str, cycle_number: int):
     return render(request, "baskets/report_detail.html", context=context)
 
 
+@login_required
 def cell_cycles(request, cell_slug: str):
     """Used by productor."""
     producer = Role.objects.get(name="Produtor")
@@ -141,6 +146,7 @@ def additional_basket_detail(request, basket_uuid: str):
     return HttpResponse("Here you'll see your basket details")
 
 
+@login_required
 def additional_products_list(request, cell_slug: str):
     """Used by consumer."""
     cell = Cell.objects.get(slug=cell_slug)
@@ -206,5 +212,6 @@ def additional_products_list(request, cell_slug: str):
     return render(request, "baskets/additional_products_list.html", context=context)
 
 
+@login_required
 def basket_requested(request):
     return render(request, "baskets/basket_requested.html")

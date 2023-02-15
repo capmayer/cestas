@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 import folium
+from django.urls import reverse
+from django.utils.http import urlencode
 
 from celulas_responsaveis.cells.forms import CellRegistrationForm, ApplicationForm
 from celulas_responsaveis.cells.models import Cell, CellLocation, Application, ApplicationAnswer, Membership, Role
@@ -20,20 +22,16 @@ def cell_detail(request, cell_slug: str):
     is_member = False
     is_organizer = False
 
+    cell_membership_url = reverse('cells:new_membership', kwargs={'cell_slug': cell_slug})
+
     context = {
         "is_member": is_member,
         "is_organizer": is_organizer,
         "cell": cell,
+        "cell_membership_url": urlencode({'next': cell_membership_url}),
     }
 
     if request.user.is_authenticated:
-        is_pending = Application.objects.filter(person=request.user, cell=cell, is_pending=True).exists()
-
-        context["is_pending"] = is_pending
-
-        if is_pending:
-            return render(request, "cells/cell_detail.html", context)
-
         # If user is a member we don't need to show application button.
         context["is_member"] = cell.members.filter(id=request.user.id).exists()
 
@@ -92,37 +90,34 @@ def new_application(request, cell_slug: str):
         if is_member.exists() or has_application.exists():
             return HttpResponse("Você já é membro ou já possui uma aplicação para esta célula!")
 
-    if request.method == "POST":
-        application_form = ApplicationForm(request.POST)
+    application = Application()
+    application.cell = cell
+    application.person = request.user
+    application.save()
 
-        if application_form.is_valid():
-            application = Application()
-            application.cell = cell
-            application.person = request.user
+    return redirect("cells:application_complete")
 
-            application.save()
+@login_required
+def new_membership(request, cell_slug: str):
+    cell = get_object_or_404(Cell, slug=cell_slug)
 
-            if hasattr(application_form, "questions_instances"):
+    if request.user.is_authenticated:
+        is_member = cell.members.filter(id=request.user.id)
 
-                for question in application_form.questions_instances:
-                    answer = ApplicationAnswer()
-                    answer.application = application
-                    answer.question = question
-                    answer.answer = application_form.cleaned_data[question.name]
-                    answer.save()
+        if is_member.exists():
+            return HttpResponse("Você já é membro desta célula!")
 
-            return redirect("cells:application_complete")
+    role = Role.objects.get(name="Consumidor")
 
-    else:
-        application_form = ApplicationForm()
-
-    context = {
-        "cell": cell,
-        "application_form": application_form,
+    membership_content = {
+        "role": role,
+        "is_active": True,
     }
 
-    return render(request, "cells/new_application.html", context)
+    cell.members.add(request.user, through_defaults=membership_content)
+    cell.save()
 
+    return redirect("baskets:additional_products_list", cell_slug=cell_slug)
 
 def members(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)

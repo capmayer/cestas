@@ -33,20 +33,18 @@ class UserSignupForm(SignupForm):
     Default fields will be added automatically.
     Check UserSocialSignupForm for accounts created from social.
     """
-    name = CharField(max_length=255)
-    phone_number = CharField(max_length=10)
-    cep = CharField(max_length=8)
-    address = CharField(max_length=255)
-    city = CharField(max_length=100)
-    state = CharField(max_length=2)
+    name = CharField(max_length=255, label="Nome")
+    # phone_number = CharField(max_length=10)
+    # cep = CharField(max_length=8)
+    # address = CharField(max_length=255)
+    # city = CharField(max_length=100)
+    # state = CharField(max_length=2)
 
     def custom_signup(self, request, user):
         user.name = self.cleaned_data["name"]
-        user.phone_number = self.cleaned_data["phone_number"]
-        user.cep = self.cleaned_data["cep"]
-        user.address = self.cleaned_data["address"]
-        user.city = self.cleaned_data["city"]
-        user.state = self.cleaned_data["state"]
+        # user.phone_number = self.cleaned_data["phone_number"]
+        # user.city = self.cleaned_data["city"]
+        # user.state = self.cleaned_data["state"]
 
         user.save()
 
