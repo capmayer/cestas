@@ -19,12 +19,9 @@
         </div>
       {% else %}
         <div class="row mt-1">
-          <a href="{{ cell.get_new_membership }}" type="button" class="btn btn-primary">ENTRAR</a>
+          <a href="{{ cell.get_apply_url }}" type="button" class="btn btn-primary">ENTRAR</a>
         </div>
       {% endif %}
-      <div class="row mt-1">
-        <a href="{% url 'account_signup' %}?{{ cell_membership_url }}" class="btn btn-alert">COMPARTILHAR</a>
-      </div>
     </div>
   </div>
   <div class="row justify-content-md-center mt-4">

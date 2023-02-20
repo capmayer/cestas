@@ -22,13 +22,12 @@ def cell_detail(request, cell_slug: str):
     is_member = False
     is_organizer = False
 
-    cell_membership_url = reverse('cells:new_membership', kwargs={'cell_slug': cell_slug})
+
 
     context = {
         "is_member": is_member,
         "is_organizer": is_organizer,
         "cell": cell,
-        "cell_membership_url": urlencode({'next': cell_membership_url}),
     }
 
     if request.user.is_authenticated:
@@ -97,6 +96,23 @@ def new_application(request, cell_slug: str):
 
     return redirect("cells:application_complete")
 
+def consumer_apply(request, cell_slug: str):
+    cell = get_object_or_404(Cell, slug=cell_slug)
+
+    if request.user.is_authenticated:
+        is_member = cell.members.filter(id=request.user.id)
+
+        if is_member.exists():
+            return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+
+        else:
+            return redirect("cells:new_membership", cell_slug=cell_slug)
+
+    else:
+        cell_membership_url = urlencode({'next': reverse('cells:new_membership', kwargs={'cell_slug': cell_slug})})
+        signup_url = reverse('account_signup')
+        return redirect(f"{signup_url}?{cell_membership_url}")
+
 @login_required
 def new_membership(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
@@ -105,7 +121,7 @@ def new_membership(request, cell_slug: str):
         is_member = cell.members.filter(id=request.user.id)
 
         if is_member.exists():
-            return HttpResponse("Você já é membro desta célula!")
+            return redirect("baskets:additional_products_list", cell_slug=cell_slug)
 
     role = Role.objects.get(name="Consumidor")
 

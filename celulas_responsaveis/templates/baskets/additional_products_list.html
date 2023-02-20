@@ -3,9 +3,12 @@
 {% block content %}
 
   <div class="row justify-content-md-center mt-4">
-    <div class="col-8">
+    <div class="col-sm-11 col-lg-8">
       <div class="row">
-        Ciclo #{{ cycle.number }} pedidos até {{ cycle.requests_end}}
+        <h3>{{ cell.name }} - Ciclo {{ cycle.number }}</h3>
+      </div>
+      <div class="row justify-content-md-center">
+        <h5>Pedidos até {{ cycle.requests_end }}</h5>
       </div>
       <div class="row">
           <form action="{{ cycle.get_request_products_url }}" method="post">
