@@ -41,6 +41,14 @@ class Role(models.Model):
         return self.name
 
 
+class PaymentInfo(models.Model):
+    person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
+    cell = models.ForeignKey(Cell, related_name="payment_info", on_delete=models.CASCADE)
+    description = models.TextField()
+
+    def __str__(self):
+        return f"{self.cell} pagamento para {self.person.name}"
+
 class ApplicationSurvey(models.Model):
     name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)

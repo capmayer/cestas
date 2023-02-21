@@ -6,7 +6,9 @@
   <div class="row justify-content-md-center mt-4">
     <div class="col-8">
       <div class="row">
-        <h1>Pedido registrado! Agora basta realizar o pagamento para a pessoa responsável.</h1>
+        <h2>Pedido registrado!</h2>
+        <h4>Faça o pagamento de R${{ total_price|floatformat:2 }} e envie o comprovante para {{ payment_info.person.name }}</h4>
+        <h4>{{ payment_info.description }}</h4>
       </div>
     </div>
   </div>

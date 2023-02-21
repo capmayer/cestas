@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from celulas_responsaveis.baskets.forms import AdditionalProductsListFormSet, BasketFormSet
 from celulas_responsaveis.baskets.models import AdditionalBasket, AdditionalProductsList, Cycle, SoldProduct
-from celulas_responsaveis.cells.models import Cell, Role, Membership
+from celulas_responsaveis.cells.models import Cell, Role, Membership, PaymentInfo
 
 
 def home(request):
@@ -158,6 +158,10 @@ def additional_products_list(request, cell_slug: str):
 
     cycle = active_cycle[0]
 
+    has_basket = AdditionalBasket.objects.filter(cycle=cycle, person=request.user).exists()
+    if has_basket:
+        return HttpResponse("Pedido de adicionais já realizado para este ciclo.")
+
     is_cycle_over = check_requests_end(cycle)
     context["is_cycle_over"] = is_cycle_over
 
@@ -188,6 +192,8 @@ def additional_products_list(request, cell_slug: str):
             additional_basket.cycle = cycle
             additional_basket.save()
 
+            total_price = 0.0
+
             for form in basket_formset:
                 if form.is_valid():
                     requested_quantity = form.cleaned_data["requested_quantity"]
@@ -199,9 +205,13 @@ def additional_products_list(request, cell_slug: str):
                         sold_product.price = form.cleaned_data["price"]
                         sold_product.requested_quantity = requested_quantity
                         sold_product.basket = additional_basket
+                        total_price += sold_product.price * sold_product.requested_quantity
                         sold_product.save()
 
-            return redirect("baskets:basket_requested")
+            additional_basket.total_price = total_price
+            additional_basket.save()
+
+            return redirect("baskets:basket_requested", cell_slug=cell_slug, request_uuid=additional_basket.uuid)
 
     basket_formset = BasketFormSet(initial=initial_values)
 
@@ -213,5 +223,14 @@ def additional_products_list(request, cell_slug: str):
 
 
 @login_required
-def basket_requested(request):
-    return render(request, "baskets/basket_requested.html")
+def basket_requested(request, cell_slug: str, request_uuid: str):
+    cell = get_object_or_404(Cell, slug=cell_slug)
+    payment_info = PaymentInfo.objects.get(cell=cell)
+    additional_basket_requested = AdditionalBasket.objects.get(uuid=request_uuid)
+
+    context = {
+        "payment_info": payment_info,
+        "cell": cell,
+        "total_price": additional_basket_requested.total_price,
+    }
+    return render(request, "baskets/basket_requested.html", context)

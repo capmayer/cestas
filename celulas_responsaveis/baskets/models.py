@@ -39,12 +39,14 @@ class AdditionalBasket(models.Model):
     created_date = models.DateField(auto_now_add=True)
     last_change = models.DateField(auto_now=True)
 
+    total_price = models.FloatField(default=0)
+
     is_cancelled = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
     is_delivered = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        return f"{self.person.name} cesta: {self.uuid}"
+        return f"{self.person.name} - Valor: {self.total_price} - código: {self.uuid}"
 
     def get_absolute_url(self):
         return reverse("baskets:basket_detail", kwargs={"basket_uuid": self.uuid})
