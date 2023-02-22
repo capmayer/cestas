@@ -23,14 +23,14 @@ class Cycle(models.Model):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.cell.slug})
 
     def __str__(self) -> str:
-        return f"Ciclo #{self.number}"
+        return f"Ciclo #{self.number} da {self.cell}"
 
 
 class AdditionalProductsList(models.Model):
     cycle = models.ForeignKey(Cycle, related_name="additional_products_list", on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.cycle} da {self.cycle.cell}"
+        return f"Lista de adicionais {self.cycle}"
 
 
 class AdditionalBasket(models.Model):
