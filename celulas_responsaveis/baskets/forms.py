@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.forms import formset_factory, inlineformset_factory, NumberInput
 
@@ -14,3 +16,9 @@ class SoldProductForm(forms.Form):
 BasketFormSet = formset_factory(SoldProductForm, extra=0)
 
 AdditionalProductsListFormSet = inlineformset_factory(AdditionalProductsList, ProductWithPrice, fields=("name", "price", "unit", "is_available",), extra=0)
+
+class CycleForm(forms.Form):
+    number = forms.CharField(label="Número")
+    begin = forms.DateField(label="Início dia", initial=datetime.date.today)
+    requests_end = forms.DateField(label="Pedidos até dia", initial=datetime.date.today() + datetime.timedelta(4))
+    end = forms.DateField(label="Fim ciclo", initial=datetime.date.today() + datetime.timedelta(7))

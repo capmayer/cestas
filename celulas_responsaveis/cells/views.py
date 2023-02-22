@@ -22,8 +22,6 @@ def cell_detail(request, cell_slug: str):
     is_member = False
     is_organizer = False
 
-
-
     context = {
         "is_member": is_member,
         "is_organizer": is_organizer,

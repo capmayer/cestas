@@ -10,13 +10,14 @@ class Cycle(models.Model):
     cell = models.ForeignKey(Cell, related_name="cycles", on_delete=models.CASCADE)
     number = models.IntegerField()
     begin = models.DateField()
+    end = models.DateField()
     requests_end = models.DateField()
 
-    def get_detail_url(self):
-        return reverse("baskets:cycle_report_detail", kwargs={"cell_slug": self.cell.slug, "cycle_number": self.number})
+    def get_report_url(self):
+        return reverse("producer:cycle_report_detail", kwargs={"cell_slug": self.cell.slug, "cycle_number": self.number})
 
     def get_additional_products_url(self):
-        return reverse("baskets:additional_products_detail", kwargs={"cell_slug": self.cell.slug, "cycle_number": self.number})
+        return reverse("producer:additional_products_detail", kwargs={"cell_slug": self.cell.slug, "cycle_number": self.number})
 
     def get_request_products_url(self):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.cell.slug})
@@ -68,8 +69,12 @@ class SoldProduct(models.Model):
 
     basket = models.ForeignKey(AdditionalBasket, related_name="products", on_delete=models.CASCADE)
 
+    @property
+    def total_price(self) -> float:
+        return self.price * self.requested_quantity
+
     def __str__(self) -> str:
-        return f"{self.requested_quantity}{self.unit} de {self.product} = {self.price * self.requested_quantity}"
+        return f"{self.requested_quantity}{self.unit} de {self.product} = {self.total_price}"
 
 
 class ProductWithPrice(models.Model):
@@ -82,4 +87,4 @@ class ProductWithPrice(models.Model):
     additional_products_list = models.ForeignKey(AdditionalProductsList, related_name="products", on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.product}"
+        return f"{self.name}"

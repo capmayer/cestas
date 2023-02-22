@@ -1,11 +1,11 @@
 import datetime
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
-from celulas_responsaveis.baskets.forms import AdditionalProductsListFormSet, BasketFormSet
+from celulas_responsaveis.baskets.forms import AdditionalProductsListFormSet, BasketFormSet, CycleForm
 from celulas_responsaveis.baskets.models import AdditionalBasket, AdditionalProductsList, Cycle, SoldProduct
 from celulas_responsaveis.cells.models import Cell, Role, Membership, PaymentInfo
 
@@ -18,7 +18,7 @@ def home(request):
     is_producer = Membership.objects.filter(person=request.user, role=producer).exists()
 
     if is_producer:
-        return redirect('baskets:home_producer')
+        return redirect('producer:home_producer')
 
     baskets = AdditionalBasket.objects.filter(person=request.user)
 
@@ -50,7 +50,7 @@ def home_producer(request):
     for member in membership.all():
         cell_to_actions = {
             "name": member.cell.name,
-            "report_url": reverse("baskets:cell_cycles", kwargs={"cell_slug": member.cell.slug})
+            "report_url": reverse("producer:cell_cycles", kwargs={"cell_slug": member.cell.slug})
         }
         cells.append(cell_to_actions)
 
@@ -59,7 +59,6 @@ def home_producer(request):
     }
 
     return render(request, "baskets/home_producer.html", context=context)
-
 
 @login_required
 def additional_products_detail(request, cell_slug: str, cycle_number: int):
@@ -86,37 +85,66 @@ def additional_products_detail(request, cell_slug: str, cycle_number: int):
 
     return render(request, "baskets/additional_products_detail.html", context=context)
 
+@login_required
+def new_cycle(request, cell_slug: str):
+    """Used by producer to create new cycles."""
+    cell = Cell.objects.get(slug=cell_slug)
+    last_cycle = Cycle.objects.filter(cell=cell).latest("number")
 
-def cycle_detail(request):
-    pass
+    context = {
+        "cell": cell,
+        "last_cycle": last_cycle,
+    }
 
+    if request.method == "POST":
+        cycle_form = CycleForm(request.POST)
+
+        if cycle_form.is_valid():
+            cycle = Cycle()
+            cycle.number = cycle_form.cleaned_data["number"]
+            cycle.begin = cycle_form.cleaned_data["begin"]
+            cycle.requests_end = cycle_form.cleaned_data["requests_end"]
+            cycle.end = cycle_form.cleaned_data["end"]
+            cycle.cell = cell
+
+            cycle.save()
+
+            if last_cycle:
+                additional_products_list = AdditionalProductsList.objects.get(cycle=last_cycle)
+                products = [product for product in additional_products_list.products.all()]
+                additional_products_list.pk = None
+                additional_products_list.cycle = cycle
+                additional_products_list.save()
+
+                for product in products:
+                    product.additional_products_list = additional_products_list
+                    product.pk = None
+                    product.save()
+
+                return HttpResponse("Hey")
+
+            else:
+                return HttpResponse("Config products now")
+    else:
+        cycle_number = last_cycle.number + 1 if last_cycle else 1
+        cycle_form = CycleForm(initial={"number": cycle_number})
+        context["cycle_form"] = cycle_form
+
+    return render(request, "baskets/new_cycle.html", context)
 
 @login_required
 def cycle_report_detail(request, cell_slug: str, cycle_number: int):
     """Used by productor."""
     cell = Cell.objects.get(slug=cell_slug)
     cycle = Cycle.objects.get(cell=cell, number=cycle_number)
-    baskets = []
 
     total_cycle_value = 0
 
     for basket in cycle.baskets.all():
-        total_value = 0
-
-        for product in basket.products.all():
-            total_value += product.price * product.requested_quantity
-
-        basket_dict = {
-            "total_value": total_value,
-            "obj": basket,
-        }
-
-        total_cycle_value += total_value
-        baskets.append(basket_dict)
+        total_cycle_value += basket.total_price
 
     context = {
         "cycle": cycle,
-        "baskets": baskets,
         "total_cycle_value": total_cycle_value,
     }
 
@@ -133,10 +161,11 @@ def cell_cycles(request, cell_slug: str):
     if not is_producer:
         return redirect("account_login")
 
-    cycles = Cycle.objects.filter(cell=cell)
+    cycles = Cycle.objects.filter(cell=cell).order_by("-number")
 
     context = {
         "cycles": cycles,
+        "cell": cell,
     }
 
     return render(request, "baskets/cell_cycles.html", context=context)
@@ -151,12 +180,10 @@ def additional_products_list(request, cell_slug: str):
     """Used by consumer."""
     cell = Cell.objects.get(slug=cell_slug)
     context = {}
-    active_cycle = get_active_cycles(cell)
+    cycle = Cycle.objects.filter(cell=cell).latest("number")
 
-    if not active_cycle:
+    if not cycle:
         return HttpResponse("Célula não possui um ciclo ativo.")
-
-    cycle = active_cycle[0]
 
     has_basket = AdditionalBasket.objects.filter(cycle=cycle, person=request.user).exists()
     if has_basket:
@@ -172,7 +199,7 @@ def additional_products_list(request, cell_slug: str):
 
     initial_values = []
 
-    for product in products_list.products.all():
+    for product in products_list.products.filter(is_available=True):
         initial_values.append({
             "name": product.name,
             "price": product.price,

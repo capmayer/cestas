@@ -4,10 +4,15 @@
 
   <div class="row justify-content-md-center mt-4">
     <div class="col-8">
-      <div class="row mb-2"><a href="{{ cell.report_url}}" class="btn btn-primary">Gerenciar adicionais</a></div>
-
       {% for cell in cells %}
-      {{ cell.name }} <a href="{{ cell.report_url}}" class="btn btn-primary">Gerenciar Ciclos</a>
+      <div class="row">
+        <div class="col-6">
+          Célula: {{ cell.name }}
+        </div>
+        <div class="col-6">
+          <a href="{{ cell.report_url}}" class="btn btn-primary">Gerenciar</a>
+        </div>
+      </div>
       {% endfor %}
     </div>
   </div>

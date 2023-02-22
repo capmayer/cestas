@@ -77,7 +77,7 @@
                     </tr>
                     <tr>
                         <td>
-                            Faturamento do ciclo: <span class="font-weight-bold">R${{total_cycle_value}}</span>
+                            Faturamento do ciclo: <span class="font-weight-bold">R${{total_cycle_value|floatformat:2}}</span>
                         </td>
                     </tr>
 <!--                    <tr>-->
@@ -93,8 +93,8 @@
                 </table>
             </div>
 
-            {% for basket in baskets %}
-            <p class="border-thin">Consumidor: <span class="font-weight-bold">{{ basket.obj.person.name }}</span></p>
+            {% for basket in cycle.baskets.all %}
+            <p class="border-thin">Consumidor: <span class="font-weight-bold">{{ basket.person.name }}</span></p>
             <div class="order-product">
                 <h4 class="text-start">Produtos Pedidos</h4>
                 <table>
@@ -104,17 +104,17 @@
                         <th>QTD</th>
                         <th>Valor</th>
                     </tr>
-                    {% for product in basket.obj.products.all %}
+                    {% for product in basket.products.all %}
                     <tr>
                         <td class="text-start">{{product.name}}</td>
                         <td>R${{product.price}}/{{product.unit}}</td>
                         <td>{{product.requested_quantity}}</td>
-                        <td>R${{ product.price|mul:product.requested_quantity }}</td>
+                        <td>R${{ product.total_price|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
                 </table>
                 <div class="text-end">
-                    Valor total: <span class="font-weight-bold">R${{ basket.total_value }}</span>
+                    Valor total: <span class="font-weight-bold">R${{ basket.total_price|floatformat:2 }}</span>
                 </div>
             </div>
             {% endfor %}

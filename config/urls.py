@@ -14,8 +14,8 @@ urlpatterns = [
     path("contas/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
     path("celulas/", include("celulas_responsaveis.cells.urls", namespace="cells")),
-    path("cestas/", include("celulas_responsaveis.baskets.urls", namespace="baskets")),
-
+    path("cestas/", include("celulas_responsaveis.baskets.consumer_urls", namespace="baskets")),
+    path("produtores/", include("celulas_responsaveis.baskets.producer_urls", namespace="producer")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
     # Static file serving when using Gunicorn + Uvicorn for local web socket development
