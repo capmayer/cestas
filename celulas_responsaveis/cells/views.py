@@ -6,7 +6,8 @@ from django.urls import reverse
 from django.utils.http import urlencode
 
 from celulas_responsaveis.cells.forms import CellRegistrationForm, ApplicationForm
-from celulas_responsaveis.cells.models import Cell, CellLocation, Application, ApplicationAnswer, Membership, Role
+from celulas_responsaveis.cells.models import Cell, CellLocation, Application, ApplicationAnswer, Membership, Role, \
+    CellType
 
 
 def generate_cell_map(latitude: float, longitude: float) -> str:
@@ -121,7 +122,7 @@ def new_membership(request, cell_slug: str):
         if is_member.exists():
             return redirect("baskets:additional_products_list", cell_slug=cell_slug)
 
-    role = Role.objects.get(name="Consumidor")
+    role = Role.objects.get(name="Padrão")
 
     membership_content = {
         "role": role,

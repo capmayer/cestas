@@ -7,23 +7,24 @@ from celulas_responsaveis.users.models import User
 
 
 class Cycle(models.Model):
-    cell = models.ForeignKey(Cell, related_name="cycles", on_delete=models.CASCADE)
+    consumer_cell = models.ForeignKey(Cell, related_name="consumer_cycles", on_delete=models.CASCADE)
+    producer_cell = models.ForeignKey(Cell, related_name="producer_cycles", on_delete=models.CASCADE)
     number = models.IntegerField()
     begin = models.DateField()
     end = models.DateField()
     requests_end = models.DateField()
 
     def get_report_url(self):
-        return reverse("producer:cycle_report_detail", kwargs={"cell_slug": self.cell.slug, "cycle_number": self.number})
+        return reverse("producer:cycle_report_detail", kwargs={"cell_slug": self.consumer_cell.slug, "cycle_number": self.number})
 
     def get_additional_products_url(self):
-        return reverse("producer:additional_products_detail", kwargs={"cell_slug": self.cell.slug, "cycle_number": self.number})
+        return reverse("producer:additional_products_detail", kwargs={"cell_slug": self.consumer_cell.slug, "cycle_number": self.number})
 
     def get_request_products_url(self):
-        return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.cell.slug})
+        return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.consumer_cell.slug})
 
     def __str__(self) -> str:
-        return f"Ciclo #{self.number} da {self.cell}"
+        return f"Ciclo #{self.number} da {self.consumer_cell}"
 
 
 class AdditionalProductsList(models.Model):
@@ -60,10 +61,18 @@ class Product(models.Model):
         return f"{self.name}"
 
 
+class Unit(models.Model):
+    name = models.CharField(max_length=15)
+    increment = models.FloatField(default=1.0)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class SoldProduct(models.Model):
     product = models.ForeignKey(Product, related_name="+", null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
-    unit = models.CharField(max_length=10)
+    unit = models.ForeignKey(Unit, related_name="+", null=True, on_delete=models.SET_NULL)
     price = models.FloatField()
     requested_quantity = models.FloatField()
 
@@ -80,7 +89,7 @@ class SoldProduct(models.Model):
 class ProductWithPrice(models.Model):
     product = models.ForeignKey(Product, related_name="+", null=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=60)
-    unit = models.CharField(max_length=10)
+    unit = models.ForeignKey(Unit, related_name="+", null=True, on_delete=models.SET_NULL)
     price = models.FloatField()
     is_available = models.BooleanField(default=True)
 

@@ -1,10 +1,15 @@
 import uuid as uuid
+from enum import Enum
+
 from django.db import models
 from django.urls import reverse
 
 from celulas_responsaveis.users.models import User
 from celulas_responsaveis.utils.slug_utils import unique_slugify
 
+class CellType(Enum):
+    PRODUCER = 'p'
+    CONSUMER = 'c'
 
 class Cell(models.Model):
     name = models.CharField(max_length=100)
@@ -13,6 +18,13 @@ class Cell(models.Model):
     created = models.DateField(auto_now_add=True)
     slug = models.SlugField(max_length=120)
     members = models.ManyToManyField(User, through="Membership", through_fields=("cell", "person"))
+
+    CELL_TYPE = (
+        (CellType.CONSUMER.value, 'Consumer'),
+        (CellType.PRODUCER.value, 'Producer'),
+    )
+    cell_type = models.CharField(max_length=1, choices=CELL_TYPE, default=CellType.CONSUMER)
+    producer_cell = models.ForeignKey("self", related_name="consumer_cells", null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ['-created']
@@ -99,12 +111,6 @@ class Membership(models.Model):
     role = models.ForeignKey(Role, null=True, on_delete=models.SET_NULL)
     is_active = models.BooleanField(default=True)
     join_date = models.DateField(auto_now_add=True)
-
-    class Meta:
-        permissions = [
-            ("approve_applications", "Can approve applications."),
-            ("can_edit", "Can edit cell information."),
-        ]
 
     def __str__(self):
         return f"{self.person.name} ({self.role}) - {self.cell}"
