@@ -117,7 +117,7 @@ class Membership(models.Model):
 
 
 class CellLocation(models.Model):
-    cell = models.ForeignKey(Cell, related_name="+", on_delete=models.CASCADE)
+    cell = models.ForeignKey(Cell, related_name="location", on_delete=models.CASCADE)
 
     address = models.CharField(max_length=100)
     city = models.CharField(max_length=50)
