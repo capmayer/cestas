@@ -23,7 +23,7 @@ class Cell(models.Model):
         (CellType.CONSUMER.value, 'Consumer'),
         (CellType.PRODUCER.value, 'Producer'),
     )
-    cell_type = models.CharField(max_length=1, choices=CELL_TYPE, default=CellType.CONSUMER)
+    cell_type = models.CharField(max_length=1, choices=CELL_TYPE, default=CellType.CONSUMER.value)
     producer_cell = models.ForeignKey("self", related_name="consumer_cells", null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
@@ -117,11 +117,14 @@ class Membership(models.Model):
 
 
 class CellLocation(models.Model):
-    cell = models.ForeignKey(Cell, on_delete=models.CASCADE)
+    cell = models.ForeignKey(Cell, related_name="+", on_delete=models.CASCADE)
 
     address = models.CharField(max_length=100)
     city = models.CharField(max_length=50)
     state = models.CharField(max_length=50)
 
-    latitude = models.DecimalField(max_digits=8, decimal_places=5)
-    longitude = models.DecimalField(max_digits=8, decimal_places=5)
+    latitude = models.DecimalField(max_digits=8, decimal_places=5, default=0)
+    longitude = models.DecimalField(max_digits=8, decimal_places=5, default=0)
+
+    def __str__(self):
+        return f"{self.address} {self.city}"

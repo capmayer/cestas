@@ -47,7 +47,7 @@
                 <td>{{ application.approved }}</td>
 
                 {% if not application.approved %}
-                <td><a href="{{ application.approve_application_url }}" class="btn btn-primary">Aprovar</a></td>
+                <td><a href="{{ application.approve_application_url }}" class="btn btn-success">Aprovar</a></td>
                 {% endif %}
               </tr>
             {% endif %}

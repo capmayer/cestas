@@ -5,7 +5,7 @@ from celulas_responsaveis.cells.models import (
     ApplicationQuestion,
     ApplicationAnswer,
     Application,
-    Cell, Membership, Role, PaymentInfo
+    Cell, Membership, Role, PaymentInfo, CellLocation
 )
 
 # Register your models here.
@@ -14,6 +14,7 @@ admin.site.register(ApplicationQuestion)
 admin.site.register(Application)
 admin.site.register(ApplicationAnswer)
 admin.site.register(Cell)
+admin.site.register(CellLocation)
 admin.site.register(Membership)
 admin.site.register(Role)
 admin.site.register(PaymentInfo)

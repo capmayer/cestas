@@ -7,8 +7,8 @@
 
 <form action="{{ products_list.get_absolute_url }}" method="post" >
   {% csrf_token %}
-  {{ additional_products_list_form.management_form }}
-  <table id="product-formset">
+  {{ additional_products_list_form.management_form}}
+  <table class="table" id="product-formset">
     {% for form in additional_products_list_form %}
       {% if forloop.first %}
         <thead>
@@ -18,22 +18,25 @@
             {% endfor %}
           </tr>
         </thead>
+        <tbody id="table-content">
       {% endif %}
-      <tr class="{% cycle row1 row2 %} product-form">
-        {% for field in form.visible_fields %}
-          <td>
-          {# Include the hidden fields in the form #}
-          {% if forloop.first %}
-            {% for hidden in form.hidden_fields %}
-            {{ hidden }}
-            {% endfor %}
-          {% endif %}
-            {{ field.errors.as_ul }}
-            {{ field }}
-          </td>
-        {% endfor %}
+        <tr class="product-form">
+          {% for field in form.visible_fields %}
+            <td>
+            {# Include the hidden fields in the form #}
+            {% if forloop.first %}
+              {% for hidden in form.hidden_fields %}
+              {{ hidden }}
+              {% endfor %}
+            {% endif %}
+              {{ field.errors.as_ul }}
+              {{ field }}
+            </td>
+          {% endfor %}
         </tr>
+
     {% endfor %}
+    </tbody>
   </table>
   <table class="hidden">
     <tr id="empty-form">
@@ -51,6 +54,8 @@
     {% endfor %}
     </tr>
   </table>
-  <button id="add-more" type="button" class="btn btn-secundary">Adicionar mais produtos</button>
-  <input class="btn btn-primary" type="submit" value="Salvar">
+  <button id="add-more" type="button" class="btn btn-success">Adicionar outro produto</button>
+
+  <input class="btn btn-success" type="submit" value="Salvar">
+
 </form>

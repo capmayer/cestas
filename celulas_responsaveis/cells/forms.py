@@ -5,15 +5,12 @@ from celulas_responsaveis.cells.models import ApplicationSurvey
 
 
 class CellRegistrationForm(forms.Form):
-    name = forms.CharField(label="Cell name", max_length=100)
-    description = forms.CharField(widget=forms.Textarea)
+    name = forms.CharField(label="Nome da Célula", max_length=100)
+    description = forms.CharField(label="Informações adicionais", widget=forms.Textarea)
 
-    address = forms.CharField(label="Address", max_length=100)
-    city = forms.CharField(label="City", max_length=50)
-    state = forms.CharField(label="State", max_length=50)
-
-    latitude = forms.DecimalField(max_digits=8, decimal_places=5)
-    longitude = forms.DecimalField(max_digits=8, decimal_places=5)
+    address = forms.CharField(label="Endereço", max_length=100)
+    city = forms.CharField(label="Cidade", max_length=50)
+    state = forms.CharField(label="Estado", max_length=50)
 
 
 class ApplicationForm(forms.Form):

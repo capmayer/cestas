@@ -9,7 +9,7 @@
       <form action="{{ cell.get_absolute_url }}/aplicar" method="post">
         {% csrf_token %}
         {{ application_form|crispy }}
-        <input class="btn btn-primary" type="submit" value="Enviar">
+        <input class="btn btn-success" type="submit" value="Enviar">
       </form>
     </div>
   </div>

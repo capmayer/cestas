@@ -1,14 +1,11 @@
 {% extends "account/base.html" %}
 
-{% load i18n %}
 {% load account socialaccount %}
+{% load static i18n compress%}
 {% load crispy_forms_tags %}
-
 {% block head_title %}{% translate "Sign In" %}{% endblock %}
 
 {% block inner %}
-
-<h1>{% translate "Sign In" %}</h1>
 
 {% get_providers as socialaccount_providers %}
 
@@ -35,25 +32,48 @@
 
   {% include "socialaccount/snippets/login_extra.html" %}
 
-{% else %}
-  {% if ACCOUNT_ALLOW_REGISTRATION %}
-    <p>
-      {% blocktranslate trimmed %}
-        If you have not created an account yet, then please
-        <a href="{{ signup_url }}">sign up</a> first.
-      {% endblocktranslate %}
-    </p>
-  {% endif %}
 {% endif %}
 
-<form class="login" method="POST" action="{% url 'account_login' %}">
-  {% csrf_token %}
-  {{ form|crispy }}
-  {% if redirect_field_value %}
-  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-  {% endif %}
-  <a class="button secondaryAction" href="{% url 'account_reset_password' %}">{% translate "Forgot Password?" %}</a>
-  <button class="primaryAction btn btn-primary" type="submit">{% translate "Sign In" %}</button>
-</form>
+<div class="card mt-4">
+  <div class="col p-4">
+    <img class="img-fluid" src="/static/images/home-image.png">
+
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form class="form" method="POST" action="{% url 'account_login' %}">
+      {% csrf_token %}
+      {{ form|crispy }}
+      {% if redirect_field_value %}
+      <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+      {% endif %}
+      <div class="col">
+        <button class="btn btn-success" type="submit" style="width:100%;">{% translate "Sign In" %}</button>
+      </div>
+    </form>
+    <div class="col s12">
+      <a class="col s12" href="{% url 'account_reset_password' %}">{% translate "Forgot Password?" %}</a>
+
+      {% if ACCOUNT_ALLOW_REGISTRATION %}
+        <p class="col s12" style="margin-bottom:30px;">
+          {% blocktranslate trimmed %}
+            If you have not created an account yet, then please
+            <a href="{{ signup_url }}">sign up</a> first.
+          {% endblocktranslate %}
+        </p>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+
 
 {% endblock %}

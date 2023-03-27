@@ -2,14 +2,16 @@
 
 {% block content %}
   <div class="row justify-content-md-center mt-4">
-    <div class="col-8">
-      <h3>Células cadastradas:</h3>
+    <div class="col-10">
+      <h3>Conheça as células:</h3>
 
       <div class="list-group d-grip border-0 w-auto">
-        {% for cell in cells %}
+        {% for cell, location in cells %}
           <a href="{{ cell.get_absolute_url }}" class="list-group-item list-group-item-action rounded-3 py-3">
-            <h5 class="mb-1">{{ cell.name }}</h5>
-            <p class="mb-1">{{ cell.location.address }}</p>
+            <div class="d-flex flex-md-row flex-column justify-content-between">
+              <h5 class="mb-1">{{ cell.name }}</h5>
+              <h5>{{ location }}</h5>
+            </div>
           </a>
         {% endfor %}
       </div>

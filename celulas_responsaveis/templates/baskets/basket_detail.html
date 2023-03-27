@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="row justify-content-md-center mt-4">
+    <div class="col-sm-11 col-lg-8">
+      <div class="row">
+        <h3>Adicionais {{ basket.cycle }}</h3>
+      </div>
+      {% for product in basket.products.all %}
+        <div class="card">
+          <div class="card-body">
+
+              <div class="d-flex flex-column flex-md-row justify-content-md-between justify-content-sm-center">
+                <div class="d-flex flex-column">
+                  <div class="d-flex align-self-center align-self-md-baseline h3">
+                      {{ product.name }}
+                  </div>
+                  <div class="d-flex align-self-center align-self-md-baseline">
+                    <div>
+                      R$<span id="product_price_{{ forloop.counter0}}">{{ product.price|floatformat:2 }} </span>
+                      <span>({{ product.unit }})</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex flex-column align-self-center">
+                  <div class="d-flex flex-row">
+                    <div class="d-flex align-self-center">
+                      {% if product.unit.increment < 1 %}
+                        <div class="h3">{% widthratio product.requested_quantity 1 1000 %}</div>
+                      {% else %}
+                        <div class="h3">{{ product.requested_quantity|floatformat:0 }}</div>
+                      {% endif %}
+                    </div>
+                    <div class="d-flex align-self-center">
+                      <div class="h4">{{ product.unit.unit }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+
+{% endblock %}

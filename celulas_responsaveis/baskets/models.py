@@ -24,7 +24,7 @@ class Cycle(models.Model):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.consumer_cell.slug})
 
     def __str__(self) -> str:
-        return f"Ciclo #{self.number} da {self.consumer_cell}"
+        return f"Ciclo #{self.number} da Célula {self.consumer_cell}"
 
 
 class AdditionalProductsList(models.Model):
@@ -64,6 +64,7 @@ class Product(models.Model):
 class Unit(models.Model):
     name = models.CharField(max_length=15)
     increment = models.FloatField(default=1.0)
+    unit = models.CharField(max_length=15)
 
     def __str__(self):
         return f"{self.name}"

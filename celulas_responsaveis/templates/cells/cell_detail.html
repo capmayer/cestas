@@ -2,34 +2,33 @@
 
 {% block content %}
 
-  <div class="row justify-content-md-center mt-4">
-    <div class="col-7">
-      <h3>{{ cell.name }}</h3>
-      <p>{{ cell.description }}</p>
-    </div>
-    <div class="col-3">
-      {% if is_member %}
-        {% if is_organizer %}
-          <div class="row">
-            <a href="{{ cell.get_absolute_url }}/membros" type="button" class="btn btn-outline-secondary">MEMBROS</a>
-          </div>
-        {% endif%}
-        <div class="row mt-1">
-          <a href="{{ cell.get_additional_products_list_url }}" type="button" class="btn btn-primary">PEDIR ADICIONAIS</a>
+  <div class="d-flex flex-column justify-content-md-center mt-4">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title">Célula {{ cell.name }}</h3>
+        <div class="d-flex flex-column">
+          <h5>Endereço: {{ location }}</h5>
+          <p>{{ cell.description }}</p>
+          {% if is_member %}
+            {% if is_organizer %}
+                <a href="{{ cell.get_absolute_url }}/membros" class="btn btn-outline-secondary btn-block">MEMBROS</a>
+            {% endif%}
+
+            <a href="{{ cell.get_additional_products_list_url }}" class="btn btn-success btn-block">PEDIR ADICIONAIS</a>
+
+          {% else %}
+              <a href="{{ cell.get_apply_url }}"  class="btn btn-success btn-block">ENTRAR</a>
+          {% endif %}
         </div>
-      {% else %}
-        <div class="row mt-1">
-          <a href="{{ cell.get_apply_url }}" type="button" class="btn btn-primary">ENTRAR</a>
+      </div>
+      <div class="row justify-content-md-center mt-4">
+        <div class="col-10">
+          {% if cell.localtion %}
+          <h5>Localização:</h5>
+          {{ cell.location.address }}
+          {% endif %}
         </div>
-      {% endif %}
-    </div>
-  </div>
-  <div class="row justify-content-md-center mt-4">
-    <div class="col-10">
-      {% if cell.localtion %}
-      <h5>Localização:</h5>
-      {{ cell.location.address }}
-      {% endif %}
+      </div>
     </div>
   </div>
 {% endblock content %}

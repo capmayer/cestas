@@ -1,20 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-
   <div class="row justify-content-md-center mt-4">
-    <div class="col-8">
+    <div class="col-10">
+      <h3>Minhas cestas:</h3>
       {% if not baskets %}
         <h1>
-          Parece que você ainda não possui cestas.
+          Você ainda não possui cestas.
         </h1>
 
-      <h3>Considere entrar em uma célula, <a class="" href="{% url 'cells:list_cells' %}">veja mais.</a></h3>
+        <h3>Considere entrar em uma célula, <a class="" href="{% url 'cells:list_cells' %}">veja mais.</a></h3>
 
       {% endif %}
-      {% for basket in baskets %}
-        <div class="row">Cesta #{{ forloop.counter }} {{ basket.created_date }}</div>
-      {% endfor %}
+      <div class="list-group d-grip border-0 w-auto">
+        {% for basket in baskets %}
+          <a href="{{ basket.get_absolute_url }}" class="list-group-item list-group-item-action rounded-3 py-3">
+            <h5 class="mb-1">{{ basket.cycle }}</h5>
+          </a>
+        {% endfor %}
+      </div>
     </div>
   </div>
+
 {% endblock content %}

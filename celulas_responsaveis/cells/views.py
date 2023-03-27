@@ -19,6 +19,7 @@ def generate_cell_map(latitude: float, longitude: float) -> str:
 
 def cell_detail(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
+    location = CellLocation.objects.get(cell=cell)
 
     is_member = False
     is_organizer = False
@@ -27,6 +28,7 @@ def cell_detail(request, cell_slug: str):
         "is_member": is_member,
         "is_organizer": is_organizer,
         "cell": cell,
+        "location": location,
     }
 
     if request.user.is_authenticated:
@@ -40,6 +42,7 @@ def cell_detail(request, cell_slug: str):
     return render(request, "cells/cell_detail.html", context)
 
 
+@login_required
 def create_cell(request):
     if request.method == "POST":
         form = CellRegistrationForm(request.POST)
@@ -55,13 +58,11 @@ def create_cell(request):
             cell_location.address = form.cleaned_data["address"]
             cell_location.city = form.cleaned_data["city"]
             cell_location.state = form.cleaned_data["state"]
-            cell_location.latitude = form.cleaned_data["latitude"]
-            cell_location.longitude = form.cleaned_data["longitude"]
             cell_location.save()
 
             # Call script to register in IDEC pages.
 
-            return HttpResponse("Done")
+            return redirect("cells:new_membership", cell_slug=cell.slug, role="Organização")
     else:
         form = CellRegistrationForm()
 
@@ -69,8 +70,11 @@ def create_cell(request):
 
 
 def list_cells(request):
-    cells = Cell.objects.all()
-    return render(request, "cells/all_cells.html", {"cells": cells})
+    # This only works with cells and locations lenght are equal.
+    cells = Cell.objects.filter(cell_type=CellType.CONSUMER.value)
+    locations = CellLocation.objects.filter(cell__cell_type=CellType.CONSUMER.value)
+
+    return render(request, "cells/all_cells.html", {"cells": zip(cells, locations)})
 
 
 def application_complete(request):
@@ -113,7 +117,7 @@ def consumer_apply(request, cell_slug: str):
         return redirect(f"{signup_url}?{cell_membership_url}")
 
 @login_required
-def new_membership(request, cell_slug: str):
+def new_membership(request, cell_slug: str, role: str = "Padrão"):
     cell = get_object_or_404(Cell, slug=cell_slug)
 
     if request.user.is_authenticated:
@@ -122,7 +126,7 @@ def new_membership(request, cell_slug: str):
         if is_member.exists():
             return redirect("baskets:additional_products_list", cell_slug=cell_slug)
 
-    role = Role.objects.get(name="Padrão")
+    role = Role.objects.get(name=role)
 
     membership_content = {
         "role": role,

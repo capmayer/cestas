@@ -5,49 +5,56 @@
   <div class="row justify-content-md-center mt-4">
     <div class="col-sm-11 col-lg-8">
       <div class="row">
-        <h3>{{ cell.name }} - Ciclo {{ cycle.number }}</h3>
+        <h3>Célula {{ cell.name }} - Ciclo {{ cycle.number }}</h3>
       </div>
       <div class="row justify-content-md-center">
         <h5>Pedidos até {{ cycle.requests_end }}</h5>
       </div>
       <div class="row">
           <form action="{{ cycle.get_request_products_url }}" method="post">
-          {% csrf_token %}
+            {% csrf_token %}
             {{ basket_form.management_form }}
             <div id="products">
+
               {% for form in basket_form %}
-                <div class="row mt-3">
-                  <div class="col-3">
-                    <div class="row">
-                      {{ form.name.value }}
+                <div class="card">
+                  <div class="card-body">
+                    <div class="d-flex flex-column flex-md-row justify-content-md-between justify-content-sm-center">
+                      <div class="d-flex flex-column">
+                        <div class="d-flex align-self-center align-self-md-baseline h3">
+                            {{ form.name.value }}
+                        </div>
+                        <div class="d-flex align-self-center align-self-md-baseline">
+                          <div>
+                            R$<span id="product_price_{{ forloop.counter0}}">{{ form.price.value|floatformat:2 }} </span>
+                            <span>({{ form.unit.value }})</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="d-flex flex-column align-self-center">
+                        <div class="d-flex flex-row">
+                          <div class="align-self-center" onchange="calculate_basket_total()">
+                            {{ form.requested_quantity }}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="col-3">
-                    <div>
-                      R$<span id="product_price_{{ forloop.counter0}}">{{ form.price.value }}</span>/{{ form.unit.value }}
-                    </div>
-                  </div>
-                  <div class="col-3">
-                    <div class="row" onchange="calculate_product_total({{ forloop.counter0 }})">{{ form.requested_quantity }}</div>
-                  </div>
-                  <div class="col-3">
-                    R$<span id="product_total_price_{{ forloop.counter0 }}">0,00</span>
                   </div>
                 </div>
               {% endfor %}
             </div>
-            <div class="row mt-3">
-              <div class="col-9">
-                <div class="row">
-                Preço total:
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex flex-row justify-content-between">
+                  <div class="d-flex flex-column h5">Preço total: </div>
+                  <div class="d-flex flex-column h5">
+                    <div>R$<span id="total_price">0,00</span></div>
+                  </div>
                 </div>
               </div>
-              <div class="col-3">
-                  R$<span id="total_price">0,00</span>
-              </div>
             </div>
-            <div class="row mt-3">
-              <input class="btn btn-primary" type="submit" value="Finalizar pedido">
+            <div class="d-flex flex-column">
+              <button class="btn btn-success btn-block mt-1" type="submit">Enviar pedido</button>
             </div>
           </form>
       </div>
@@ -55,23 +62,19 @@
   </div>
   <script type="text/javascript">
     function calculate_basket_total() {
-      var product_total_prices = document.querySelectorAll('[id^="product_total_price_"]')
+      var product_total_prices = document.querySelectorAll('[id^="product_price_"]')
       var total_basket_price = 0.0
+      for (let product_count=0; product_count < product_total_prices.length; product_count++){
+        var requested_quantity = document.getElementById("id_form-"+product_count+"-requested_quantity").value;
+        var product_price_string = document.getElementById("product_price_"+product_count).innerHTML.replace(',', '.')
+        var product_price = parseFloat(product_price_string);
+        var product_total_price = requested_quantity * product_price;
 
-      for (let i=0; i < product_total_prices.length; i++){
-        total_basket_price += parseFloat(product_total_prices[i].innerHTML)
+        total_basket_price += product_total_price;
       }
       document.getElementById("total_price").innerHTML = total_basket_price.toLocaleString("pt-BR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
-    function calculate_product_total(product_count) {
-      var requested_quantity = document.getElementById("id_form-"+product_count+"-requested_quantity").value;
-      var product_price = parseFloat(document.getElementById("product_price_"+product_count).innerHTML);
 
-      var product_total_price = requested_quantity * product_price;
-      document.getElementById("product_total_price_"+product_count).innerHTML = product_total_price.toLocaleString("pt-BR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-      calculate_basket_total();
-    }
   </script>
 
 {% endblock content %}

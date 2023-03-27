@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
 from celulas_responsaveis.baskets.forms import AdditionalProductsListFormSet, BasketFormSet, CycleForm
-from celulas_responsaveis.baskets.models import AdditionalBasket, AdditionalProductsList, Cycle, SoldProduct
+from celulas_responsaveis.baskets.models import AdditionalBasket, AdditionalProductsList, Cycle, SoldProduct, Unit
 from celulas_responsaveis.cells.models import Cell, Role, Membership, PaymentInfo, CellType
 
 
@@ -123,10 +123,10 @@ def new_cycle(request, cell_slug: str):
                     product.pk = None
                     product.save()
 
-                return redirect("baskets:cell_cycles", cell_slug=cell_slug)
+                return redirect("producer:cell_cycles", cell_slug=cell_slug)
 
             else:
-                return redirect("baskets:additional_products_detail", cell_slug=cell_slug, cycle_number=cycle.number)
+                return redirect("producer:additional_products_detail", cell_slug=cell_slug, cycle_number=cycle.number)
     else:
         cycle_form = CycleForm(initial={"number": last_cycle_number + 1})
         context["cycle_form"] = cycle_form
@@ -172,8 +172,11 @@ def cell_cycles(request, cell_slug: str):
     return render(request, "baskets/cell_cycles.html", context=context)
 
 
+@login_required
 def additional_basket_detail(request, basket_uuid: str):
-    return HttpResponse("Here you'll see your basket details")
+    basket = AdditionalBasket.objects.get(uuid=basket_uuid)
+    context = {"basket":basket}
+    return render(request, "baskets/basket_detail.html", context=context)
 
 
 @login_required
@@ -216,6 +219,7 @@ def additional_products_list(request, cell_slug: str):
         basket_formset = BasketFormSet(request.POST, initial=initial_values)
 
         if basket_formset.is_valid():
+
             additional_basket = AdditionalBasket()
             additional_basket.person = request.user
             additional_basket.cycle = cycle
@@ -230,7 +234,10 @@ def additional_products_list(request, cell_slug: str):
                     if requested_quantity > 0.0:
                         sold_product = SoldProduct()
                         sold_product.name = form.cleaned_data["name"]
-                        sold_product.unit = form.cleaned_data["unit"]
+
+                        unit = Unit.objects.get(name=form.cleaned_data["unit"])
+                        sold_product.unit = unit
+
                         sold_product.price = form.cleaned_data["price"]
                         sold_product.requested_quantity = requested_quantity
                         sold_product.basket = additional_basket
@@ -241,6 +248,9 @@ def additional_products_list(request, cell_slug: str):
             additional_basket.save()
 
             return redirect("baskets:basket_requested", cell_slug=cell_slug, request_uuid=additional_basket.uuid)
+        else:
+            context["messages"] = basket_formset.non_form_errors()
+            render(request, "baskets/additional_products_list.html", context=context)
 
     basket_formset = BasketFormSet(initial=initial_values)
 
@@ -256,10 +266,12 @@ def basket_requested(request, cell_slug: str, request_uuid: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
     payment_info = PaymentInfo.objects.get(cell=cell)
     additional_basket_requested = AdditionalBasket.objects.get(uuid=request_uuid)
+    basket_url = additional_basket_requested.get_absolute_url()
 
     context = {
         "payment_info": payment_info,
         "cell": cell,
         "total_price": additional_basket_requested.total_price,
+        "basket_url": basket_url,
     }
     return render(request, "baskets/basket_requested.html", context)

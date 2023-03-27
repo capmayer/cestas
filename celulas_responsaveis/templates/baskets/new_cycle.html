@@ -4,12 +4,12 @@
 {% block content %}
 
   <div class="row justify-content-md-center mt-4">
-
     <div class="col-8">
-      <form action="{% url 'producer:new_cycle' cell_slug=cell.slug %}" method="post">
+      <h3>Novo ciclo:</h3>
+      <form class="card p-3" action="{% url 'producer:new_cycle' cell_slug=cell.slug %}" method="post">
         {% csrf_token %}
         {{ cycle_form|crispy }}
-        <input class="btn btn-primary" type="submit" value="Criar ciclo">
+        <input class="btn btn-success" type="submit" value="Criar ciclo">
       </form>
 
     </div>

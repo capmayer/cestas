@@ -2,9 +2,15 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<form action="/celulas/nova_celula" method="post">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <input type="submit" value="Submit">
-</form>
+
+  <div class="row mt-4">
+    <div class="col-md-10">
+      <h3 class="mb-4">Nova Célula: </h3>
+      <form class="form-control pt-2" action="{% url 'cells:create_cell' %}" method="post">
+          {% csrf_token %}
+          {{ form|crispy }}
+          <input class="btn btn-success" type="submit" value="Enviar">
+      </form>
+    </div>
+  </div>
 {% endblock content %}

@@ -1,18 +1,22 @@
-{% extends "base.html" %}
+{% extends "base_producer.html" %}
 
 {% block content %}
-
-  <div class="row justify-content-md-center mt-4">
-    <div class="col-8">
+  <div class="row mt-4">
+    <div class="col-md-10">
+      <h3 class="mb-4"> Células: </h3>
       {% for cell in cells %}
-      <div class="row">
-        <div class="col-6">
-          Célula: {{ cell.name }}
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-10">{{ cell.name }}</div>
+              <div class="col-2">
+                <div class="row float-end">
+                  <a class="stretched-link" href="{{ cell.report_url}}"><i class="bi-gear"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="col-6">
-          <a href="{{ cell.report_url}}" class="btn btn-primary">Gerenciar</a>
-        </div>
-      </div>
       {% endfor %}
     </div>
   </div>

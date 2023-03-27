@@ -1,22 +1,40 @@
 {% extends "account/base.html" %}
 
-{% load i18n %}
+{% load static i18n compress%}
 {% load crispy_forms_tags %}
-
 {% block head_title %}{% translate "Signup" %}{% endblock %}
 
 {% block inner %}
-<h1>{% translate "Sign Up" %}</h1>
 
-<p>{% blocktranslate %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktranslate %}</p>
+<div class="card mt-4">
+  <div class="col p-4">
+    <img class="img-fluid" src="/static/images/home-image.png">
 
-<form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
-  {% csrf_token %}
-  {{ form|crispy }}
-  {% if redirect_field_value %}
-  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+    {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
   {% endif %}
-  <button class="btn btn-primary" type="submit">{% translate "Sign Up" %} &raquo;</button>
-</form>
 
+  <form class="col" id="signup_form" method="post" action="{% url 'account_signup' %}">
+    {% csrf_token %}
+    {{ form|crispy }}
+    {% if redirect_field_value %}
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+    {% endif %}
+    <div class="col">
+      <button class="btn btn-success" type="submit" style="width:100%;">{% translate "Sign Up" %}</button>
+    </div>
+
+  </form>
+  <div class="col">
+    <p class="col ">{% blocktranslate %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktranslate %}</p>
+  </div>
+  </div>
+
+
+</div>
 {% endblock %}
