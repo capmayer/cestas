@@ -32,7 +32,10 @@ class Cell(models.Model):
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
+    def get_managment_url(self):
+        return reverse("cells:managment", kwargs={"cell_slug": self.slug})
+
+    def get_detail_url(self):
         return reverse("cells:cell_detail", kwargs={"cell_slug": self.slug})
 
     def get_additional_products_list_url(self):
@@ -54,12 +57,11 @@ class Role(models.Model):
 
 
 class PaymentInfo(models.Model):
-    person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
     cell = models.ForeignKey(Cell, related_name="payment_info", on_delete=models.CASCADE)
     description = models.TextField()
 
     def __str__(self):
-        return f"{self.cell} pagamento para {self.person.name}"
+        return f"{self.cell}"
 
 class ApplicationSurvey(models.Model):
     name = models.CharField(max_length=100)
@@ -120,6 +122,7 @@ class CellLocation(models.Model):
     cell = models.ForeignKey(Cell, related_name="location", on_delete=models.CASCADE)
 
     address = models.CharField(max_length=100)
+    neighborhood = models.CharField(max_length=50)
     city = models.CharField(max_length=50)
     state = models.CharField(max_length=50)
 
@@ -127,4 +130,4 @@ class CellLocation(models.Model):
     longitude = models.DecimalField(max_digits=8, decimal_places=5, default=0)
 
     def __str__(self):
-        return f"{self.address} {self.city}"
+        return f"{self.address}, {self.neighborhood} - {self.city}"

@@ -3,8 +3,8 @@
 
 {% block content %}
   <div class="d-flex flex-column mt-4">
-    <h2>Pedido registrado!</h2>
-    <h4>Faça o pagamento de R${{ total_price|floatformat:2 }} para {{ payment_info.person.name }}.</h4>
+    <h2>Pedido feito!</h2>
+    <h4>Valor do pedido R${{ total_price|floatformat:2 }}.</h4>
     <h4>{{ payment_info.description }}</h4>
     <a class="btn btn-success" href="{{ basket_url }}">Conferir Pedido</a>
   </div>

@@ -11,7 +11,7 @@
           <p>{{ cell.description }}</p>
           {% if is_member %}
             {% if is_organizer %}
-                <a href="{{ cell.get_absolute_url }}/membros" class="btn btn-outline-secondary btn-block">MEMBROS</a>
+              <a href="{{ cell.get_managment_url }}" class="btn btn-outline-secondary btn-block">COORDENAR</a>
             {% endif%}
 
             <a href="{{ cell.get_additional_products_list_url }}" class="btn btn-success btn-block">PEDIR ADICIONAIS</a>

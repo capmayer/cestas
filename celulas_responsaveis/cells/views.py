@@ -51,6 +51,7 @@ def create_cell(request):
             cell = Cell()
             cell.name = form.cleaned_data["name"]
             cell.description = form.cleaned_data["description"]
+            cell.cell_type = form.cleaned_data["cell_type"]
             cell.save()
 
             cell_location = CellLocation()
@@ -136,9 +137,12 @@ def new_membership(request, cell_slug: str, role: str = "Padrão"):
     cell.members.add(request.user, through_defaults=membership_content)
     cell.save()
 
-    return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+    if role.name == "Padrão":
+        return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+    else:
+        return redirect("cells:cell_detail", cell_slug=cell_slug)
 
-def members(request, cell_slug: str):
+def cell_managment(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
     membership = Membership.objects.filter(cell=cell)
     applications = Application.objects.filter(cell=cell)
@@ -148,7 +152,7 @@ def members(request, cell_slug: str):
         "cell": cell,
         "membership": membership,
     }
-    return render(request, "cells/members.html", context)
+    return render(request, "cells/cell_managment.html", context)
 
 
 def approve_application(request, cell_slug: str, application_uuid: str):

@@ -57,8 +57,25 @@
       {% endblock content %}
 
 
-      {% block footer %}
-      {% endblock footer %}
+
+  <footer class="d-flex flex-column flex-md-row justify-content-between row-cols-1 row-cols-sm-2 row-cols-md-5 py-5 my-5 border-top">
+    <div class="col">
+      <a href="/" class="d-flex align-items-center link-dark text-decoration-none">
+        <img class="img-fluid" style="height:200px;" src="/static/images/home-image.png">
+      </a>
+    </div>
+
+    <div class="col">
+      <h5>Atalhos</h5>
+      <ul class="nav flex-column">
+        <li class="nav-item mb-2"><a href="{% url 'core:home' %}" class="nav-link p-0 text-muted">Inicio</a></li>
+        <li class="nav-item mb-2"><a href="{% url 'producer:home_producer' %}" class="nav-link p-0 text-muted">Produtor(a)</a></li>
+        <li class="nav-item mb-2"><a href="{% url 'baskets:home_consumer' %}" class="nav-link p-0 text-muted">Cestas</a></li>
+        <li class="nav-item mb-2"><a href="{% url 'cells:list_cells' %}" class="nav-link p-0 text-muted">Células</a></li>
+        <li class="nav-item mb-2"><a href="{% url 'cells:create_cell' %}" class="nav-link p-0 text-muted">Adicionar Célula</a></li>
+      </ul>
+    </div>
+  </footer>
 
     </div> <!-- /container -->
 

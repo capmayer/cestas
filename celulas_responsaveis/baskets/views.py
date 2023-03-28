@@ -264,12 +264,12 @@ def additional_products_list(request, cell_slug: str):
 @login_required
 def basket_requested(request, cell_slug: str, request_uuid: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
-    payment_info = PaymentInfo.objects.get(cell=cell)
+    payment_info = PaymentInfo.objects.filter(cell=cell.producer_cell)
     additional_basket_requested = AdditionalBasket.objects.get(uuid=request_uuid)
     basket_url = additional_basket_requested.get_absolute_url()
 
     context = {
-        "payment_info": payment_info,
+        "payment_info": payment_info[0] if payment_info else None,
         "cell": cell,
         "total_price": additional_basket_requested.total_price,
         "basket_url": basket_url,
