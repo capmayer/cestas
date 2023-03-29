@@ -4,60 +4,68 @@
 
   <div class="row justify-content-md-center mt-4">
     <div class="col-sm-11 col-lg-8">
-      <div class="row">
-        <h3>Célula {{ cell.name }} - Ciclo {{ cycle.number }}</h3>
-      </div>
-      <div class="row justify-content-md-center">
-        <h5>Pedidos até {{ cycle.requests_end }}</h5>
-      </div>
-      <div class="row">
-          <form action="{{ cycle.get_request_products_url }}" method="post">
-            {% csrf_token %}
-            {{ basket_form.management_form }}
-            <div id="products">
+      {% if closed_cycle %}
+        <h3>Célula {{ cell.name }}:</h3>
+        <h5>O ciclo ainda não começou!</h5>
+      {% elif is_cycle_over %}
+        <h3>Célula {{ cell.name }}:</h3>
+        <h5>O Ciclo {{ cycle.number }}# acabou, espere o próximo começar!</h5>
+      {% else %}
+        <div class="row">
+          <h3>Célula {{ cell.name }} - Ciclo {{ cycle.number }}</h3>
+        </div>
+        <div class="row justify-content-md-center">
+          <h5>Pedidos até {{ cycle.requests_end }}</h5>
+        </div>
+        <div class="row">
+            <form action="{{ cycle.get_request_products_url }}" method="post">
+              {% csrf_token %}
+              {{ basket_form.management_form }}
+              <div id="products">
 
-              {% for form in basket_form %}
-                <div class="card">
-                  <div class="card-body">
-                    <div class="d-flex flex-column flex-md-row justify-content-md-between justify-content-sm-center">
-                      <div class="d-flex flex-column">
-                        <div class="d-flex align-self-center align-self-md-baseline h3">
-                            {{ form.name.value }}
-                        </div>
-                        <div class="d-flex align-self-center align-self-md-baseline">
-                          <div>
-                            R$<span id="product_price_{{ forloop.counter0}}">{{ form.price.value|floatformat:2 }} </span>
-                            <span>({{ form.unit.value }})</span>
+                {% for form in basket_form %}
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex flex-column flex-md-row justify-content-md-between justify-content-sm-center">
+                        <div class="d-flex flex-column">
+                          <div class="d-flex align-self-center align-self-md-baseline h3">
+                              {{ form.name.value }}
+                          </div>
+                          <div class="d-flex align-self-center align-self-md-baseline">
+                            <div>
+                              R$<span id="product_price_{{ forloop.counter0}}">{{ form.price.value|floatformat:2 }} </span>
+                              <span>({{ form.unit.value }})</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div class="d-flex flex-column align-self-center">
-                        <div class="d-flex flex-row">
-                          <div class="align-self-center" onchange="calculate_basket_total()">
-                            {{ form.requested_quantity }}
+                        <div class="d-flex flex-column align-self-center">
+                          <div class="d-flex flex-row">
+                            <div class="align-self-center" onchange="calculate_basket_total()">
+                              {{ form.requested_quantity }}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              {% endfor %}
-            </div>
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex flex-row justify-content-between">
-                  <div class="d-flex flex-column h5">Preço total: </div>
-                  <div class="d-flex flex-column h5">
-                    <div>R$<span id="total_price">0,00</span></div>
+                {% endfor %}
+              </div>
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex flex-row justify-content-between">
+                    <div class="d-flex flex-column h5">Preço total: </div>
+                    <div class="d-flex flex-column h5">
+                      <div>R$<span id="total_price">0,00</span></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="d-flex flex-column">
-              <button class="btn btn-success btn-block mt-1" type="submit">Enviar pedido</button>
-            </div>
-          </form>
-      </div>
+              <div class="d-flex flex-column">
+                <button class="btn btn-success btn-block mt-1" type="submit">Enviar pedido</button>
+              </div>
+            </form>
+        </div>
+      {% endif %}
     </div>
   </div>
   <script type="text/javascript">

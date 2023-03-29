@@ -11,6 +11,6 @@ urlpatterns = [
     path("<str:cell_slug>/coordenar", views.cell_managment, name="managment"),
     path("<str:cell_slug>/membros/aplicacao/<str:application_uuid>", views.approve_application, name="approve_application"),
     path("<str:cell_slug>/aplicar", views.new_application, name="new_application"),
-    path("<str:cell_slug>/entrar", views.consumer_apply, name="consumer_apply"),
+    path("<str:cell_slug>/entrar", views.cell_apply, name="cell_apply"),
     path("<str:cell_slug>/entrando/<str:role>", views.new_membership, name="new_membership"),
 ]

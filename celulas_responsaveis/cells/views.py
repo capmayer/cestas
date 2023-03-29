@@ -35,7 +35,7 @@ def cell_detail(request, cell_slug: str):
         # If user is a member we don't need to show application button.
         context["is_member"] = cell.members.filter(id=request.user.id).exists()
 
-        organizer = Role.objects.get(name="Organização")
+        organizer = Role.objects.get(name="coordenacao")
         context["is_organizer"] = cell.members.through.objects.filter(cell=cell, person=request.user, role=organizer).exists()
 
 
@@ -63,7 +63,7 @@ def create_cell(request):
 
             # Call script to register in IDEC pages.
 
-            return redirect("cells:new_membership", cell_slug=cell.slug, role="Organização")
+            return redirect("cells:new_membership", cell_slug=cell.slug, role="coordenacao")
     else:
         form = CellRegistrationForm()
 
@@ -75,7 +75,14 @@ def list_cells(request):
     cells = Cell.objects.filter(cell_type=CellType.CONSUMER.value)
     locations = CellLocation.objects.filter(cell__cell_type=CellType.CONSUMER.value)
 
-    return render(request, "cells/all_cells.html", {"cells": zip(cells, locations)})
+    producer_cells = Cell.objects.filter(cell_type=CellType.PRODUCER.value)
+    cells_locations = list(zip(cells, locations))
+    context = {
+        "cells": cells_locations,
+        "producer_cells": producer_cells,
+    }
+
+    return render(request, "cells/all_cells.html", context=context)
 
 
 def application_complete(request):
@@ -100,32 +107,51 @@ def new_application(request, cell_slug: str):
 
     return redirect("cells:application_complete")
 
-def consumer_apply(request, cell_slug: str):
+def cell_apply(request, cell_slug: str):
+    """
+        Define os caminhos para ingressar en uma célula.
+
+    Pessoa acessou o link para entrar na célula ou chegou nela atráves de buscar na internet/plataforma.
+    Caso ela esteja deslogada da plataforma, inferimos que ainda não possui cadastro. Caso esteja logada, verificamos
+    se já é membra, se não encaminha para entrar na célula.
+    """
     cell = get_object_or_404(Cell, slug=cell_slug)
 
     if request.user.is_authenticated:
         is_member = cell.members.filter(id=request.user.id)
 
         if is_member.exists():
-            return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+            return HttpResponse("Já é membro.")
 
         else:
-            return redirect("cells:new_membership", cell_slug=cell_slug)
+            return redirect("cells:new_membership", cell_slug=cell_slug, role="membro")
 
     else:
-        cell_membership_url = urlencode({'next': reverse('cells:new_membership', kwargs={'cell_slug': cell_slug})})
+        cell_membership_url = urlencode({"next": reverse("cells:new_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
         signup_url = reverse('account_signup')
         return redirect(f"{signup_url}?{cell_membership_url}")
 
 @login_required
-def new_membership(request, cell_slug: str, role: str = "Padrão"):
+def new_membership(request, cell_slug: str, role: str = "membro"):
+    """
+        Cria a relação da pessoa com a célula/grupo.
+
+     View com função de criar a relação entre pessoa e célula/grupo. É utilizado para adicionar membros em células de
+     produção e consumo. O paramêtro 'role' define a função do membro na célula, por exemplo, estar na coordenação da
+     célula/grupo.
+
+
+    """
     cell = get_object_or_404(Cell, slug=cell_slug)
 
     if request.user.is_authenticated:
         is_member = cell.members.filter(id=request.user.id)
 
         if is_member.exists():
-            return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+            if cell.cell_type is CellType.PRODUCER.value:
+                return redirect("producer:home_producer")
+            elif cell.cell_type is CellType.CONSUMER.value:
+                return redirect("baskets:additional_products_list", cell_slug=cell_slug)
 
     role = Role.objects.get(name=role)
 
@@ -137,10 +163,7 @@ def new_membership(request, cell_slug: str, role: str = "Padrão"):
     cell.members.add(request.user, through_defaults=membership_content)
     cell.save()
 
-    if role.name == "Padrão":
-        return redirect("baskets:additional_products_list", cell_slug=cell_slug)
-    else:
-        return redirect("cells:cell_detail", cell_slug=cell_slug)
+    return redirect("cells:cell_detail", cell_slug=cell_slug)
 
 def cell_managment(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)

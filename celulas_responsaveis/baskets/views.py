@@ -25,7 +25,7 @@ def get_active_cycles(cell: Cell):
     last_week = today + datetime.timedelta(-7)
     return Cycle.objects.filter(cell=cell, begin__range=[last_week, today])
 
-def check_requests_end(cycle: Cycle) -> bool:
+def is_cycle_over(cycle: Cycle) -> bool:
     today = datetime.date.today()
     return today > cycle.requests_end
 
@@ -183,25 +183,38 @@ def additional_basket_detail(request, basket_uuid: str):
 def additional_products_list(request, cell_slug: str):
     """Used by consumer."""
     cell = Cell.objects.get(slug=cell_slug)
-    context = {}
+
+    context = {
+        "closed_cycle": False,
+        "cell": cell,
+    }
     cycles = Cycle.objects.filter(consumer_cell=cell)
 
     if not cycles:
-        return HttpResponse("Célula não possui um ciclo ativo.")
+        context["closed_cycle"] = True
+
+        return render(request, "baskets/additional_products_list.html", context=context)
 
     cycle = cycles.latest("number")
+
     has_basket = AdditionalBasket.objects.filter(cycle=cycle, person=request.user).exists()
     if has_basket:
         return HttpResponse("Pedido de adicionais já realizado para este ciclo.")
 
-    is_cycle_over = check_requests_end(cycle)
-    context["is_cycle_over"] = is_cycle_over
+    if is_cycle_over(cycle):
+        context["is_cycle_over"] = is_cycle_over(cycle)
+        context["cycle"] = cycle
+        return render(request, "baskets/additional_products_list.html", context=context)
 
-    products_list = AdditionalProductsList.objects.get(cycle=cycle)
+    products_lists = AdditionalProductsList.objects.filter(cycle=cycle)
 
-    if not products_list:
-        return HttpResponse("A lista de pedidos adicionais ainda não foi disponibilizada.")
+    if not products_lists:
+        context["is_cycle_over"] = is_cycle_over(cycle)
+        context["cycle"] = cycle
 
+        return render(request, "baskets/additional_products_list.html", context=context)
+
+    products_list = products_lists.last()
     initial_values = []
 
     for product in products_list.products.filter(is_available=True):
@@ -213,7 +226,7 @@ def additional_products_list(request, cell_slug: str):
         })
 
     if request.method == "POST":
-        if is_cycle_over:
+        if is_cycle_over(cycle):
             return HttpResponse("Oops, os pedidos estão encerrados para esse ciclo.")
 
         basket_formset = BasketFormSet(request.POST, initial=initial_values)

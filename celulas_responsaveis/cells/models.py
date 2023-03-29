@@ -42,7 +42,7 @@ class Cell(models.Model):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.slug})
 
     def get_apply_url(self):
-        return reverse("cells:consumer_apply", kwargs={"cell_slug": self.slug})
+        return reverse("cells:cell_apply", kwargs={"cell_slug": self.slug})
 
     def save(self, **kwargs) -> None:
         unique_slugify(self, self.name)
