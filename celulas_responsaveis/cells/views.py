@@ -163,7 +163,13 @@ def new_membership(request, cell_slug: str, role: str = "membro"):
     cell.members.add(request.user, through_defaults=membership_content)
     cell.save()
 
-    return redirect("cells:cell_detail", cell_slug=cell_slug)
+    if role.name == "membro":
+        if cell.cell_type is CellType.PRODUCER.value:
+            return redirect("producer:home_producer")
+        elif cell.cell_type is CellType.CONSUMER.value:
+            return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+    else:
+        return redirect("cells:cell_detail", cell_slug=cell_slug)
 
 def cell_managment(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
