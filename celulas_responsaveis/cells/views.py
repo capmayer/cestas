@@ -21,25 +21,58 @@ def cell_detail(request, cell_slug: str):
     cell = get_object_or_404(Cell, slug=cell_slug)
     location = CellLocation.objects.get(cell=cell)
 
-    is_member = False
-    is_organizer = False
-
     context = {
-        "is_member": is_member,
-        "is_organizer": is_organizer,
+        "is_cell_member": False,
+        "is_organizer": False,
+        "can_connect": False,
+        "cell_already_connected": False,
         "cell": cell,
         "location": location,
     }
 
     if request.user.is_authenticated:
         # If user is a member we don't need to show application button.
-        context["is_member"] = cell.members.filter(id=request.user.id).exists()
+        person_membership = Membership.objects.filter(person=request.user)
+
+        cell_member_membership = person_membership.filter(cell=cell)
+        context["is_cell_member"] = cell_member_membership.exists()
 
         organizer = Role.objects.get(name="coordenacao")
-        context["is_organizer"] = cell.members.through.objects.filter(cell=cell, person=request.user, role=organizer).exists()
+        person_organizer_cells = person_membership.filter(role=organizer)
+        person_cell = person_organizer_cells.last()
+
+        if person_cell.cell.producer_cell is not None:
+            context["cell_already_connected"] = True
+
+        if cell.is_producer_cell and person_organizer_cells.exists():
+            context["can_connect"] = True
+
+        is_organizer = cell_member_membership.filter(role=organizer).exists()
+        context["is_organizer"] = is_organizer
 
 
     return render(request, "cells/cell_detail.html", context)
+
+def get_person_cell_by_role(person, role):
+    person_role = Role.objects.get(name=role)
+    membership = Membership.objects.filter(person=person, role=person_role).last()
+
+    if membership:
+        return membership.cell
+    else:
+        return None
+
+
+@login_required
+def connect_cells(request, cell_slug: str):
+    producer_cell = get_object_or_404(Cell, slug=cell_slug)
+
+    consumer_cell = get_person_cell_by_role(request.user, "coordenacao")
+
+    consumer_cell.producer_cell = producer_cell
+    consumer_cell.save()
+
+    return redirect("cells:cell_detail", cell_slug=cell_slug)
 
 
 @login_required
@@ -185,6 +218,7 @@ def cell_managment(request, cell_slug: str):
 
 
 def approve_application(request, cell_slug: str, application_uuid: str):
+    """Not being used."""
     application = get_object_or_404(Application, uuid=application_uuid)
     cell = get_object_or_404(Cell, slug=cell_slug)
     application.is_pending = False

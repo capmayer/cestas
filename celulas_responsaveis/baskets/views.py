@@ -36,16 +36,7 @@ def home_producer(request):
     if not membership:
         return redirect("cells:list_cells")
 
-    cells = []
-
-    for member in membership.all():
-        for cell in member.cell.consumer_cells.all():
-
-            cell_to_actions = {
-                "name": cell.name,
-                "report_url": reverse("producer:cell_cycles", kwargs={"cell_slug": cell.slug})
-            }
-            cells.append(cell_to_actions)
+    cells = membership.last().cell.consumer_cells.all()
 
     context = {
         "cells": cells,

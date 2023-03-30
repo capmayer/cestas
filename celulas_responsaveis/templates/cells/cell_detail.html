@@ -9,26 +9,44 @@
         <div class="d-flex flex-column">
           <h5>Endereço: {{ location }}</h5>
           <p>{{ cell.description }}</p>
-          {% if is_member %}
+          {% if is_cell_member %}
+            {% if cell.is_producer_cell %}
+              {% if cell_already_connected %}
+                <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary disabled btn-block mb-2">CONECTADO</a>
+              {% elif can_connect %}
+                <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary btn-block mb-2">CONECTAR COM GRUPO</a>
+              {% endif %}
+
+            {% else %}
+              <a href="{{ cell.get_additional_products_list_url }}" class="btn btn-success btn-block mb-2">PEDIR ADICIONAIS</a>
+            {% endif %}
+
             {% if is_organizer %}
-              <a href="{{ cell.get_managment_url }}" class="btn btn-outline-secondary btn-block mb-2">COORDENAR</a>
+              <a href="{{ cell.get_managment_url }}" class="btn btn-secondary btn-block mb-2">COORDENAR</a>
             {% endif%}
 
-            <a href="{{ cell.get_additional_products_list_url }}" class="btn btn-success btn-block">PEDIR ADICIONAIS</a>
+
 
           {% else %}
-              <a href="{{ cell.get_apply_url }}"  class="btn btn-success btn-block">ENTRAR</a>
+            {% if cell_already_connected %}
+              <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary disabled btn-block mb-2">CONECTADO</a>
+            {% elif can_connect %}
+              <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary btn-block mb-2">CONECTAR COM GRUPO</a>
+            {% endif %}
+
+            <a href="{{ cell.get_apply_url }}"  class="btn btn-success btn-block">ENTRAR</a>
+
           {% endif %}
         </div>
       </div>
-      <div class="row justify-content-md-center mt-4">
-        <div class="col-10">
-          {% if cell.localtion %}
-          <h5>Localização:</h5>
-          {{ cell.location.address }}
-          {% endif %}
-        </div>
-      </div>
+<!--      <div class="row justify-content-md-center mt-4">-->
+<!--        <div class="col-10">-->
+<!--          {% if cell.localtion %}-->
+<!--          <h5>Localização:</h5>-->
+<!--          {{ cell.location.address }}-->
+<!--          {% endif %}-->
+<!--        </div>-->
+<!--      </div>-->
     </div>
   </div>
 {% endblock content %}

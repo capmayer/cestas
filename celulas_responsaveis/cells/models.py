@@ -44,6 +44,16 @@ class Cell(models.Model):
     def get_apply_url(self):
         return reverse("cells:cell_apply", kwargs={"cell_slug": self.slug})
 
+    def get_connect_cells_url(self):
+        return reverse("cells:connect_cells", kwargs={"cell_slug": self.slug})
+
+    def get_cycles_url(self):
+        return reverse("producer:cell_cycles", kwargs={"cell_slug": self.slug})
+
+    @property
+    def is_producer_cell(self) -> bool:
+        return self.cell_type is CellType.PRODUCER.value
+
     def save(self, **kwargs) -> None:
         unique_slugify(self, self.name)
         super(Cell, self).save(**kwargs)
