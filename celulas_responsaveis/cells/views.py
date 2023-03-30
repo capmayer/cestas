@@ -38,7 +38,7 @@ def cell_detail(request, cell_slug: str):
         context["is_cell_member"] = cell_member_membership.exists()
 
         organizer = Role.objects.get(name="coordenacao")
-        person_organizer_cells = person_membership.filter(role=organizer)
+        person_organizer_cells = person_membership.filter(role=organizer, cell__cell_type=CellType.CONSUMER.value)
         person_cell = person_organizer_cells.last()
 
         if person_cell.cell.producer_cell is not None:
