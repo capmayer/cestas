@@ -39,9 +39,10 @@ def cell_detail(request, cell_slug: str):
 
         organizer = Role.objects.get(name="coordenacao")
         person_organizer_cells = person_membership.filter(role=organizer, cell__cell_type=CellType.CONSUMER.value)
+
         person_cell = person_organizer_cells.last()
 
-        if person_cell.cell.producer_cell is not None:
+        if person_cell and person_cell.cell.producer_cell is not None:
             context["cell_already_connected"] = True
 
         if cell.is_producer_cell and person_organizer_cells.exists():
