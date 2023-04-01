@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
-from celulas_responsaveis.baskets.forms import AdditionalProductsListFormSet, BasketFormSet, CycleForm
+from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, CycleForm
 from celulas_responsaveis.baskets.models import AdditionalBasket, AdditionalProductsList, Cycle, SoldProduct, Unit
 from celulas_responsaveis.cells.models import Cell, Role, Membership, PaymentInfo, CellType
 
@@ -31,15 +31,24 @@ def is_cycle_over(cycle: Cycle) -> bool:
 
 @login_required
 def home_producer(request):
-    membership = Membership.objects.filter(person=request.user, cell__cell_type=CellType.PRODUCER.value)
+    """
+        Paǵina principal do/a produtora.
 
-    if not membership:
+    Página que apresenta as células atendendidas pelo grupo de produção para o/a produtora.
+    """
+    memberships = Membership.objects.filter(person=request.user, cell__cell_type=CellType.PRODUCER.value)
+
+    if not memberships:
         return redirect("cells:list_cells")
 
-    cells = membership.last().cell.consumer_cells.all()
+    cells = dict()
+
+    for membership in memberships:
+        consumer_cells = membership.cell.consumer_cells.all()
+        cells[membership.cell] = consumer_cells
 
     context = {
-        "cells": cells,
+        "cells": cells.items(),
     }
 
     return render(request, "baskets/home_producer.html", context=context)
@@ -60,7 +69,7 @@ def additional_products_detail(request, cell_slug: str, cycle_number: int):
             products_list.cycle = cycle
             products_list.save()
 
-        additional_products_list_form = AdditionalProductsListFormSet(request.POST, instance=products_list)
+        additional_products_list_form = ProductsListFormSet(request.POST, instance=products_list)
 
         if additional_products_list_form.is_valid():
             additional_products_list_form.save()
@@ -70,7 +79,7 @@ def additional_products_detail(request, cell_slug: str, cycle_number: int):
         else:
             return render(request, "baskets/additional_products_detail.html", context=context)
 
-    additional_products_list_form = AdditionalProductsListFormSet(instance=products_list)
+    additional_products_list_form = ProductsListFormSet(instance=products_list)
 
     context["additional_products_list_form"] = additional_products_list_form
 

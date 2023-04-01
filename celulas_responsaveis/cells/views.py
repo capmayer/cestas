@@ -18,6 +18,12 @@ def generate_cell_map(latitude: float, longitude: float) -> str:
 
 
 def cell_detail(request, cell_slug: str):
+    """
+        Página da célula.
+
+    Centraliza as ações que podem ser realizadas em relação à célula. Cada tipo de célula possue ações diferentes.
+    """
+
     cell = get_object_or_404(Cell, slug=cell_slug)
     location = CellLocation.objects.get(cell=cell)
 
@@ -38,28 +44,31 @@ def cell_detail(request, cell_slug: str):
         context["is_cell_member"] = cell_member_membership.exists()
 
         organizer = Role.objects.get(name="coordenacao")
-        person_organizer_cells = person_membership.filter(role=organizer, cell__cell_type=CellType.CONSUMER.value)
-
-        person_cell = person_organizer_cells.last()
-
-        if person_cell and person_cell.cell.producer_cell is not None:
-            context["cell_already_connected"] = True
-
-        if cell.is_producer_cell and person_organizer_cells.exists():
-            context["can_connect"] = True
 
         is_organizer = cell_member_membership.filter(role=organizer).exists()
         context["is_organizer"] = is_organizer
 
+        if cell.cell_type is CellType.PRODUCER.value:
+            person_organize_cells = person_membership.filter(role=organizer, cell__cell_type=CellType.CONSUMER.value)
+
+            person_cell = person_organize_cells.last()
+
+            if person_cell and person_cell.cell.producer_cell == cell:
+                context["cell_already_connected"] = True
+
+            if cell.is_producer_cell and person_organize_cells.exists():
+                context["can_connect"] = True
+
+
 
     return render(request, "cells/cell_detail.html", context)
 
-def get_person_cell_by_role(person, role):
+def get_person_cell_by_role(request, role, cell_type):
     person_role = Role.objects.get(name=role)
-    membership = Membership.objects.filter(person=person, role=person_role).last()
+    membership = Membership.objects.filter(person=request.user, role=person_role, cell__cell_type=cell_type)
 
     if membership:
-        return membership.cell
+        return membership.last().cell
     else:
         return None
 
@@ -68,7 +77,7 @@ def get_person_cell_by_role(person, role):
 def connect_cells(request, cell_slug: str):
     producer_cell = get_object_or_404(Cell, slug=cell_slug)
 
-    consumer_cell = get_person_cell_by_role(request.user, "coordenacao")
+    consumer_cell = get_person_cell_by_role(request, "coordenacao", CellType.CONSUMER.value)
 
     consumer_cell.producer_cell = producer_cell
     consumer_cell.save()

@@ -37,7 +37,15 @@ class BaseBasketFormSet(BaseFormSet):
 
 BasketFormSet = formset_factory(SoldProductForm, extra=0, formset=BaseBasketFormSet)
 
-AdditionalProductsListFormSet = inlineformset_factory(AdditionalProductsList, ProductWithPrice, fields=("name", "price", "unit", "is_available",), extra=1)
+class SoldProductForm(forms.Form):
+    name = forms.CharField(label="Produto", max_length=60, disabled=True)
+    price = forms.FloatField(label="Preço", disabled=True)
+
+    unit = forms.CharField(label="Unidade", disabled=True)
+    requested_quantity = forms.FloatField(label="Quantidade", min_value=0, widget=NumberInput(attrs={"step": "0.1", "class": "form-control requested_quantity"}))
+
+
+ProductsListFormSet = inlineformset_factory(AdditionalProductsList, ProductWithPrice, fields=("name", "price", "unit", "is_available",), labels=("Nome", "Preço", "Unidade", "Disponível", "Apagar"), extra=1)
 
 class CycleForm(forms.Form):
     number = forms.CharField(label="Número")

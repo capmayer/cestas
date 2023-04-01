@@ -25,13 +25,13 @@
               <a href="{{ cell.get_managment_url }}" class="btn btn-secondary btn-block mb-2">COORDENAR</a>
             {% endif%}
 
-
-
           {% else %}
-            {% if cell_already_connected %}
-              <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary disabled btn-block mb-2">CONECTADO</a>
-            {% elif can_connect %}
-              <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary btn-block mb-2">CONECTAR COM GRUPO</a>
+            {% if cell.is_producer_cell %}
+              {% if cell_already_connected %}
+                <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary disabled btn-block mb-2">CONECTADO</a>
+              {% elif can_connect %}
+                <a href="{{ cell.get_connect_cells_url }}" class="btn btn-secondary btn-block mb-2">CONECTAR COM GRUPO</a>
+              {% endif %}
             {% endif %}
 
             <a href="{{ cell.get_apply_url }}"  class="btn btn-success btn-block">ENTRAR</a>
