@@ -5,7 +5,7 @@
     <div class="col-md-10">
       <h3 class="mb-4"> Células: </h3>
         {% for producer_cell, consumer_cells in cells %}
-          {% if cells|length > 2 and consumer_cells %}
+          {% if cells|length > 1 and consumer_cells %}
             <h5>{{ producer_cell.name}}</h5>
           {% endif %}
           {% for cell in consumer_cells %}
