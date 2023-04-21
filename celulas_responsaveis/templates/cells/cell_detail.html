@@ -18,11 +18,11 @@
               {% endif %}
 
             {% else %}
-              <a href="{{ cell.get_additional_products_list_url }}" class="btn btn-success btn-block mb-2">PEDIR ADICIONAIS</a>
+              <a href="{% url 'baskets:request_products' %}" class="btn btn-success btn-block mb-2">PEDIR ADICIONAIS</a>
             {% endif %}
 
             {% if is_organizer %}
-              <a href="{{ cell.get_managment_url }}" class="btn btn-secondary btn-block mb-2">COORDENAR</a>
+              <a href="{{ cell.get_management_url }}" class="btn btn-secondary btn-block mb-2">COORDENAR</a>
             {% endif%}
 
           {% else %}

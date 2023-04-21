@@ -1,0 +1,30 @@
+{% extends "base_producer.html" %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col-md-10">
+      <div class="row mb-4">
+        <div class="col-6">
+          <h3> Ciclos </h3>
+        </div>
+        <div class="col-6">
+          <a href="{% url 'producer:new_month_cycle' %}" class="btn btn-success float-end">Novo ciclo</a>
+        </div>
+      </div>
+      {% for cycle in month_cycles %}
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-10">Ciclo {{ cycle.get_name_display }}</div>
+              <div class="col-2">
+                <div class="row float-end">
+                  <a class="stretched-link" href="{% url 'producer:month_cycle_detail' month_cycle_name=cycle.name %}"><i class="bi-gear"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock content %}

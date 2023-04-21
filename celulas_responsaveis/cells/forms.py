@@ -1,16 +1,10 @@
-from allauth.account.forms import SignupForm
 from django import forms
 
-from celulas_responsaveis.cells.models import ApplicationSurvey, CellType
+from celulas_responsaveis.cells.models import ApplicationSurvey
 
 
-class CellRegistrationForm(forms.Form):
+class ConsumerCellRegistrationForm(forms.Form):
     name = forms.CharField(label="Nome da Célula", max_length=100)
-    cell_types = (
-        (CellType.CONSUMER.value, "Consumidores"),
-        (CellType.PRODUCER.value, "Produtores"),
-    )
-    cell_type = forms.ChoiceField(label="Tipo de Célula", choices=cell_types)
 
     description = forms.CharField(label="Informações adicionais", widget=forms.Textarea)
     address = forms.CharField(label="Endereço", max_length=100)

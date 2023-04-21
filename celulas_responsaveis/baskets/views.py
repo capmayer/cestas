@@ -1,18 +1,21 @@
 import datetime
+from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
 
-from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, CycleForm
-from celulas_responsaveis.baskets.models import AdditionalBasket, AdditionalProductsList, Cycle, SoldProduct, Unit
-from celulas_responsaveis.cells.models import Cell, Role, Membership, PaymentInfo, CellType
+from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, WeekCycleForm, MonthCycleForm
+from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle
+from celulas_responsaveis.cells.models import ConsumerCell, PaymentInfo, ProducerMembership, ConsumerMembership, \
+    ProducerCell
+from celulas_responsaveis.users.models import User
 
 
 @login_required
-def home(request):
-    baskets = AdditionalBasket.objects.filter(person=request.user)
+def consumer_home(request):
+    baskets = Basket.objects.filter(person=request.user)
 
     context = {
         "baskets": baskets,
@@ -20,201 +23,236 @@ def home(request):
     return render(request, "baskets/home.html", context=context)
 
 
-def get_active_cycles(cell: Cell):
+def get_active_cycles(cell: ConsumerCell):
     today = datetime.date.today()
     last_week = today + datetime.timedelta(-7)
-    return Cycle.objects.filter(cell=cell, begin__range=[last_week, today])
+    return MonthCycle.objects.filter(cell=cell, begin__range=[last_week, today])
 
-def is_cycle_over(cycle: Cycle) -> bool:
+def is_cycle_over(cycle: WeekCycle) -> bool:
     today = datetime.date.today()
-    return today > cycle.requests_end
+    return today > cycle.request_day
+
+def get_producer_cell(user: User):
+    memberships = ProducerMembership.objects.filter(person=user)
+
+    if not memberships.exists():
+        raise PermissionDenied("Você não possui permissão para esta ação")
+
+    return memberships.first().cell
+
+def get_consumer_cell(user: User):
+    memberships = ConsumerMembership.objects.filter(person=user)
+
+    if not memberships.exists():
+        raise PermissionDenied("Você não possui permissão para esta ação")
+
+    return memberships.first().cell
 
 @login_required
-def home_producer(request):
+def month_cycle_detail(request, month_cycle_name: str):
+    producer_cell = get_producer_cell(request.user)
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, name=month_cycle_name).first()
+
+    context = {
+        "month_cycle": month_cycle
+    }
+
+    return render(request, "baskets/month_cycle_detail.html", context=context)
+
+@login_required
+def producer_home(request):
     """
         Paǵina principal do/a produtora.
 
     Página que apresenta as células atendendidas pelo grupo de produção para o/a produtora.
     """
-    memberships = Membership.objects.filter(person=request.user, cell__cell_type=CellType.PRODUCER.value)
+    producer_cell = get_producer_cell(request.user)
 
-    if not memberships:
-        return redirect("cells:list_cells")
-
-    cells = dict()
-
-    for membership in memberships:
-        consumer_cells = membership.cell.consumer_cells.all()
-        cells[membership.cell] = consumer_cells
+    month_cycles = MonthCycle.objects.filter(producer_cell=producer_cell)
 
     context = {
-        "cells": cells.items(),
+        "month_cycles": month_cycles,
     }
 
-    return render(request, "baskets/home_producer.html", context=context)
+    return render(request, "baskets/producer_home.html", context=context)
 
 @login_required
-def additional_products_detail(request, cell_slug: str, cycle_number: int):
-    """Used by productor"""
-    cell = Cell.objects.get(slug=cell_slug)
-    cycle = Cycle.objects.get(consumer_cell=cell, number=cycle_number)
-    products_lists = AdditionalProductsList.objects.filter(cycle=cycle)
-    products_list = products_lists[0] if products_lists else None
+def products_list_detail(request):
+    """Used by producer"""
+    producer_cell = get_producer_cell(request.user)
+    products_list = ProductsList.objects.filter(producer_cell=producer_cell).first()
+
     context = dict()
     context["products_list"] = products_list
 
     if request.method == "POST":
         if not products_list:
-            products_list = AdditionalProductsList()
-            products_list.cycle = cycle
+            products_list = ProductsList()
+            products_list.producer_cell = producer_cell
             products_list.save()
 
-        additional_products_list_form = ProductsListFormSet(request.POST, instance=products_list)
+        products_list_form = ProductsListFormSet(request.POST, instance=products_list)
 
-        if additional_products_list_form.is_valid():
-            additional_products_list_form.save()
-            context["additional_products_list_form"] = additional_products_list_form
-            context["message"] = "Lista salva."
-            return render(request, "baskets/additional_products_detail.html", context=context)
+        if products_list_form.is_valid():
+            products_list_form.save()
+            context["products_list_form"] = products_list_form
+            context["messages"] = ["Lista salva."]
+            return render(request, "baskets/products_list_detail.html", context=context)
         else:
-            return render(request, "baskets/additional_products_detail.html", context=context)
+            context["products_list_form"] = products_list_form
+            return render(request, "baskets/products_list_detail.html", context=context)
 
     additional_products_list_form = ProductsListFormSet(instance=products_list)
 
-    context["additional_products_list_form"] = additional_products_list_form
+    context["products_list_form"] = additional_products_list_form
 
-    return render(request, "baskets/additional_products_detail.html", context=context)
+    return render(request, "baskets/products_list_detail.html", context=context)
 
 @login_required
-def new_cycle(request, cell_slug: str):
-    """Used by producer to create new cycles."""
-    cell = get_object_or_404(Cell, slug=cell_slug)
-    cell_cycles = Cycle.objects.filter(consumer_cell=cell)
-    last_cycle = cell_cycles.latest("number") if cell_cycles else None
-    last_cycle_number = last_cycle.number if last_cycle else 0
-
-    context = {
-        "cell": cell,
-    }
+def new_month_cycle(request):
+    producer_cell = get_producer_cell(request.user)
+    context = {}
 
     if request.method == "POST":
-        cycle_form = CycleForm(request.POST)
+        month_cycle_form = MonthCycleForm(request.POST)
 
-        if cycle_form.is_valid():
-            cycle = Cycle()
-            cycle.number = cycle_form.cleaned_data["number"]
-            cycle.begin = cycle_form.cleaned_data["begin"]
-            cycle.requests_end = cycle_form.cleaned_data["requests_end"]
-            cycle.end = cycle_form.cleaned_data["end"]
-            cycle.producer_cell = cell.producer_cell
-            cycle.consumer_cell = cell
-            cycle.save()
+        if month_cycle_form.is_valid():
+            month_cycle = MonthCycle()
+            month_cycle.producer_cell = producer_cell
+            month_cycle.name = month_cycle_form.cleaned_data["name"]
+            month_cycle.begin = month_cycle_form.cleaned_data["begin"]
+            month_cycle.end = month_cycle_form.cleaned_data["end"]
 
-            if last_cycle:
-                # Copy product list from previous cycle.
-                additional_products_list = AdditionalProductsList.objects.get(cycle=last_cycle)
-                products = [product for product in additional_products_list.products.all()]
-                additional_products_list.pk = None
-                additional_products_list.cycle = cycle
-                additional_products_list.save()
+            month_cycle.save()
 
-                for product in products:
-                    product.additional_products_list = additional_products_list
-                    product.pk = None
-                    product.save()
+            return  redirect("producer:producer_home")
 
-                return redirect("producer:cell_cycles", cell_slug=cell_slug)
-
-            else:
-                return redirect("producer:additional_products_detail", cell_slug=cell_slug, cycle_number=cycle.number)
     else:
-        cycle_form = CycleForm(initial={"number": last_cycle_number + 1})
-        context["cycle_form"] = cycle_form
+        month_cycle_form = MonthCycleForm()
 
-    return render(request, "baskets/new_cycle.html", context)
+    context["month_cycle_form"] = month_cycle_form
+    return render(request, "baskets/new_month_cycle.html", context)
 
 @login_required
-def cycle_report_detail(request, cell_slug: str, cycle_number: int):
-    """Used by productor."""
-    cell = Cell.objects.get(slug=cell_slug)
-    cycle = Cycle.objects.get(consumer_cell=cell, number=cycle_number)
+def new_week_cycle(request):
+    """
+        Used by producer to create a new week cycle.
 
-    total_cycle_value = 0
+    Uma vez por semana é necessário criar um novo ciclo semanal para gerenciar os pedidos daquela semana.
 
-    for basket in cycle.baskets.all():
-        total_cycle_value += basket.total_price
+    Após criar o ciclo, é feito o redirecionamento para a página de produtos para atualização das quantidades
+    disponíveis.
 
+    Esse processo pode ser automatizado no futuro, mas carece debate.
+    """
+    producer_cell = get_producer_cell(request.user)
+    last_month_cycle = producer_cell.month_cycles.last()
+
+    if not last_month_cycle:
+        raise Http404("Month cycle not found!")
+
+    last_week_cycle = last_month_cycle.week_cycles.last()
+
+    context = {}
+
+    if request.method == "POST":
+        cycle_form = WeekCycleForm(request.POST)
+
+        if cycle_form.is_valid():
+            cycle = WeekCycle()
+            cycle.number = cycle_form.cleaned_data["number"]
+            cycle.delivery_day = cycle_form.cleaned_data["delivery_day"]
+            cycle.request_day = cycle_form.cleaned_data["request_day"]
+            cycle.month_cycle = last_month_cycle
+            cycle.save()
+
+            return redirect("producer:products_list_detail")
+    else:
+        cycle_number = last_week_cycle.number + 1 if last_week_cycle else 1
+        cycle_form = WeekCycleForm(initial={"number": cycle_number})
+        context["cycle_form"] = cycle_form
+
+    return render(request, "baskets/new_week_cycle.html", context)
+
+# @login_required
+# def consumer_cell_week_cycle_detail(request, cell_slug: str, cycle_number: int):
+#     """Used by productor."""
+#     cell = ConsumerCell.objects.get(slug=cell_slug)
+#     cycle = MonthCycle.objects.get(consumer_cell=cell, number=cycle_number)
+#
+#     total_cycle_value = 0
+#
+#     for basket in cycle.baskets.all():
+#         total_cycle_value += basket.total_price
+#
+#     context = {
+#         "cycle": cycle,
+#         "total_cycle_value": total_cycle_value,
+#     }
+#
+#     return render(request, "baskets/report_detail.html", context=context)
+
+
+@login_required
+def week_cycle_report(request, month_cycle_name: str, week_cycle_number: int):
+    producer_cell = get_producer_cell(request.user)
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, name=month_cycle_name).first()
+    week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
+
+    cells = defaultdict(list)  # Dict[cell_name, List[Baskets]]
+    for basket in week_cycle.baskets.all():
+        cells[basket.consumer_cell].append(basket)
+
+    # Necessary to render the dict in template, otherwise a new empty list is created when template
+    # tries to access "items".
+    cells.default_factory = None
     context = {
-        "cycle": cycle,
-        "total_cycle_value": total_cycle_value,
+        "cells": cells,
+        "week_cycle": week_cycle,
     }
 
     return render(request, "baskets/report_detail.html", context=context)
 
-
 @login_required
-def cell_cycles(request, cell_slug: str):
-    """Used by productor."""
-    cell = Cell.objects.get(slug=cell_slug)
-
-    membership = Membership.objects.filter(person=request.user, cell__cell_type=CellType.PRODUCER.value)
-
-    if not membership:
-        return redirect("baskets:home_consumer")
-
-    cycles = Cycle.objects.filter(consumer_cell=cell).order_by("-number")
-
-    context = {
-        "cycles": cycles,
-        "cell": cell,
-    }
-
-    return render(request, "baskets/cell_cycles.html", context=context)
-
-
-@login_required
-def additional_basket_detail(request, basket_uuid: str):
-    basket = AdditionalBasket.objects.get(uuid=basket_uuid)
+def basket_detail(request, basket_uuid: str):
+    basket = Basket.objects.get(uuid=basket_uuid)
     context = {"basket":basket}
     return render(request, "baskets/basket_detail.html", context=context)
 
 
 @login_required
-def additional_products_list(request, cell_slug: str):
+def request_products(request):
     """Used by consumer."""
-    cell = Cell.objects.get(slug=cell_slug)
+
+    consumer_cell = get_consumer_cell(request.user)
 
     context = {
         "closed_cycle": False,
-        "cell": cell,
+        "cell": consumer_cell,
     }
-    cycles = Cycle.objects.filter(consumer_cell=cell)
+    month_cycle = MonthCycle.objects.filter(producer_cell=consumer_cell.producer_cell).first()
 
-    if not cycles:
-        context["closed_cycle"] = True
+    if not month_cycle:
+        return HttpResponse("Ops, não existem produtos cadastrados.")
 
-        return render(request, "baskets/additional_products_list.html", context=context)
+    week_cycle = month_cycle.week_cycles.latest("number")
 
-    cycle = cycles.latest("number")
+    if not week_cycle:
+        return HttpResponse("Ops, não existem produtos cadastrados.")
 
-    has_basket = AdditionalBasket.objects.filter(cycle=cycle, person=request.user).exists()
+    has_basket = Basket.objects.filter(week_cycle=week_cycle, person=request.user).exists()
     if has_basket:
         return HttpResponse("Pedido de adicionais já realizado para este ciclo.")
 
-    if is_cycle_over(cycle):
-        context["is_cycle_over"] = is_cycle_over(cycle)
-        context["cycle"] = cycle
-        return render(request, "baskets/additional_products_list.html", context=context)
+    products_lists = ProductsList.objects.filter(producer_cell=consumer_cell.producer_cell)
 
-    products_lists = AdditionalProductsList.objects.filter(cycle=cycle)
+    context["cycle"] = week_cycle
+    context["is_cycle_over"] = is_cycle_over(week_cycle)
 
-    if not products_lists:
-        context["is_cycle_over"] = is_cycle_over(cycle)
-        context["cycle"] = cycle
+    if not products_lists or is_cycle_over(week_cycle):
+        return render(request, "baskets/request_products.html", context=context)
 
-        return render(request, "baskets/additional_products_list.html", context=context)
-
-    products_list = products_lists.last()
+    products_list = products_lists.first()
     initial_values = []
 
     for product in products_list.products.filter(is_available=True):
@@ -226,16 +264,16 @@ def additional_products_list(request, cell_slug: str):
         })
 
     if request.method == "POST":
-        if is_cycle_over(cycle):
+        if is_cycle_over(week_cycle):
             return HttpResponse("Oops, os pedidos estão encerrados para esse ciclo.")
 
         basket_formset = BasketFormSet(request.POST, initial=initial_values)
 
         if basket_formset.is_valid():
-
-            additional_basket = AdditionalBasket()
+            additional_basket = Basket()
             additional_basket.person = request.user
-            additional_basket.cycle = cycle
+            additional_basket.week_cycle = week_cycle
+            additional_basket.consumer_cell = consumer_cell
             additional_basket.save()
 
             total_price = 0.0
@@ -260,30 +298,30 @@ def additional_products_list(request, cell_slug: str):
             additional_basket.total_price = total_price
             additional_basket.save()
 
-            return redirect("baskets:basket_requested", cell_slug=cell_slug, request_uuid=additional_basket.uuid)
+            return redirect("baskets:basket_requested", request_uuid=additional_basket.uuid)
         else:
             context["messages"] = basket_formset.non_form_errors()
-            render(request, "baskets/additional_products_list.html", context=context)
+            render(request, "baskets/request_products.html", context=context)
 
     basket_formset = BasketFormSet(initial=initial_values)
 
-    context["cycle"] = cycle
-    context["cell"] = cell
+    context["cycle"] = week_cycle
+    context["cell"] = consumer_cell
     context["basket_form"] = basket_formset
 
-    return render(request, "baskets/additional_products_list.html", context=context)
+    return render(request, "baskets/request_products.html", context=context)
 
 
 @login_required
-def basket_requested(request, cell_slug: str, request_uuid: str):
-    cell = get_object_or_404(Cell, slug=cell_slug)
-    payment_info = PaymentInfo.objects.filter(cell=cell.producer_cell)
-    additional_basket_requested = AdditionalBasket.objects.get(uuid=request_uuid)
+def basket_requested(request, request_uuid: str):
+    consumer_cell = get_consumer_cell(request.user)
+    payment_info = PaymentInfo.objects.filter(producer_cell=consumer_cell.producer_cell)
+    additional_basket_requested = Basket.objects.get(uuid=request_uuid)
     basket_url = additional_basket_requested.get_absolute_url()
 
     context = {
-        "payment_info": payment_info[0] if payment_info else None,
-        "cell": cell,
+        "payment_info": payment_info.first() if payment_info else None,
+        "cell": consumer_cell,
         "total_price": additional_basket_requested.total_price,
         "basket_url": basket_url,
     }

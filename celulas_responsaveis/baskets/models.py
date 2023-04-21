@@ -2,41 +2,65 @@ import uuid as uuid
 from django.db import models
 from django.urls import reverse
 
-from celulas_responsaveis.cells.models import Cell
+from celulas_responsaveis.cells.models import ConsumerCell, ProducerCell
 from celulas_responsaveis.users.models import User
 
 
-class Cycle(models.Model):
-    consumer_cell = models.ForeignKey(Cell, related_name="consumer_cycles", on_delete=models.CASCADE)
-    producer_cell = models.ForeignKey(Cell, related_name="producer_cycles", on_delete=models.CASCADE)
-    number = models.IntegerField()
+class MonthCycle(models.Model):
+    producer_cell = models.ForeignKey(ProducerCell, related_name="month_cycles", on_delete=models.CASCADE)
     begin = models.DateField()
     end = models.DateField()
-    requests_end = models.DateField()
+
+    MONTH_CHOICES = (
+        ("jan", "Janeiro"),
+        ("fev", "Fevereiro"),
+        ("mar", "Março"),
+        ("abr", "Abril"),
+        ("mai", "Maio"),
+        ("jun", "Junho"),
+        ("jul", "Julho"),
+        ("ago", "Agosto"),
+        ("set", "Setembro"),
+        ("out", "Outubro"),
+        ("nov", "Novembro"),
+        ("dez", "Dezembro"),
+    )
+
+    name = models.CharField(max_length=3, choices=MONTH_CHOICES)
 
     def get_report_url(self):
-        return reverse("producer:cycle_report_detail", kwargs={"cell_slug": self.consumer_cell.slug, "cycle_number": self.number})
+        return reverse("producer:consumer_cell_week_cycle_detail", kwargs={"cell_slug": self.producer_cell.slug, "cycle_number": self.number})
 
     def get_additional_products_url(self):
-        return reverse("producer:additional_products_detail", kwargs={"cell_slug": self.consumer_cell.slug, "cycle_number": self.number})
+        return reverse("producer:products_list_detail", kwargs={"cell_slug": self.producer_cell.slug, "cycle_number": self.number})
 
     def get_request_products_url(self):
-        return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.consumer_cell.slug})
+        return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.producer_cell.slug})
 
     def __str__(self) -> str:
-        return f"Ciclo #{self.number} da Célula {self.consumer_cell}"
+        return f"Ciclo de {self.name}"
 
 
-class AdditionalProductsList(models.Model):
-    cycle = models.ForeignKey(Cycle, related_name="additional_products_list", on_delete=models.CASCADE)
+class WeekCycle(models.Model):
+    month_cycle = models.ForeignKey(MonthCycle, related_name="week_cycles", on_delete=models.CASCADE)
+    delivery_day = models.DateField()
+    request_day = models.DateField()
+    number = models.IntegerField()
 
     def __str__(self) -> str:
-        return f"Lista de adicionais {self.cycle}"
+        return f"Semana {self.number} - {self.month_cycle}"
+
+class ProductsList(models.Model):
+    producer_cell = models.ForeignKey(ProducerCell, related_name="product_list", on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f"Lista de produtos {self.producer_cell}"
 
 
-class AdditionalBasket(models.Model):
+class Basket(models.Model):
     person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
-    cycle = models.ForeignKey(Cycle, related_name="baskets", on_delete=models.CASCADE)
+    week_cycle = models.ForeignKey(WeekCycle, related_name="baskets", on_delete=models.CASCADE)
+    consumer_cell = models.ForeignKey(ConsumerCell, related_name="+", on_delete=models.CASCADE)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_date = models.DateField(auto_now_add=True)
     last_change = models.DateField(auto_now=True)
@@ -62,6 +86,17 @@ class Product(models.Model):
 
 
 class Unit(models.Model):
+    """
+    Unit define as unidades disponíveis no sistema e como será o incremento delas.
+
+    name: Nome que aparece para o usuário.
+    increment: Valor de acrescimo/decrescimo ao clicar nas setas.
+    unit: Medida
+
+    Exemplos: Unit(Kilograma, 0.1, Kg) permite que o usuário selecione de 100 em 100 gramas do produto.
+              Unit(Unidade, 1, Und) permite que o usuário selecione de 1 em 1 unidade do produto.
+    """
+
     name = models.CharField(max_length=15)
     increment = models.FloatField(default=1.0)
     unit = models.CharField(max_length=15)
@@ -77,7 +112,7 @@ class SoldProduct(models.Model):
     price = models.FloatField()
     requested_quantity = models.FloatField()
 
-    basket = models.ForeignKey(AdditionalBasket, related_name="products", on_delete=models.CASCADE)
+    basket = models.ForeignKey(Basket, related_name="products", on_delete=models.CASCADE)
 
     @property
     def total_price(self) -> float:
@@ -92,9 +127,11 @@ class ProductWithPrice(models.Model):
     name = models.CharField(max_length=60)
     unit = models.ForeignKey(Unit, related_name="+", null=True, on_delete=models.SET_NULL)
     price = models.FloatField()
+
+    available_quantity = models.FloatField()
     is_available = models.BooleanField(default=True)
 
-    additional_products_list = models.ForeignKey(AdditionalProductsList, related_name="products", on_delete=models.CASCADE)
+    additional_products_list = models.ForeignKey(ProductsList, related_name="products", on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return f"{self.name}"

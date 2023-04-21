@@ -7,9 +7,9 @@
 
 <form action="{{ products_list.get_absolute_url }}" method="post" >
   {% csrf_token %}
-  {{ additional_products_list_form.management_form}}
+  {{ products_list_form.management_form}}
   <table class="table" id="product-formset">
-    {% for form in additional_products_list_form %}
+    {% for form in products_list_form %}
       {% if forloop.first %}
         <thead>
           <tr>
@@ -40,7 +40,7 @@
   </table>
   <table class="hidden">
     <tr id="empty-form">
-    {% for field in additional_products_list_form.empty_form %}
+    {% for field in products_list_form.empty_form %}
       <td>
           {# Include the hidden fields in the form #}
           {% if forloop.first %}

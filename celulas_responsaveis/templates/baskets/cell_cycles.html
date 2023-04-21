@@ -9,7 +9,7 @@
           <h3> Célula {{ cell }} </h3>
         </div>
         <div class="col-6">
-          <a href="{% url 'producer:new_cycle' cell_slug=cell.slug %}" class="btn btn-success float-end">Iniciar novo ciclo</a>
+          <a href="{% url 'producer:new_week_cycle' cell_slug=cell.slug %}" class="btn btn-success float-end">Iniciar novo ciclo</a>
         </div>
       </div>
       {% for cycle in cycles %}

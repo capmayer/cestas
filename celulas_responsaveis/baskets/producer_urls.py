@@ -4,10 +4,11 @@ from . import views
 
 app_name = 'producer'
 urlpatterns = [
-    path('', views.home_producer, name="home_producer"),
-    path('<str:cell_slug>/novo_ciclo/', views.new_cycle, name="new_cycle"),
-    path('<str:cell_slug>/ciclos/', views.cell_cycles, name="cell_cycles"),
-    path('<str:cell_slug>/ciclos/<int:cycle_number>/relatorio', views.cycle_report_detail, name="cycle_report_detail"),
-    path('<str:cell_slug>/adicionais/<int:cycle_number>/', views.additional_products_detail,
-         name="additional_products_detail"),
+    path('ciclos', views.producer_home, name="producer_home"),
+    path('ciclos/<str:month_cycle_name>/', views.month_cycle_detail, name="month_cycle_detail"),
+    path('ciclos/<str:month_cycle_name>/<int:week_cycle_number>', views.week_cycle_report, name="week_cycle_report"),
+    path('novo_ciclo_semanal/', views.new_week_cycle, name="new_week_cycle"),
+    path('novo_ciclo_mensal/', views.new_month_cycle, name="new_month_cycle"),
+    path('produtos/', views.products_list_detail, name="products_list_detail"),
+    path('', views.producer_home),
 ]

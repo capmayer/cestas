@@ -1,5 +1,4 @@
 import uuid as uuid
-from enum import Enum
 
 from django.db import models
 from django.urls import reverse
@@ -7,24 +6,14 @@ from django.urls import reverse
 from celulas_responsaveis.users.models import User
 from celulas_responsaveis.utils.slug_utils import unique_slugify
 
-class CellType(Enum):
-    PRODUCER = 'p'
-    CONSUMER = 'c'
 
-class Cell(models.Model):
+class ProducerCell(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     is_active = models.BooleanField(default=False)
     created = models.DateField(auto_now_add=True)
     slug = models.SlugField(max_length=120)
-    members = models.ManyToManyField(User, through="Membership", through_fields=("cell", "person"))
-
-    CELL_TYPE = (
-        (CellType.CONSUMER.value, 'Consumer'),
-        (CellType.PRODUCER.value, 'Producer'),
-    )
-    cell_type = models.CharField(max_length=1, choices=CELL_TYPE, default=CellType.CONSUMER.value)
-    producer_cell = models.ForeignKey("self", related_name="consumer_cells", null=True, blank=True, on_delete=models.SET_NULL)
+    members = models.ManyToManyField(User, through="ProducerMembership", through_fields=("cell", "person"))
 
     class Meta:
         ordering = ['-created']
@@ -32,8 +21,8 @@ class Cell(models.Model):
     def __str__(self):
         return self.name
 
-    def get_managment_url(self):
-        return reverse("cells:managment", kwargs={"cell_slug": self.slug})
+    def get_management_url(self):
+        return reverse("cells:management", kwargs={"cell_slug": self.slug})
 
     def get_detail_url(self):
         return reverse("cells:cell_detail", kwargs={"cell_slug": self.slug})
@@ -50,13 +39,42 @@ class Cell(models.Model):
     def get_cycles_url(self):
         return reverse("producer:cell_cycles", kwargs={"cell_slug": self.slug})
 
-    @property
-    def is_producer_cell(self) -> bool:
-        return self.cell_type is CellType.PRODUCER.value
+    def save(self, **kwargs) -> None:
+        unique_slugify(self, self.name)
+        super(ProducerCell, self).save(**kwargs)
+
+
+class ConsumerCell(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    is_active = models.BooleanField(default=False)
+    created = models.DateField(auto_now_add=True)
+    slug = models.SlugField(max_length=120)
+    members = models.ManyToManyField(User, through="ConsumerMembership", through_fields=("cell", "person"))
+
+    producer_cell = models.ForeignKey(ProducerCell, related_name="consumer_cells", null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.name
+
+    def get_management_url(self):
+        return reverse("cells:management", kwargs={"cell_slug": self.slug})
+
+    def get_detail_url(self):
+        return reverse("cells:consumer_cell_detail", kwargs={"cell_slug": self.slug})
+
+    def get_apply_url(self):
+        return reverse("cells:cell_apply", kwargs={"cell_slug": self.slug})
+
+    def get_connect_cells_url(self):
+        return reverse("cells:connect_cells", kwargs={"cell_slug": self.slug})
 
     def save(self, **kwargs) -> None:
         unique_slugify(self, self.name)
-        super(Cell, self).save(**kwargs)
+        super(ConsumerCell, self).save(**kwargs)
 
 
 class Role(models.Model):
@@ -67,11 +85,11 @@ class Role(models.Model):
 
 
 class PaymentInfo(models.Model):
-    cell = models.ForeignKey(Cell, related_name="payment_info", on_delete=models.CASCADE)
+    producer_cell = models.ForeignKey(ProducerCell, related_name="payment_info", on_delete=models.CASCADE)
     description = models.TextField()
 
     def __str__(self):
-        return f"{self.cell}"
+        return f"{self.producer_cell}"
 
 class ApplicationSurvey(models.Model):
     name = models.CharField(max_length=100)
@@ -92,7 +110,7 @@ class ApplicationQuestion(models.Model):
 
 
 class Application(models.Model):
-    cell = models.ForeignKey(Cell, on_delete=models.CASCADE)
+    cell = models.ForeignKey(ConsumerCell, on_delete=models.CASCADE)
     person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
@@ -117,8 +135,19 @@ class ApplicationAnswer(models.Model):
         return self.answer
 
 
-class Membership(models.Model):
-    cell = models.ForeignKey(Cell, related_name="+", on_delete=models.CASCADE)
+class ConsumerMembership(models.Model):
+    cell = models.ForeignKey(ConsumerCell, related_name="+", on_delete=models.CASCADE)
+    person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, null=True, on_delete=models.SET_NULL)
+    is_active = models.BooleanField(default=True)
+    join_date = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.person.name} ({self.role}) - {self.cell}"
+
+
+class ProducerMembership(models.Model):
+    cell = models.ForeignKey(ProducerCell, related_name="+", on_delete=models.CASCADE)
     person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
     role = models.ForeignKey(Role, null=True, on_delete=models.SET_NULL)
     is_active = models.BooleanField(default=True)
@@ -129,8 +158,7 @@ class Membership(models.Model):
 
 
 class CellLocation(models.Model):
-    cell = models.ForeignKey(Cell, related_name="location", on_delete=models.CASCADE)
-
+    cell = models.ForeignKey(ConsumerCell, related_name="location", on_delete=models.CASCADE)
     address = models.CharField(max_length=100)
     neighborhood = models.CharField(max_length=50)
     city = models.CharField(max_length=50)

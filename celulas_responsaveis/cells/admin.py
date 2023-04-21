@@ -5,7 +5,13 @@ from celulas_responsaveis.cells.models import (
     ApplicationQuestion,
     ApplicationAnswer,
     Application,
-    Cell, Membership, Role, PaymentInfo, CellLocation
+    ConsumerCell,
+    ProducerCell,
+    Role,
+    PaymentInfo,
+    CellLocation,
+    ConsumerMembership,
+    ProducerMembership
 )
 
 # Register your models here.
@@ -13,8 +19,10 @@ admin.site.register(ApplicationSurvey)
 admin.site.register(ApplicationQuestion)
 admin.site.register(Application)
 admin.site.register(ApplicationAnswer)
-admin.site.register(Cell)
+admin.site.register(ConsumerCell)
 admin.site.register(CellLocation)
-admin.site.register(Membership)
+admin.site.register(ProducerCell)
+admin.site.register(ConsumerMembership)
 admin.site.register(Role)
 admin.site.register(PaymentInfo)
+admin.site.register(ProducerMembership)

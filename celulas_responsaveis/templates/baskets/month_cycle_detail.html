@@ -1,0 +1,30 @@
+{% extends "base_producer.html" %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col-md-10">
+      <div class="row mb-4">
+        <div class="col-6">
+          <h3>Ciclos Semanais: {{ month_cycle.get_name_display }}</h3>
+        </div>
+        <div class="col-6">
+          <a href="{% url 'producer:new_week_cycle' %}" class="btn btn-success float-end">Nova semana</a>
+        </div>
+      </div>
+      {% for week_cycle in month_cycle.week_cycles.all|dictsortreversed:"number" %}
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-10">{{ week_cycle }}</div>
+              <div class="col-2">
+                <div class="row float-end">
+                  <a class="stretched-link" href="{% url 'producer:week_cycle_report' month_cycle_name=month_cycle.name week_cycle_number=week_cycle.number %}"><i class="bi-gear"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock content %}
