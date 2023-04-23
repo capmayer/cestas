@@ -110,29 +110,29 @@ def application_complete(request):
 #
 #     return redirect("cells:application_complete")
 
-# def cell_apply(request, cell_slug: str):
-#     """
-#         Define os caminhos para ingressar en uma célula.
-#
-#     Pessoa acessou o link para entrar na célula ou chegou nela atráves de buscar na internet/plataforma.
-#     Caso ela esteja deslogada da plataforma, inferimos que ainda não possui cadastro. Caso esteja logada, verificamos
-#     se já é membra, se não encaminha para entrar na célula.
-#     """
-#     cell = get_object_or_404(ConsumerCell, slug=cell_slug)
-#
-#     if request.user.is_authenticated:
-#         is_member = cell.members.filter(id=request.user.id)
-#
-#         if is_member.exists():
-#             return HttpResponse("Já é membro.")
-#
-#         else:
-#             return redirect("cells:new_membership", cell_slug=cell_slug, role="membro")
-#
-#     else:
-#         cell_membership_url = urlencode({"next": reverse("cells:new_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
-#         signup_url = reverse('account_signup')
-#         return redirect(f"{signup_url}?{cell_membership_url}")
+def apply_to_consumer_cell(request, cell_slug: str):
+    """
+        Define os caminhos para ingressar en uma célula.
+
+    Pessoa acessou o link para entrar na célula ou chegou nela atráves de buscar na internet/plataforma.
+    Caso ela esteja deslogada da plataforma, inferimos que ainda não possui cadastro. Caso esteja logada, verificamos
+    se já é membra, se não encaminha para entrar na célula.
+    """
+    cell = get_object_or_404(ConsumerCell, slug=cell_slug)
+
+    if request.user.is_authenticated:
+        is_member = cell.members.filter(id=request.user.id)
+
+        if is_member.exists():
+            return HttpResponse("Já é membro.")
+
+        else:
+            return redirect("cells:new_membership", cell_slug=cell_slug, role="membro")
+
+    else:
+        cell_membership_url = urlencode({"next": reverse("cells:new_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
+        signup_url = reverse('account_signup')
+        return redirect(f"{signup_url}?{cell_membership_url}")
 
 
 def new_membership(request, cell_slug: str, role: str = "membro"):
@@ -148,7 +148,7 @@ def new_membership(request, cell_slug: str, role: str = "membro"):
         is_member = cell.members.filter(id=request.user.id)
 
         if is_member.exists():
-            return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+            return redirect("baskets:request_products")
 
     role = Role.objects.get(name=role)
 
@@ -161,7 +161,7 @@ def new_membership(request, cell_slug: str, role: str = "membro"):
     cell.save()
 
     if role.name == "membro":
-        return redirect("baskets:additional_products_list", cell_slug=cell_slug)
+        return redirect("baskets:request_products")
     else:
         return redirect("cells:consumer_cell_detail", cell_slug=cell_slug)
 

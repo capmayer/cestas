@@ -41,7 +41,12 @@
                         <div class="d-flex flex-column align-self-center">
                           <div class="d-flex flex-row">
                             <div class="align-self-center" onchange="calculate_basket_total()">
-                              {{ form.requested_quantity }}
+                              <div class="requested_quantity_error">
+                                {{ form.requested_quantity.errors }}
+                              </div>
+                              <div class="requested_quantity">
+                                {{ form.requested_quantity }}
+                              </div>
                             </div>
                           </div>
                         </div>

@@ -30,9 +30,6 @@ class ProducerCell(models.Model):
     def get_additional_products_list_url(self):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.slug})
 
-    def get_apply_url(self):
-        return reverse("cells:cell_apply", kwargs={"cell_slug": self.slug})
-
     def get_connect_cells_url(self):
         return reverse("cells:connect_cells", kwargs={"cell_slug": self.slug})
 
@@ -67,7 +64,7 @@ class ConsumerCell(models.Model):
         return reverse("cells:consumer_cell_detail", kwargs={"cell_slug": self.slug})
 
     def get_apply_url(self):
-        return reverse("cells:cell_apply", kwargs={"cell_slug": self.slug})
+        return reverse("cells:apply_to_consumer_cell", kwargs={"cell_slug": self.slug})
 
     def get_connect_cells_url(self):
         return reverse("cells:connect_cells", kwargs={"cell_slug": self.slug})

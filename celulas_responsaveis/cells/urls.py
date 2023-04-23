@@ -9,5 +9,6 @@ urlpatterns = [
     path("concluido", views.application_complete, name="application_complete"),
     path("<str:cell_slug>", views.consumer_cell_detail, name="consumer_cell_detail"),
     path("<str:cell_slug>/coordenar", views.cell_management, name="management"),
+    path("<str:cell_slug>/entrar", views.apply_to_consumer_cell, name="apply_to_consumer_cell"),
     path("<str:cell_slug>/entrando/<str:role>", views.new_membership, name="new_membership"),
 ]

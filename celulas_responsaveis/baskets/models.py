@@ -135,3 +135,9 @@ class ProductWithPrice(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name}"
+
+    def reduce_available_quantity(self, value):
+        self.available_quantity = self.available_quantity - value
+
+        if self.available_quantity == 0.0:
+            self.is_available = False

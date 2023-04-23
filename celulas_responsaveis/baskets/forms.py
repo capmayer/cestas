@@ -22,6 +22,8 @@ class SoldProductForm(forms.Form):
         )
     )
 
+    product_pk = forms.IntegerField(widget = forms.HiddenInput(), required=False)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         unit = kwargs['initial']['unit']
@@ -33,9 +35,22 @@ class SoldProductForm(forms.Form):
         else:
             requested_quantity_widget.attrs["onkeypress"] = "return validateFloat(event)"
 
+    def clean_requested_quantity(self):
+        requested_quantity = self.cleaned_data["requested_quantity"]
+
+        if requested_quantity <= 0.0:
+            return requested_quantity
+
+        product_with_price = ProductWithPrice.objects.get(pk=self.initial["product_pk"])
+
+        if product_with_price.available_quantity >= requested_quantity:
+            return requested_quantity
+
+        raise ValidationError("Produto em falta.")
 
 class BaseBasketFormSet(BaseFormSet):
     def clean(self):
+
         if any(self.errors):
             return
 

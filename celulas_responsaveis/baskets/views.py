@@ -7,7 +7,8 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 
 from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, WeekCycleForm, MonthCycleForm
-from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle
+from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
+    ProductWithPrice
 from celulas_responsaveis.cells.models import ConsumerCell, PaymentInfo, ProducerMembership, ConsumerMembership, \
     ProducerCell
 from celulas_responsaveis.users.models import User
@@ -229,6 +230,7 @@ def request_products(request):
     context = {
         "closed_cycle": False,
         "cell": consumer_cell,
+        "messages": [],
     }
     month_cycle = MonthCycle.objects.filter(producer_cell=consumer_cell.producer_cell).first()
 
@@ -255,12 +257,13 @@ def request_products(request):
     products_list = products_lists.first()
     initial_values = []
 
-    for product in products_list.products.filter(is_available=True):
+    for product in products_list.products.order_by("name", "is_available"):
         initial_values.append({
             "name": product.name,
             "price": product.price,
             "unit": product.unit,
             "requested_quantity": 0,
+            "product_pk": product.pk,
         })
 
     if request.method == "POST":
@@ -280,28 +283,32 @@ def request_products(request):
 
             for form in basket_formset:
                 if form.is_valid():
-                    requested_quantity = form.cleaned_data["requested_quantity"]
+                    sold_product = SoldProduct()
+                    sold_product.name = form.cleaned_data["name"]
+                    sold_product.price = form.cleaned_data["price"]
+                    sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
+                    sold_product.basket = additional_basket
 
-                    if requested_quantity > 0.0:
-                        sold_product = SoldProduct()
-                        sold_product.name = form.cleaned_data["name"]
+                    unit = Unit.objects.get(name=form.cleaned_data["unit"])
+                    sold_product.unit = unit
 
-                        unit = Unit.objects.get(name=form.cleaned_data["unit"])
-                        sold_product.unit = unit
+                    current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
+                    current_product.reduce_available_quantity(sold_product.requested_quantity)
+                    current_product.save()
+                    sold_product.save()
 
-                        sold_product.price = form.cleaned_data["price"]
-                        sold_product.requested_quantity = requested_quantity
-                        sold_product.basket = additional_basket
-                        total_price += sold_product.price * sold_product.requested_quantity
-                        sold_product.save()
+                    total_price += sold_product.price * sold_product.requested_quantity
+                else:
+                    context["messages"].extend(form.non_field_errors())
 
             additional_basket.total_price = total_price
             additional_basket.save()
 
             return redirect("baskets:basket_requested", request_uuid=additional_basket.uuid)
         else:
-            context["messages"] = basket_formset.non_form_errors()
-            render(request, "baskets/request_products.html", context=context)
+            context["basket_form"] = basket_formset
+            context["messages"].extend(basket_formset.non_form_errors())
+            return render(request, "baskets/request_products.html", context=context)
 
     basket_formset = BasketFormSet(initial=initial_values)
 
