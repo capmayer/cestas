@@ -257,7 +257,7 @@ def request_products(request):
     products_list = products_lists.first()
     initial_values = []
 
-    for product in products_list.products.order_by("name", "is_available"):
+    for product in products_list.products.filter(is_available=True).order_by("name"):
         initial_values.append({
             "name": product.name,
             "price": product.price,

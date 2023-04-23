@@ -42,7 +42,7 @@
 
 
 
-    <div class="container pt-2">
+    <div class="container pt-2 min-vh-100">
 
       {% if messages %}
         {% for message in messages %}
@@ -55,29 +55,27 @@
 
       {% block content %}
       {% endblock content %}
-
-
-
-
     </div> <!-- /container -->
-    <footer class="d-flex align-self-end flex-column flex-md-row justify-content-center justify-content-md-evenly border-top mt-5">
-        <div class="d-flex mt-3">
+    <footer class="container-fluid border-top mt-5 footer">
+      <div class="row justify-content-end m-2">
+        <div class="col col-11 col-md-2">
           <a href="/" class="d-flex align-items-center link-dark text-decoration-none">
-            <img class="img-fluid" style="height:200px;" src="/static/images/home-image.png">
+            <img class="img-fluid" style="height:150px;" src="/static/images/home-image.png">
           </a>
         </div>
 
-        <div class="d-flex flex-column mt-3">
+        <div class="col col-11 col-md-3">
           <h5>Atalhos</h5>
           <ul class="nav flex-column">
-            <li class="nav-item mb-2"><a href="{% url 'core:home' %}" class="nav-link p-0 text-muted">Inicio</a></li>
-            <li class="nav-item mb-2"><a href="{% url 'producer:producer_home' %}" class="nav-link p-0 text-muted">Produtor(a)</a></li>
-            <li class="nav-item mb-2"><a href="{% url 'baskets:consumer_home' %}" class="nav-link p-0 text-muted">Cestas</a></li>
-            <li class="nav-item mb-2"><a href="{% url 'cells:list_cells' %}" class="nav-link p-0 text-muted">Células</a></li>
+            <li class="nav-item p-2"><a href="{% url 'core:home' %}" class="nav-link p-0 text-muted">Inicio</a></li>
+            <li class="nav-item p-2"><a href="{% url 'producer:producer_home' %}" class="nav-link p-0 text-muted">Produtor(a)</a></li>
+            <li class="nav-item p-2"><a href="{% url 'baskets:consumer_home' %}" class="nav-link p-0 text-muted">Cestas</a></li>
+            <li class="nav-item p-2"><a href="{% url 'cells:list_cells' %}" class="nav-link p-0 text-muted">Células</a></li>
 <!--            <li class="nav-item mb-2"><a href="{% url 'cells:create_cell' %}" class="nav-link p-0 text-muted">Adicionar Célula</a></li>-->
           </ul>
         </div>
-      </footer>
+      </div>
+    </footer>
 
     {% block modal %}{% endblock modal %}
 

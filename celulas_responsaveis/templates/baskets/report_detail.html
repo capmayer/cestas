@@ -57,7 +57,7 @@
         </style>
     </head>
         <div class="content">
-          <h2 class="text-center"> Relatório Semana {{ week_cycle.number }} - {{ week_cycle.month_cycle.name }}</h2>
+          <h2 class="text-center"> Relatório Semana {{ week_cycle.number }} - {{ week_cycle.month_cycle.get_name_display() }}</h2>
           <button class="print_button" onclick="window.print();return false;">Imprimir</button>
           {% for cell, baskets in cells.items %}
             <div>

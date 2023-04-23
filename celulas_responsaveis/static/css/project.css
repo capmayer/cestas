@@ -23,6 +23,11 @@ body {
   font-size: .875rem;
 }
 
+.footer {
+  background-color: #efe2b7;
+  margin-bottom: -8px;
+}
+
 .feather {
   width: 16px;
   height: 16px;
