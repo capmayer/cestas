@@ -121,10 +121,10 @@ def apply_to_consumer_cell(request, cell_slug: str):
     cell = get_object_or_404(ConsumerCell, slug=cell_slug)
 
     if request.user.is_authenticated:
-        is_member = cell.members.filter(id=request.user.id)
+        membership = ConsumerMembership.objects.filter(person=request.user.id).first()
 
-        if is_member.exists():
-            return HttpResponse("Já é membro.")
+        if membership:
+            return redirect("cells:consumer_cell_detail", cell_slug=membership.cell.slug)
 
         else:
             return redirect("cells:new_membership", cell_slug=cell_slug, role="membro")
