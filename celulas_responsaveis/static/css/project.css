@@ -23,6 +23,10 @@ body {
   font-size: .875rem;
 }
 
+.empty-form {
+  display: None;
+}
+
 .footer {
   background-color: #efe2b7;
   margin-bottom: -8px;

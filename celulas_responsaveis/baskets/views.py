@@ -101,11 +101,11 @@ def products_list_detail(request):
             return render(request, "baskets/products_list_detail.html", context=context)
         else:
             context["products_list_form"] = products_list_form
+            context["messages"] = products_list_form.errors
             return render(request, "baskets/products_list_detail.html", context=context)
 
-    additional_products_list_form = ProductsListFormSet(instance=products_list)
-
-    context["products_list_form"] = additional_products_list_form
+    products_list_form = ProductsListFormSet(instance=products_list)
+    context["products_list_form"] = products_list_form
 
     return render(request, "baskets/products_list_detail.html", context=context)
 
@@ -309,6 +309,7 @@ def request_products(request):
             context["basket_form"] = basket_formset
             context["messages"].extend(basket_formset.non_form_errors())
             return render(request, "baskets/request_products.html", context=context)
+
 
     basket_formset = BasketFormSet(initial=initial_values)
 

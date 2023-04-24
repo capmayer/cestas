@@ -1,12 +1,65 @@
 {% extends "base_producer.html" %}
-
+{% load crispy_forms_tags %}
 
 {% block content %}
   <div class="row mt-4">
     <div class="col-md-10">
-      <h3 class="mb-4">Lista de pedidos:</h3>
-
-      {% include "baskets/partials/product_detail_form.html" %}
+      <h3 class="mb-4">Produtos:</h3>
+      <form action="{{ products_list.get_absolute_url }}" class="form" method="POST">
+        <div class="row">
+          {% csrf_token %}
+          {{ products_list_form.management_form}}
+          <div id="form-content">
+            {% for form in products_list_form %}
+              <div class="card p-2 mb-2 product-form" >
+                <div class="row">
+                  {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                  {% endfor %}
+                  <div class="form-group col-3">
+                    {{ form.name|as_crispy_field }}
+                  </div>
+                  <div class="form-group col-3">
+                    {{ form.price|as_crispy_field }}
+                  </div>
+                  <div class="form-group col-3">
+                    {{ form.unit|as_crispy_field }}
+                  </div>
+                  <div class="form-group col-3">
+                    {{ form.available_quantity|as_crispy_field }}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="empty-form" id="empty-form">
+          <div class="card p-2 mb-2">
+            <div class="row">
+              {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+              {% endfor %}
+              <div class="form-group col-3">
+                {{ products_list_form.empty_form.name|as_crispy_field }}
+              </div>
+              <div class="form-group col-3">
+                {{ products_list_form.empty_form.price|as_crispy_field }}
+              </div>
+              <div class="form-group col-3">
+                {{ products_list_form.empty_form.unit|as_crispy_field }}
+              </div>
+              <div class="form-group col-3">
+                {{ products_list_form.empty_form.available_quantity|as_crispy_field }}
+              </div>
+              <div class="empty-form">
+                {{ products_list_form.empty_form.prefix }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <button id="add-more" type="button" class="btn btn-secondary">Adicionar outro produto</button>
+        <input class="btn btn-success" type="submit" value="Salvar Lista">
+      </form>
 
       <script type="text/javascript">
         const addButton = document.getElementById("add-more")
@@ -18,10 +71,11 @@
             event.preventDefault()
           }
           const currentForms = document.getElementsByClassName("product-form")
+          console.log(currentForms)
 
           let currentFormLength = currentForms.length
 
-          const formSetTarget = document.getElementById("table-content")
+          const formSetTarget = document.getElementById("form-content")
           const copyEmptyForm = document.getElementById("empty-form").cloneNode(true)
           copyEmptyForm.setAttribute("class", "product-form")
           copyEmptyForm.setAttribute("id", `form-${currentFormLength}`)
