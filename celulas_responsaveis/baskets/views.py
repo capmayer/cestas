@@ -242,9 +242,9 @@ def request_products(request):
     if not week_cycle:
         return HttpResponse("Ops, não existem produtos cadastrados.")
 
-    has_basket = Basket.objects.filter(week_cycle=week_cycle, person=request.user).exists()
-    if has_basket:
-        return HttpResponse("Pedido de adicionais já realizado para este ciclo.")
+    current_basket = Basket.objects.filter(week_cycle=week_cycle, person=request.user).first()
+    if current_basket:
+        return redirect("baskets:basket_detail", basket_uuid=current_basket.uuid)
 
     products_lists = ProductsList.objects.filter(producer_cell=consumer_cell.producer_cell)
 

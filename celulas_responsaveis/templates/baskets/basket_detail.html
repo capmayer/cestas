@@ -4,7 +4,8 @@
   <div class="row justify-content-md-center mt-4">
     <div class="col-sm-11 col-lg-8">
       <div class="row">
-        <h3>Adicionais {{ basket.cycle }}</h3>
+        <h3>Produtos adicionais {{ basket.week_cycle }} - {{ basket.week_cycle.month_cycle }}</h3>
+        <h5>Data do pedido: {{ basket.created_date }}</h5>
       </div>
       {% for product in basket.products.all %}
         <div class="card">
@@ -39,9 +40,18 @@
               </div>
 
           </div>
-
         </div>
       {% endfor %}
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-row justify-content-between">
+            <div class="d-flex flex-column h5">Preço total: </div>
+            <div class="d-flex flex-column h5">
+              <div>R${{ basket.total_price|floatformat:2 }}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
