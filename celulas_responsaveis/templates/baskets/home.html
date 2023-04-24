@@ -15,7 +15,7 @@
       <div class="list-group d-grip border-0 w-auto">
         {% for basket in baskets %}
           <a href="{{ basket.get_absolute_url }}" class="list-group-item list-group-item-action rounded-3 py-3">
-            <h5 class="mb-1">{{ basket.cycle }}</h5>
+            <h5 class="mb-1">{{ basket.week_cycle }} - {{ basket.week_cycle.month_cycle }}</h5>
           </a>
         {% endfor %}
       </div>
