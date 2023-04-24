@@ -283,21 +283,23 @@ def request_products(request):
 
             for form in basket_formset:
                 if form.is_valid():
-                    sold_product = SoldProduct()
-                    sold_product.name = form.cleaned_data["name"]
-                    sold_product.price = form.cleaned_data["price"]
-                    sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
-                    sold_product.basket = additional_basket
+                    requested_quantity = form.cleaned_data["requested_quantity"]
+                    if requested_quantity > 0.0:
+                        sold_product = SoldProduct()
+                        sold_product.name = form.cleaned_data["name"]
+                        sold_product.price = form.cleaned_data["price"]
+                        sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
+                        sold_product.basket = additional_basket
 
-                    unit = Unit.objects.get(name=form.cleaned_data["unit"])
-                    sold_product.unit = unit
+                        unit = Unit.objects.get(name=form.cleaned_data["unit"])
+                        sold_product.unit = unit
 
-                    current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
-                    current_product.reduce_available_quantity(sold_product.requested_quantity)
-                    current_product.save()
-                    sold_product.save()
+                        current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
+                        current_product.reduce_available_quantity(sold_product.requested_quantity)
+                        current_product.save()
+                        sold_product.save()
 
-                    total_price += sold_product.price * sold_product.requested_quantity
+                        total_price += sold_product.price * sold_product.requested_quantity
                 else:
                     context["messages"].extend(form.non_field_errors())
 
