@@ -31,9 +31,9 @@ class SoldProductForm(forms.Form):
         requested_quantity_widget.attrs['step'] = unit.increment
 
         if unit.increment >= 1:
-            requested_quantity_widget.attrs["onkeypress"] = "return validateInteger(event)"
+            requested_quantity_widget.attrs["oninput"] = "return validateInteger(event)"
         else:
-            requested_quantity_widget.attrs["onkeypress"] = "return validateFloat(event)"
+            requested_quantity_widget.attrs["oninput"] = "return validateFloat(event)"
 
     def clean_requested_quantity(self):
         requested_quantity = self.cleaned_data["requested_quantity"]
@@ -46,7 +46,7 @@ class SoldProductForm(forms.Form):
         if product_with_price.available_quantity >= requested_quantity:
             return requested_quantity
 
-        raise ValidationError("Produto em falta.")
+        raise ValidationError("Quantidade disponível insuficiente")
 
 class BaseBasketFormSet(BaseFormSet):
     def clean(self):

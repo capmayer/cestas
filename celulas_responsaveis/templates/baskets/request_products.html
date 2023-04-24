@@ -41,12 +41,14 @@
                         <div class="d-flex flex-column align-self-center">
                           <div class="d-flex flex-row">
                             <div class="align-self-center" onchange="calculate_basket_total()">
-                              <div class="requested_quantity_error">
-                                {{ form.requested_quantity.errors }}
-                              </div>
                               <div class="requested_quantity">
                                 {{ form.requested_quantity }}
                               </div>
+                              {% if form.requested_quantity.errors %}
+                              <div class="alert-danger p-2 mt-1" role="alert">
+                                {{ form.requested_quantity.errors.0 }}
+                              </div>
+                              {% endif %}
                             </div>
                           </div>
                         </div>
