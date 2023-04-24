@@ -38,7 +38,7 @@ class MonthCycle(models.Model):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.producer_cell.slug})
 
     def __str__(self) -> str:
-        return f"Ciclo de {self.name}"
+        return f"Ciclo de {self.get_name_display()}"
 
 
 class WeekCycle(models.Model):
@@ -48,7 +48,7 @@ class WeekCycle(models.Model):
     number = models.IntegerField()
 
     def __str__(self) -> str:
-        return f"Semana {self.number} - {self.month_cycle}"
+        return f"Semana {self.number}"
 
 class ProductsList(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="product_list", on_delete=models.CASCADE)
