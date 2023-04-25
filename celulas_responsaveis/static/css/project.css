@@ -32,6 +32,10 @@ body {
   margin-bottom: -8px;
 }
 
+.navbar-color {
+  background-color: #efe2b7;
+}
+
 .feather {
   width: 16px;
   height: 16px;

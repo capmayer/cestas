@@ -64,6 +64,7 @@ def create_cell(request):
             cell_location.address = form.cleaned_data["address"]
             cell_location.city = form.cleaned_data["city"]
             cell_location.state = form.cleaned_data["state"]
+            cell_location.neighborhood = form.cleaned_data["neighborhood"]
             cell_location.save()
 
             # Call script to register in IDEC pages.

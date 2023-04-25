@@ -9,7 +9,7 @@
         <h5>O ciclo ainda não começou!</h5>
       {% elif is_cycle_over %}
         <h3>Célula {{ cell.name }}:</h3>
-        <h5>O Ciclo {{ cycle.number }}# acabou, espere o próximo começar!</h5>
+        <h5>Pedidos encerrados, até semana que vem ;)</h5>
       {% else %}
         <div class="row">
           <h3>Célula {{ cell.name }} - Ciclo {{ cycle.month_cycle.get_name_display }} Semana {{ cycle.number }}</h3>
@@ -17,6 +17,14 @@
         <div class="row justify-content-md-center">
           <h5>Pedidos até {{ cycle.request_day }}</h5>
         </div>
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-dismissible alert-danger">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
         <div class="row">
             <form action="{{ cycle.get_request_products_url }}" method="post">
               {% csrf_token %}

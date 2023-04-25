@@ -165,4 +165,7 @@ class CellLocation(models.Model):
     longitude = models.DecimalField(max_digits=8, decimal_places=5, default=0)
 
     def __str__(self):
-        return f"{self.address}, {self.neighborhood} - {self.city}"
+        return f"{self.neighborhood}, {self.city}"
+
+    def get_full_address(self) -> str:
+        return f"{self.address}, {self.neighborhood} - {self.city}/{self.state}"

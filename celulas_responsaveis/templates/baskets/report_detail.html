@@ -85,7 +85,7 @@
                     </tr>
                     {% for product in basket.products.all %}
                     <tr>
-                        <td>{{product.name}}</td>
+                        <td>{{product.name}} ({{product.unit}})</td>
                         {% if product.unit.increment < 1 %}
                           <td>{% widthratio product.requested_quantity 1 1000 %}{{ product.unit.unit}}</td>
                         {% else %}

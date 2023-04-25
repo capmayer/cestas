@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db.models import CharField
 from django.urls import reverse
+from datetime import datetime
 from django.utils.translation import gettext_lazy as _
 
 
@@ -29,3 +30,13 @@ class User(AbstractUser):
 
         """
         return reverse("users:detail", kwargs={"username": self.username})
+
+    def get_greetings(self):
+        hour = datetime.now().hour
+        greeting = "Boa noite"
+        if 5 <= hour < 12:
+            greeting = "Bom dia"
+        elif 12 <= hour < 18:
+            greeting = "Boa tarde"
+
+        return f"{greeting}, {self.name.split(' ')[0]}"

@@ -9,7 +9,6 @@
 <div class="card mt-4">
   <div class="col p-4">
     <img class="img-fluid" src="/static/images/home-image.png">
-
     {% if messages %}
     {% for message in messages %}
       <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
@@ -19,6 +18,9 @@
     {% endfor %}
   {% endif %}
 
+  <div class="row p-3">
+    <h3 class="form text-center">Cadastrar</h3>
+  </div>
   <form class="col" id="signup_form" method="post" action="{% url 'account_signup' %}">
     {% csrf_token %}
     {{ form|crispy }}

@@ -37,8 +37,6 @@
 <div class="card mt-4">
   <div class="col p-4">
     <img class="img-fluid" src="/static/images/home-image.png">
-
-
     {% if messages %}
       {% for message in messages %}
         <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
@@ -47,6 +45,9 @@
         </div>
       {% endfor %}
     {% endif %}
+    <div class="row p-3">
+      <h3 class="form text-center">Entrar</h3>
+    </div>
 
     <form class="form" method="POST" action="{% url 'account_login' %}">
       {% csrf_token %}
@@ -58,11 +59,11 @@
         <button class="btn btn-success" type="submit" style="width:100%;">{% translate "Sign In" %}</button>
       </div>
     </form>
-    <div class="col s12">
-      <a class="col s12" href="{% url 'account_reset_password' %}">{% translate "Forgot Password?" %}</a>
+    <div class="col col-sm-12">
+      <a class="col col-sm-12" href="{% url 'account_reset_password' %}">{% translate "Forgot Password?" %}</a>
 
       {% if ACCOUNT_ALLOW_REGISTRATION %}
-        <p class="col s12" style="margin-bottom:30px;">
+        <p class="col col-sm-12" style="margin-bottom:30px;">
           {% blocktranslate trimmed %}
             If you have not created an account yet, then please
             <a href="{{ signup_url }}">sign up</a> first.
