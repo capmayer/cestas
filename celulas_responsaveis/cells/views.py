@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 import folium
 from django.urls import reverse
@@ -125,7 +126,8 @@ def apply_to_consumer_cell(request, cell_slug: str):
         membership = ConsumerMembership.objects.filter(person=request.user.id).first()
 
         if membership:
-            return redirect("cells:consumer_cell_detail", cell_slug=membership.cell.slug)
+            messages.warning(request, f"Você já faz parte da CCR {membership.cell}")
+            return redirect("cells:consumer_cell_detail", cell_slug=cell_slug)
 
         else:
             return redirect("cells:new_membership", cell_slug=cell_slug, role="membro")
@@ -133,6 +135,7 @@ def apply_to_consumer_cell(request, cell_slug: str):
     else:
         cell_membership_url = urlencode({"next": reverse("cells:new_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
         signup_url = reverse('account_signup')
+        messages.warning(request, "É necessário criar uma conta ou entrar em uma conta existente para continuar.")
         return redirect(f"{signup_url}?{cell_membership_url}")
 
 

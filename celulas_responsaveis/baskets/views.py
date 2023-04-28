@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 
 from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, WeekCycleForm, MonthCycleForm
 from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
@@ -97,11 +98,11 @@ def products_list_detail(request):
         if products_list_form.is_valid():
             products_list_form.save()
             context["products_list_form"] = products_list_form
-            context["messages"] = ["Lista salva."]
+            messages.success(request, "Lista salva.")
+
             return render(request, "baskets/products_list_detail.html", context=context)
         else:
             context["products_list_form"] = products_list_form
-            context["messages"] = products_list_form.errors
             return render(request, "baskets/products_list_detail.html", context=context)
 
     products_list_form = ProductsListFormSet(instance=products_list)
@@ -244,6 +245,7 @@ def request_products(request):
 
     current_basket = Basket.objects.filter(week_cycle=week_cycle, person=request.user).first()
     if current_basket:
+        messages.success(request, "Você já realizou um pedido.")
         return redirect("baskets:basket_detail", basket_uuid=current_basket.uuid)
 
     products_lists = ProductsList.objects.filter(producer_cell=consumer_cell.producer_cell)
@@ -300,16 +302,14 @@ def request_products(request):
                         sold_product.save()
 
                         total_price += sold_product.price * sold_product.requested_quantity
-                else:
-                    context["messages"].extend(form.non_field_errors())
 
             additional_basket.total_price = total_price
             additional_basket.save()
-
+            messages.success(request, "Pedido realizado!")
             return redirect("baskets:basket_requested", request_uuid=additional_basket.uuid)
         else:
             context["basket_form"] = basket_formset
-            context["messages"].extend(basket_formset.non_form_errors())
+            map(lambda error: messages.error(request, error), basket_formset.non_form_errors())
             return render(request, "baskets/request_products.html", context=context)
 
 
@@ -326,13 +326,11 @@ def request_products(request):
 def basket_requested(request, request_uuid: str):
     consumer_cell = get_consumer_cell(request.user)
     payment_info = PaymentInfo.objects.filter(producer_cell=consumer_cell.producer_cell)
-    additional_basket_requested = Basket.objects.get(uuid=request_uuid)
-    basket_url = additional_basket_requested.get_absolute_url()
+    basket = Basket.objects.get(uuid=request_uuid)
 
     context = {
         "payment_info": payment_info.first() if payment_info else None,
         "cell": consumer_cell,
-        "total_price": additional_basket_requested.total_price,
-        "basket_url": basket_url,
+        "basket": basket,
     }
     return render(request, "baskets/basket_requested.html", context)

@@ -4,6 +4,14 @@
 
   <div class="row justify-content-center mt-4">
     <div class="col-12 col-md-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
       <div class="card">
         <div class="card-body">
           <h3 class="card-title">Célula {{ cell.name }}</h3>

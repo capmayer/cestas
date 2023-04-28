@@ -8,7 +8,7 @@
           <h3>Ciclos Semanais: {{ month_cycle.get_name_display }}</h3>
         </div>
         <div class="col-6">
-          <a href="{% url 'producer:new_week_cycle' %}" class="btn btn-success float-end">Nova semana</a>
+          <a href="{% url 'producer:new_week_cycle' %}" class="btn btn-success float-end">NOVA SEMANA</a>
         </div>
       </div>
       {% for week_cycle in month_cycle.week_cycles.all|dictsortreversed:"number" %}

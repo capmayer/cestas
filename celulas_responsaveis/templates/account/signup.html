@@ -9,7 +9,12 @@
 <div class="card mt-4">
   <div class="col p-4">
     <img class="img-fluid" src="/static/images/home-image.png">
-    {% if messages %}
+
+
+  <div class="row p-3">
+    <h3 class="form text-center">Cadastrar</h3>
+  </div>
+  {% if messages %}
     {% for message in messages %}
       <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
         {{ message }}
@@ -17,10 +22,6 @@
       </div>
     {% endfor %}
   {% endif %}
-
-  <div class="row p-3">
-    <h3 class="form text-center">Cadastrar</h3>
-  </div>
   <form class="col" id="signup_form" method="post" action="{% url 'account_signup' %}">
     {% csrf_token %}
     {{ form|crispy }}
@@ -28,7 +29,7 @@
     <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
     {% endif %}
     <div class="col">
-      <button class="btn btn-success" type="submit" style="width:100%;">{% translate "Sign Up" %}</button>
+      <button class="btn btn-success" type="submit" style="width:100%;">CADASTRAR-SE</button>
     </div>
 
   </form>

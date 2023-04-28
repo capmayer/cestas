@@ -2,11 +2,38 @@
 
 
 {% block content %}
-  <div class="d-flex flex-column mt-4">
-    <h2>Pedido feito!</h2>
-    <h4>Valor do pedido R${{ total_price|floatformat:2 }}.</h4>
-    <h4>{{ payment_info.description }}</h4>
-    <a class="btn btn-success" href="{{ basket_url }}">Conferir Pedido</a>
+    <div class="row justify-content-md-center mt-4">
+      <div class="col-sm-11 col-lg-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <h2>Faça o pagamento para o pix abaixo e envie o comprovante para o/a responsável:</h2>
+      <div class="card">
+        <div class="card-body">
+          <h4>Chave pix: {{ payment_info.pix_key }}</h4>
+          <h4>Responsável: {{ payment_info.receiver_name }}</h4>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-row justify-content-between">
+            <div class="d-flex flex-column h5">Preço total: </div>
+            <div class="d-flex flex-column h5">
+              <div>R${{ basket.total_price|floatformat:2 }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h4>{{ payment_info.description }}</h4>
+      <div class="d-grid mt-2">
+        <a class="btn btn-success" href="{{ basket.get_absolute_url }}">Conferir Pedido</a>
+      </div>
+    </div>
   </div>
 
 
