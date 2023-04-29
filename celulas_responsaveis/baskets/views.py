@@ -5,6 +5,7 @@ from math import ceil
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied
+from django.db.models import Sum, Count
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -150,8 +151,13 @@ def producer_home(request):
     producer_cell = get_producer_cell(request.user)
     week_cycle = get_week_cycle(producer_cell)
 
+    week_cycle_infos = week_cycle.baskets.aggregate(Count('id'), Count('is_paid'), Sum('total_price'))
+    cells_count = producer_cell.consumer_cells.count()
+
     context = {
         "week_cycle": week_cycle,
+        "week_cycle_infos": week_cycle_infos,
+        "cells_count": cells_count,
     }
 
     return render(request, "baskets/producer_home.html", context=context)
@@ -302,6 +308,21 @@ def new_week_cycle(request):
 #
 #     return render(request, "baskets/report_detail.html", context=context)
 
+@login_required
+def week_cycle_total_products(request, month_identifier: str, week_cycle_number: int):
+    producer_cell = get_producer_cell(request.user)
+
+    month_date = datetime.datetime.strptime(month_identifier, "%m%Y")
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, begin__month=month_date.month,
+                                            begin__year=month_date.year).last()
+
+    week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
+
+    products = week_cycle.baskets.filter(is_paid=True).values('products__name', 'products__unit__name', 'products__unit__increment').annotate(requested_quantity=Sum('products__requested_quantity'))
+    context = {
+        "products": products
+    }
+    return render(request, 'baskets/week_cycle_total_products.html', context=context)
 
 @login_required
 def week_cycle_report(request, month_identifier: str, week_cycle_number: int):

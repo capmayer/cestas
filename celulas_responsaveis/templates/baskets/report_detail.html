@@ -1,104 +1,55 @@
+{% extends 'base_producer.html' %}
 {% load mathfilters %}
 
 {% block content %}
-    <head>
-        <style>
-            .font-weight-bold {
-                font-weight: bold;
-            }
-            .header-table {
-                border: 1px solid black;
-                width: 100%;
-                overflow: auto;
-            }
-            .order-product {
-                max-width: 800px;
-                text-align: center;
-                margin-left: auto;
-                margin-right: auto;
-            }
-            .order-product table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .order-product table tr {
-                border-bottom: 1px solid black;
-            }
-            .border-thin {
-                border-style: solid;
-                border-width: thin;
-            }
-            .text-center {
-                text-align: center;
-            }
-            .text-end {
-                text-align: end;
-            }
-            .text-start {
-                text-align: start;
-            }
-            .content {
-                margin: 10px;
-                padding: 10px;
-                border: 1px solid;
-            }
-            .print_button {
-                padding: 5px;
-                border-radius: 4px;
-                border: 2px solid gray;
-                color: black;
-            }
-            @media print {
-                .print_button {
-                    display: none;
-                }
-            }
-        </style>
-    </head>
-        <div class="content">
-          <h2 class="text-center"> Relatório Semana {{ week_cycle.number }} - {{ week_cycle.month_cycle.get_name_display }}</h2>
-          <button class="print_button" onclick="window.print();return false;">Imprimir</button>
-          {% for cell, baskets in cells.items %}
-            <div>
-              <table class="header-table">
-                <tr>
-                    <td>
-                        Célula: <span class="font-weight-bold">{{ cell.name }}</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        Pedidos adicionais neste ciclo: <span class="font-weight-bold">{{ baskets|length }}</span>
-                    </td>
-                </tr>
-              </table>
-            </div>
-            {% for basket in baskets %}
-              <p class="border-thin">Consumidor: <span class="font-weight-bold">{{ basket.person.name }}</span></p>
-              <div class="order-product">
-                <h4 class="text-start">Produtos Pedidos</h4>
-                <table>
-                    <tr>
-                        <th>Produto</th>
-                        <th>Quantidade</th>
-                    </tr>
-                    {% for product in basket.products.all %}
-                    <tr>
-                        <td>{{product.name}} ({{product.unit}})</td>
-                        {% if product.unit.increment < 1 %}
-                          <td>{% widthratio product.requested_quantity 1 1000 %}{{ product.unit.unit}}</td>
-                        {% else %}
-                          <td>{{ product.requested_quantity|floatformat:0 }}{{ product.unit.unit}}</td>
-                        {% endif %}
-
-                    </tr>
-                    {% endfor %}
-                </table>
-                <div class="text-end">
-                    Valor total: <span class="font-weight-bold">R${{ basket.total_price|floatformat:2 }}</span>
-                </div>
-              </div>
-            {% endfor %}
-          {% endfor %}
+  <div class="row mt-4">
+    <div class="col col-12 col-md-8">
+      <div class="d-flex flex-row justify-content-between">
+        <div class="d-flex flex-row">
+          <h2>Relatório por CCRs:</h2>
         </div>
-        {% endblock %}
+      </div>
+      {% for cell, baskets in cells.items %}
+        <div class="d-flex flex-row mb-3 mt-3">
+          <h4 class="fw-bold me-2">CCR {{ cell.name }}:</h4>
+          <h4 class="">{{ baskets|length }} pedidos </h4>
+        </div>
+
+        {% for basket in baskets %}
+          <div class="card mb-2">
+            <div class="card-header">
+              <a class="stretched-link" data-bs-toggle="collapse" href="#collapseExample{{ basket.number }}" role="button" aria-expanded="true" aria-controls="collapseExample{{  basket.number }}"></a>
+              <div class="fw-bold h5 mt-1">{{ basket.person.name }}</div>
+            </div>
+            <div class="collapse show" id="collapseExample{{  basket.number }}">
+              {% for product in basket.products.all %}
+                <div class="card-body border-bottom">
+                  <div class="d-flex flex-row justify-content-between">
+                    <div class="d-flex flex-column">
+                      <div class="h4">{{ product.name }}</div>
+                    </div>
+                    <div class="d-flex flex-row">
+                      <div class="d-flex align-self-center">
+                        {% if product.unit.increment < 1 %}
+                          <div class="h3">{{ product.requested_quantity|floatformat:1 }}</div>
+                          <div class="h4 align-self-center">
+                            {{ product.unit.name }}
+                          </div>
+                        {% else %}
+                          <div class="h3">{{ product.requested_quantity|floatformat:0 }}</div>
+                          <div class="h4 align-self-center">
+                            {{ product.unit.unit }}
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

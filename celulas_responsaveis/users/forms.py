@@ -33,7 +33,7 @@ class UserSignupForm(SignupForm):
     Default fields will be added automatically.
     Check UserSocialSignupForm for accounts created from social.
     """
-    name = CharField(max_length=255, label="Nome", widget=TextInput(attrs={'placeholder': 'Nome'}))
+    name = CharField(max_length=255, label="Nome completo", widget=TextInput(attrs={'placeholder': 'Nome completo'}))
     # phone_number = CharField(max_length=10)
     # cep = CharField(max_length=8)
     # address = CharField(max_length=255)
