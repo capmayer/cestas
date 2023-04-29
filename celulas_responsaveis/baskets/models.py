@@ -1,4 +1,8 @@
-import uuid as uuid
+import datetime
+import locale
+import random
+
+from django.contrib.sites.models import Site
 from django.db import models
 from django.urls import reverse
 
@@ -6,27 +10,19 @@ from celulas_responsaveis.cells.models import ConsumerCell, ProducerCell
 from celulas_responsaveis.users.models import User
 
 
+class CycleSettings(models.Model):
+    producer_cell = models.ForeignKey(ProducerCell, related_name="cycle_settings", on_delete=models.CASCADE)
+    week_day_requests_end = models.IntegerField()
+    week_day_delivery = models.IntegerField()
+
+def hex_uuid():
+    pass
+
+MONTH_TO_PORTUGUESE = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+
 class MonthCycle(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="month_cycles", on_delete=models.CASCADE)
     begin = models.DateField()
-    end = models.DateField()
-
-    MONTH_CHOICES = (
-        ("jan", "Janeiro"),
-        ("fev", "Fevereiro"),
-        ("mar", "Março"),
-        ("abr", "Abril"),
-        ("mai", "Maio"),
-        ("jun", "Junho"),
-        ("jul", "Julho"),
-        ("ago", "Agosto"),
-        ("set", "Setembro"),
-        ("out", "Outubro"),
-        ("nov", "Novembro"),
-        ("dez", "Dezembro"),
-    )
-
-    name = models.CharField(max_length=3, choices=MONTH_CHOICES)
 
     def get_report_url(self):
         return reverse("producer:consumer_cell_week_cycle_detail", kwargs={"cell_slug": self.producer_cell.slug, "cycle_number": self.number})
@@ -37,8 +33,14 @@ class MonthCycle(models.Model):
     def get_request_products_url(self):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.producer_cell.slug})
 
+    def get_month_number(self):
+        return self.begin.month
+
+    def get_identifier(self):
+        return self.begin.strftime('%m%Y')
+
     def __str__(self) -> str:
-        return f"Ciclo de {self.get_name_display()}"
+        return f"Ciclo de {MONTH_TO_PORTUGUESE[self.begin.month - 1]}"
 
 
 class WeekCycle(models.Model):
@@ -46,6 +48,15 @@ class WeekCycle(models.Model):
     delivery_day = models.DateField()
     request_day = models.DateField()
     number = models.IntegerField()
+
+    def get_number_of_baskets(self):
+        return self.baskets.count()
+
+    def get_number_of_paid_baskets(self):
+        return self.baskets.filter(is_paid=True).count()
+
+    def get_number_of_cells(self):
+        return self.month_cycle.producer_cell.consumer_cells.count()
 
     def __str__(self) -> str:
         return f"Semana {self.number}"
@@ -56,14 +67,22 @@ class ProductsList(models.Model):
     def __str__(self) -> str:
         return f"Lista de produtos {self.producer_cell}"
 
+def basket_identification_number():
+    time_now = datetime.datetime.now()
+    random_number = random.randrange(0, 10**6)
+    identification = f"{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}{random_number:06d}"
+    return identification
 
 class Basket(models.Model):
+    """
+    Representa uma cesta de pedidos adicionais.
+    """
     person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
     week_cycle = models.ForeignKey(WeekCycle, related_name="baskets", on_delete=models.CASCADE)
     consumer_cell = models.ForeignKey(ConsumerCell, related_name="+", on_delete=models.CASCADE)
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    created_date = models.DateField(auto_now_add=True)
-    last_change = models.DateField(auto_now=True)
+    number = models.CharField(default=basket_identification_number, editable=False, unique=True, max_length=20)
+    created_date = models.DateTimeField(auto_now_add=True)
+    last_change = models.DateTimeField(auto_now=True)
 
     total_price = models.FloatField(default=0)
 
@@ -72,11 +91,10 @@ class Basket(models.Model):
     is_delivered = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        return f"{self.person.name} - Valor: {self.total_price} - código: {self.uuid}"
+        return f"{self.person.name} - Valor: {self.total_price} - código: {self.number}"
 
     def get_absolute_url(self):
-        return reverse("baskets:basket_detail", kwargs={"basket_uuid": self.uuid})
-
+        return reverse("baskets:basket_detail", kwargs={"basket_number": self.number})
 
 class Product(models.Model):
     name = models.CharField(max_length=60)

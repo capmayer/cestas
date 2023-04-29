@@ -1,15 +1,15 @@
-{% extends "base.html" %}
+{% extends "base_producer.html" %}
 {% load crispy_forms_tags %}
 
 {% block content %}
 
   <div class="row justify-content-md-center mt-4">
-    <div class="col-8">
-      <h3>Novo ciclo semanal:</h3>
+   <div class="col-sm-11 col-lg-8">
+      <h3>Nova semana:</h3>
       <form class="card p-3" action="{% url 'producer:new_week_cycle' %}" method="post">
         {% csrf_token %}
         {{ cycle_form|crispy }}
-        <input class="btn btn-success" type="submit" value="Criar ciclo">
+        <input class="btn btn-success" type="submit" value="INICIAR SEMANA">
       </form>
 
     </div>

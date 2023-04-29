@@ -85,6 +85,7 @@ class PaymentInfo(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="payment_info", on_delete=models.CASCADE)
     description = models.TextField()
     receiver_name = models.CharField(max_length=50)
+    receiver_contact = models.CharField(max_length=20)
     pix_key = models.CharField(max_length=50)
 
     def __str__(self):

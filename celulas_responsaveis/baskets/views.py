@@ -1,15 +1,18 @@
 import datetime
 from collections import defaultdict
+from math import ceil
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.urls import reverse
 
 from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, WeekCycleForm, MonthCycleForm
 from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
-    ProductWithPrice
+    ProductWithPrice, CycleSettings
 from celulas_responsaveis.cells.models import ConsumerCell, PaymentInfo, ProducerMembership, ConsumerMembership, \
     ProducerCell
 from celulas_responsaveis.users.models import User
@@ -51,9 +54,11 @@ def get_consumer_cell(user: User):
     return memberships.first().cell
 
 @login_required
-def month_cycle_detail(request, month_cycle_name: str):
+def month_cycle_detail(request, month_identifier: str):
     producer_cell = get_producer_cell(request.user)
-    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, name=month_cycle_name).first()
+
+    month_date = datetime.datetime.strptime(month_identifier, "%m%Y")
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, begin__month=month_date.month, begin__year=month_date.year).last()
 
     context = {
         "month_cycle": month_cycle
@@ -62,7 +67,7 @@ def month_cycle_detail(request, month_cycle_name: str):
     return render(request, "baskets/month_cycle_detail.html", context=context)
 
 @login_required
-def producer_home(request):
+def month_cycles(request):
     """
         Paǵina principal do/a produtora.
 
@@ -76,7 +81,113 @@ def producer_home(request):
         "month_cycles": month_cycles,
     }
 
+    return render(request, "baskets/month_cycles.html", context=context)
+
+def get_week_of_month(date):
+   return ceil(date.day/7.0)
+
+def get_week_cycle(producer_cell):
+    cycle_settings = CycleSettings.objects.filter(producer_cell=producer_cell).first()
+    today = datetime.date.today()
+    week_start_day = today - datetime.timedelta(days=today.weekday())
+    delivery_day = week_start_day + datetime.timedelta(days=cycle_settings.week_day_delivery)
+    request_day = week_start_day + datetime.timedelta(days=cycle_settings.week_day_requests_end)
+    next_delivery_day = delivery_day + datetime.timedelta(days=7)
+    next_request_day = request_day + datetime.timedelta(days=7)
+
+    month_cycle = producer_cell.month_cycles.last()
+    if not month_cycle:
+        month_cycle = MonthCycle()
+        month_cycle.producer_cell = producer_cell
+
+        if next_delivery_day.replace(day=1) > delivery_day.replace(day=1):
+            begin = week_start_day + datetime.timedelta(days=7)
+        else:
+            begin = week_start_day
+        month_cycle.begin = begin.replace(day=1)
+        month_cycle.save()
+
+        week_cycle = WeekCycle()
+        week_cycle.month_cycle = month_cycle
+
+        if today > delivery_day:
+            week_cycle.delivery_day = next_delivery_day
+            week_cycle.request_day = next_request_day
+        else:
+            week_cycle.delivery_day = delivery_day
+            week_cycle.request_day = request_day
+
+        week_cycle.number = get_week_of_month(week_cycle.delivery_day)
+        week_cycle.save()
+
+        return week_cycle
+
+    week_cycle = month_cycle.week_cycles.last()
+
+    # Wait one more day before closing current cycle.
+    cycle_over_date = delivery_day + datetime.timedelta(days=1)
+
+    if today > cycle_over_date:
+
+        if next_delivery_day.replace(day=1) > week_cycle.delivery_day.replace(day=1):
+            month_cycle = MonthCycle()
+            month_cycle.producer_cell = producer_cell
+            month_cycle.begin = next_delivery_day.replace(day=1)
+            month_cycle.save()
+
+        week_cycle = WeekCycle()
+        week_cycle.month_cycle = month_cycle
+        week_cycle.delivery_day = next_delivery_day
+        week_cycle.request_day = next_request_day
+        week_cycle.number = get_week_of_month(week_cycle.delivery_day)
+
+        week_cycle.save()
+
+    return week_cycle
+
+@login_required
+def producer_home(request):
+    producer_cell = get_producer_cell(request.user)
+    week_cycle = get_week_cycle(producer_cell)
+
+    context = {
+        "week_cycle": week_cycle,
+    }
+
     return render(request, "baskets/producer_home.html", context=context)
+
+@login_required
+def producer_cycle_requests(request, month_identifier: str, week_cycle_number: int):
+    producer_cell = get_producer_cell(request.user)
+
+    month_date = datetime.datetime.strptime(month_identifier, "%m%Y")
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, begin__month=month_date.month, begin__year=month_date.year).last()
+
+    week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
+    baskets = week_cycle.baskets.order_by("-created_date")
+    context = {
+        "baskets": baskets,
+        "week_cycle": week_cycle,
+    }
+    return render(request, "baskets/producer_requests.html", context=context)
+
+@login_required
+def producer_payment_confirmation(request, basket_number: str):
+    producer_cell = get_producer_cell(request.user)
+
+    basket = Basket.objects.get(number=basket_number)
+    week_cycle = basket.week_cycle
+
+    if request.method == "POST":
+        basket.is_paid = True
+        basket.save()
+
+    context = {
+        "basket": basket,
+        "week_cycle": week_cycle,
+    }
+
+    return render(request, "baskets/producer_payment_confirmation.html", context=context)
 
 @login_required
 def products_list_detail(request):
@@ -121,13 +232,10 @@ def new_month_cycle(request):
         if month_cycle_form.is_valid():
             month_cycle = MonthCycle()
             month_cycle.producer_cell = producer_cell
-            month_cycle.name = month_cycle_form.cleaned_data["name"]
             month_cycle.begin = month_cycle_form.cleaned_data["begin"]
-            month_cycle.end = month_cycle_form.cleaned_data["end"]
-
             month_cycle.save()
 
-            return  redirect("producer:producer_home")
+            return  redirect("producer:month_cycles")
 
     else:
         month_cycle_form = MonthCycleForm()
@@ -196,13 +304,16 @@ def new_week_cycle(request):
 
 
 @login_required
-def week_cycle_report(request, month_cycle_name: str, week_cycle_number: int):
+def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
     producer_cell = get_producer_cell(request.user)
-    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, name=month_cycle_name).first()
+
+    month_date = datetime.datetime.strptime(month_identifier, "%m%Y")
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, begin__month=month_date.month, begin__year=month_date.year).last()
+
     week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
 
     cells = defaultdict(list)  # Dict[cell_name, List[Baskets]]
-    for basket in week_cycle.baskets.all():
+    for basket in week_cycle.baskets.filter(is_paid=True):
         cells[basket.consumer_cell].append(basket)
 
     # Necessary to render the dict in template, otherwise a new empty list is created when template
@@ -216,8 +327,8 @@ def week_cycle_report(request, month_cycle_name: str, week_cycle_number: int):
     return render(request, "baskets/report_detail.html", context=context)
 
 @login_required
-def basket_detail(request, basket_uuid: str):
-    basket = Basket.objects.get(uuid=basket_uuid)
+def basket_detail(request, basket_number: str):
+    basket = Basket.objects.get(number=basket_number)
     context = {"basket":basket}
     return render(request, "baskets/basket_detail.html", context=context)
 
@@ -246,7 +357,7 @@ def request_products(request):
     current_basket = Basket.objects.filter(week_cycle=week_cycle, person=request.user).first()
     if current_basket:
         messages.success(request, "Você já realizou um pedido.")
-        return redirect("baskets:basket_detail", basket_uuid=current_basket.uuid)
+        return redirect("baskets:basket_detail", basket_number=current_basket.number)
 
     products_lists = ProductsList.objects.filter(producer_cell=consumer_cell.producer_cell)
 
@@ -306,7 +417,7 @@ def request_products(request):
             additional_basket.total_price = total_price
             additional_basket.save()
             messages.success(request, "Pedido realizado!")
-            return redirect("baskets:basket_requested", request_uuid=additional_basket.uuid)
+            return redirect("baskets:basket_requested", request_number=additional_basket.number)
         else:
             context["basket_form"] = basket_formset
             map(lambda error: messages.error(request, error), basket_formset.non_form_errors())
@@ -321,16 +432,48 @@ def request_products(request):
 
     return render(request, "baskets/request_products.html", context=context)
 
+def get_send_message_url(basket, payment_info):
+    from django.utils.http import urlencode
+
+    domain = Site.objects.get_current().domain
+    payment_url = reverse("producer:requested_basket_url", kwargs={"basket_number": basket.number})
+
+    text = (
+        f"Olá, {payment_info.receiver_name} fiz um pedido de adicionais!\n"
+        f"O valor do pedido foi de R${basket.total_price:.2f}\n\n"
+        f"Aqui está o comprovante e o link do pedido:\n"
+        f"https://{domain}{payment_url}"
+    )
+    text_encoded = urlencode({"text": text})
+
+    return f"https://wa.me/{payment_info.receiver_contact}?{text_encoded}"
 
 @login_required
-def basket_requested(request, request_uuid: str):
+def requested_basket_url(request, basket_number: str):
+    """
+    Redireciona para a confirmação de pagamento se a pessoa que clicou foi um produtor/a ou para
+    o detalhes do pedido caso seja consumidor/a.
+    """
+
+    try:
+        producer_cell = get_producer_cell(request.user)
+    except PermissionDenied:
+        return redirect("baskets:basket_detail", basket_number=basket_number)
+    else:
+        return redirect("producer:producer_payment_confirmation", basket_number=basket_number)
+
+
+@login_required
+def basket_requested(request, request_number: str):
     consumer_cell = get_consumer_cell(request.user)
-    payment_info = PaymentInfo.objects.filter(producer_cell=consumer_cell.producer_cell)
-    basket = Basket.objects.get(uuid=request_uuid)
+    payment_info = PaymentInfo.objects.filter(producer_cell=consumer_cell.producer_cell).first()
+    basket = Basket.objects.get(number=request_number)
+    send_payment_confirmation_url = get_send_message_url(basket, payment_info)
 
     context = {
-        "payment_info": payment_info.first() if payment_info else None,
+        "payment_info": payment_info,
         "cell": consumer_cell,
         "basket": basket,
+        "send_payment_confirmation_url": send_payment_confirmation_url,
     }
     return render(request, "baskets/basket_requested.html", context)

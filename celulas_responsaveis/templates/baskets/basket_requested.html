@@ -15,8 +15,23 @@
       <h2>Faça o pagamento para o pix abaixo e envie o comprovante para o/a responsável:</h2>
       <div class="card">
         <div class="card-body">
-          <h4>Chave pix: {{ payment_info.pix_key }}</h4>
-          <h4>Responsável: {{ payment_info.receiver_name }}</h4>
+          <div class="d-flex flex-column flex-md-row justify-content-between">
+              <h4>Responsável:</h4>
+              <h4>{{ payment_info.receiver_name }}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-md-row  justify-content-between">
+            <div class="d-flex me-1">
+              <h4>Chave pix:</h4>
+            </div>
+            <div class="d-flex">
+              <h4 id="pix_key">{{ payment_info.pix_key }}</h4>
+              <h5><span type="button" class="badge ms-2 bg-secondary" onclick="copyPixKeyToClipboard()">COPIAR</span></h5>
+            </div>
+          </div>
         </div>
       </div>
       <div class="card">
@@ -29,12 +44,22 @@
           </div>
         </div>
       </div>
-      <h4>{{ payment_info.description }}</h4>
-      <div class="d-grid mt-2">
-        <a class="btn btn-success" href="{{ basket.get_absolute_url }}">Conferir Pedido</a>
+      <div class="row mt-2">
+        <div class="col-12 col-md-6 mb-1 d-grid">
+          <a class="btn btn-success" href="{{ basket.get_absolute_url }}">CONFERIR PEDIDO</a>
+        </div>
+        <div class="col-12 col-md-6 mb-1 d-grid">
+          <a class="btn btn-success" target="_blank" href="{{ send_payment_confirmation_url }}">ENVIAR COMPROVANTE</a>
+        </div>
       </div>
     </div>
   </div>
+    <script type="text/javascript">
+    function copyPixKeyToClipboard() {
+      var pixKeyElement = document.getElementById("pix_key");
+      navigator.clipboard.writeText(pixKeyElement.textContent);
+    }
 
+  </script>
 
 {% endblock %}

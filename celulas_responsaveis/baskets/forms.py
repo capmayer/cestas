@@ -79,9 +79,7 @@ ProductsListFormSet = inlineformset_factory(
 )
 
 class MonthCycleForm(forms.Form):
-    name = forms.ChoiceField(label="Mês", choices=MonthCycle.MONTH_CHOICES)
     begin = forms.DateField(label="Início do ciclo", initial=datetime.date.today().replace(day=1))
-    end = forms.DateField(label="Fim do ciclo")
 
 
 class WeekCycleForm(forms.Form):

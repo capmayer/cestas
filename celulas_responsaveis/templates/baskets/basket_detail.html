@@ -13,27 +13,21 @@
       {% endif %}
       <div class="row">
         <h3>Produtos adicionais {{ basket.week_cycle }} - {{ basket.week_cycle.month_cycle }}</h3>
-        <h5>Data do pedido: {{ basket.created_date }}</h5>
+        <h5>{{ basket.created_date }}</h5>
       </div>
       {% for product in basket.products.all %}
         <div class="card">
           <div class="card-body">
-
-              <div class="d-flex flex-column flex-md-row justify-content-md-between justify-content-sm-center">
-                <div class="d-flex flex-column">
-                  <div class="d-flex align-self-center align-self-md-baseline h3">
-                      {{ product.name }}
-                  </div>
-                  <div class="d-flex align-self-center align-self-md-baseline">
-                    <div>
-                      R$<span id="product_price_{{ forloop.counter0}}">{{ product.price|floatformat:2 }} </span>
-                      <span>({{ product.unit }})</span>
-                    </div>
-                  </div>
+            <div class="d-flex flex-row justify-content-between">
+              <div class="d-flex flex-column">
+                <div class="h4">{{ product.name }}</div>
+                <div class="h7 align-self-center">
+                  R$<span id="product_price_{{ forloop.counter0}}">{{ product.price|floatformat:2 }} </span>
+                  <span>({{ product.unit }})</span>
                 </div>
-                <div class="d-flex flex-column align-self-center">
-                  <div class="d-flex flex-row">
-                    <div class="d-flex align-self-center">
+              </div>
+              <div class="d-flex flex-row h5">
+                <div class="d-flex align-self-center">
                       {% if product.unit.increment < 1 %}
                         <div class="h3">{% widthratio product.requested_quantity 1 1000 %}</div>
                       {% else %}
@@ -43,10 +37,8 @@
                     <div class="d-flex align-self-center">
                       <div class="h4">{{ product.unit.unit }}</div>
                     </div>
-                  </div>
-                </div>
               </div>
-
+            </div>
           </div>
         </div>
       {% endfor %}
@@ -61,7 +53,12 @@
         </div>
       </div>
       <div class="d-grid mt-2">
-        <a class="btn btn-success" href="{% url 'baskets:basket_requested' request_uuid=basket.uuid %}">Informações pagamento</a>
+        {% if basket.is_paid %}
+          <a class="btn btn-success disabled" href="{% url 'baskets:basket_requested' request_number=basket.number %}">PAGO</a>
+        {% else %}
+          <a class="btn btn-success" href="{% url 'baskets:basket_requested' request_number=basket.number %}">PAGAMENTO</a>
+        {% endif %}
+        <a class="btn btn-secondary mt-2" href="{% url 'baskets:consumer_home' %}">CESTAS</a>
       </div>
     </div>
 
