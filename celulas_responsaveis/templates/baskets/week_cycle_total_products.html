@@ -25,14 +25,14 @@
               <div class="d-flex flex-row">
                 <div class="d-flex align-self-center">
                   {% if product.products__unit__increment < 1 %}
-                    <div class="h3">{{ product.requested_quantity|floatformat:1 }}</div>
+                    <div class="h3">{{ product.requested_quantity }}</div>
                     <div class="h4 align-self-center">
                       {{ product.products__unit__name }}
                     </div>
                   {% else %}
                     <div class="h3">{{ product.requested_quantity|floatformat:0 }}</div>
                     <div class="h4 align-self-center">
-                      {{ product.products__unit__name }}
+                      {{ product.products__unit__unit }}
                     </div>
                   {% endif %}
                 </div>

@@ -320,7 +320,7 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
 
     week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
 
-    products = week_cycle.baskets.filter(is_paid=True).values('products__name', 'products__unit__name', 'products__unit__increment').annotate(requested_quantity=Sum('products__requested_quantity'))
+    products = week_cycle.baskets.filter(is_paid=True).values('products__name', 'products__unit__name', 'products__unit__increment', 'products__unit__unit').annotate(requested_quantity=Sum('products__requested_quantity'))
     context = {
         "products": products
     }
