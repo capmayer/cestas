@@ -126,7 +126,7 @@ def get_week_cycle(producer_cell):
     week_cycle = month_cycle.week_cycles.last()
 
     # Wait one more day before closing current cycle.
-    cycle_over_date = delivery_day + datetime.timedelta(days=1)
+    cycle_over_date = week_cycle.delivery_day + datetime.timedelta(days=1)
 
     if today > cycle_over_date:
 
