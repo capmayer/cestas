@@ -151,13 +151,15 @@ def producer_home(request):
     producer_cell = get_producer_cell(request.user)
     week_cycle = get_week_cycle(producer_cell)
 
-    week_cycle_infos = week_cycle.baskets.aggregate(Count('id'), Count('is_paid'), Sum('total_price'))
+    week_cycle_infos = week_cycle.baskets.aggregate(Count('id'), Sum('total_price'))
+    paid_baskets = week_cycle.baskets.filter(is_paid=True).count()
     cells_count = producer_cell.consumer_cells.count()
 
     context = {
         "week_cycle": week_cycle,
         "week_cycle_infos": week_cycle_infos,
         "cells_count": cells_count,
+        "paid_baskets": paid_baskets,
     }
 
     return render(request, "baskets/producer_home.html", context=context)
