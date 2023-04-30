@@ -4,7 +4,7 @@
 {% block content %}
   <div class="row mt-4">
     <div class="col-md-10">
-      <h3 class="mb-4">Produtos:</h3>
+      <h3 class="mb-4 fw-bold">Produtos</h3>
       {% if messages %}
         {% for message in messages %}
           <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">

@@ -3,7 +3,7 @@
 {% block content %}
   <div class="row justify-content-md-center mt-4">
     <div class="col-sm-11 col-lg-8">
-      <h3>Minhas cestas:</h3>
+      <h3 class="fw-bold">Minhas cestas</h3>
       {% if not baskets %}
         <h1>
           Você ainda não possui cestas.
@@ -14,7 +14,7 @@
       <div class="card">
         <div class="card-body">
           <a href="{{ basket.get_absolute_url }}" class="stretched-link"></a>
-          <h5 class="mb-1">{{ basket.week_cycle }} - {{ basket.week_cycle.month_cycle }}</h5>
+          <h5 class="mb-1">{{ basket.week_cycle.month_cycle }} - {{ basket.week_cycle }}</h5>
         </div>
       </div>
       {% endfor %}

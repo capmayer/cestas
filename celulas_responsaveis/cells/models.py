@@ -25,7 +25,7 @@ class ProducerCell(models.Model):
         return reverse("cells:management", kwargs={"cell_slug": self.slug})
 
     def get_detail_url(self):
-        return reverse("cells:cell_detail", kwargs={"cell_slug": self.slug})
+        return reverse("cells:producer_cell_detail", kwargs={"cell_slug": self.slug})
 
     def get_additional_products_list_url(self):
         return reverse("baskets:additional_products_list", kwargs={"cell_slug": self.slug})

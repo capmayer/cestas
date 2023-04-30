@@ -13,7 +13,7 @@ urlpatterns = [
     path("pessoas/", include("celulas_responsaveis.users.urls", namespace="users")),
     path("contas/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    path("celulas/", include("celulas_responsaveis.cells.urls", namespace="cells")),
+    path("", include("celulas_responsaveis.cells.urls", namespace="cells")),
     path("cestas/", include("celulas_responsaveis.baskets.consumer_urls", namespace="baskets")),
     path("", include("celulas_responsaveis.baskets.producer_urls", namespace="producer")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

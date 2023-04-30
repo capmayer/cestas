@@ -12,8 +12,9 @@
         {% endfor %}
       {% endif %}
       <div class="row">
-        <h3>Produtos adicionais {{ basket.week_cycle }} - {{ basket.week_cycle.month_cycle }}</h3>
-        <h5>{{ basket.created_date }}</h5>
+        <h3 class="fw-bold">Cesta de adicionais</h3>
+        <h6>{{ basket.week_cycle.month_cycle }} - {{ basket.week_cycle }}</h6>
+        <h6>{{ basket.created_date }}</h6>
       </div>
       {% for product in basket.products.all %}
         <div class="card">
@@ -21,7 +22,7 @@
             <div class="d-flex flex-row justify-content-between">
               <div class="d-flex flex-column">
                 <div class="h4">{{ product.name }}</div>
-                <div class="h7 align-self-center">
+                <div class="h7">
                   R$<span id="product_price_{{ forloop.counter0}}">{{ product.price|floatformat:2 }} </span>
                   <span>({{ product.unit }})</span>
                 </div>
@@ -53,12 +54,12 @@
         </div>
       </div>
       <div class="d-grid mt-2">
+        <a class="btn btn-secondary mb-2" href="{% url 'baskets:consumer_home' %}">CESTAS</a>
         {% if basket.is_paid %}
           <a class="btn btn-success disabled" href="{% url 'baskets:basket_requested' request_number=basket.number %}">PAGO</a>
         {% else %}
           <a class="btn btn-success" href="{% url 'baskets:basket_requested' request_number=basket.number %}">PAGAMENTO</a>
         {% endif %}
-        <a class="btn btn-secondary mt-2" href="{% url 'baskets:consumer_home' %}">CESTAS</a>
       </div>
     </div>
 

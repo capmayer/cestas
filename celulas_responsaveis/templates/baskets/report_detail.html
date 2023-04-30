@@ -6,13 +6,13 @@
     <div class="col col-12 col-md-8">
       <div class="d-flex flex-row justify-content-between">
         <div class="d-flex flex-row">
-          <h2>Relatório por CCRs:</h2>
+          <h3 class="fw-bold">Relatório por CCR</h3>
         </div>
       </div>
       {% for cell, baskets in cells.items %}
-        <div class="d-flex flex-row mb-3 mt-3">
+        <div class="d-flex flex-row mt-3 justify-content-center">
           <h4 class="fw-bold me-2">CCR {{ cell.name }}:</h4>
-          <h4 class="">{{ baskets|length }} pedidos </h4>
+          <h4 class="">{{ baskets|length }} pedido(s) </h4>
         </div>
 
         {% for basket in baskets %}

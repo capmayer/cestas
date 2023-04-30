@@ -322,7 +322,8 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
 
     products = week_cycle.baskets.filter(is_paid=True).values('products__name', 'products__unit__name', 'products__unit__increment', 'products__unit__unit').annotate(requested_quantity=Sum('products__requested_quantity'))
     context = {
-        "products": products
+        "products": products,
+        "week_cycle": week_cycle,
     }
     return render(request, 'baskets/week_cycle_total_products.html', context=context)
 

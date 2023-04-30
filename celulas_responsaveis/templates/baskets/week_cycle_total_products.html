@@ -12,8 +12,8 @@
         {% endfor %}
       {% endif %}
       <div class="row">
-        <h3>Produtos vendidos:</h3>
-        <h5>{{ week_cycle }}</h5>
+        <h3 class="fw-bold">Produtos vendidos</h3>
+        <h6>{{ week_cycle.month_cycle }} - {{ week_cycle }}</h6>
       </div>
       {% for product in products %}
         <div class="card">

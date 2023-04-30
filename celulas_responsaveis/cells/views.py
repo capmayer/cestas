@@ -7,7 +7,8 @@ from django.urls import reverse
 from django.utils.http import urlencode
 
 from celulas_responsaveis.cells.forms import ConsumerCellRegistrationForm
-from celulas_responsaveis.cells.models import ConsumerCell, CellLocation, Application, Role, ConsumerMembership
+from celulas_responsaveis.cells.models import ConsumerCell, CellLocation, Application, Role, ConsumerMembership, \
+    ProducerCell, ProducerMembership
 
 
 def generate_cell_map(latitude: float, longitude: float) -> str:
@@ -15,6 +16,61 @@ def generate_cell_map(latitude: float, longitude: float) -> str:
     folium.Marker(location=[latitude, longitude]).add_to(m)
 
     return m._repr_html_()
+
+def producer_cell_detail(request, cell_slug: str):
+    cell = get_object_or_404(ProducerCell, slug=cell_slug)
+
+    context = {
+        "cell": cell,
+    }
+
+    return render(request, "cells/producer_cell_detail.html", context=context)
+
+def new_producer_membership(request, cell_slug: str, role: str = "membro"):
+    """
+        Cria a relação de membro do grupo.
+    """
+    cell = get_object_or_404(ProducerCell, slug=cell_slug)
+
+    if request.user.is_authenticated:
+        is_member = cell.members.filter(id=request.user.id)
+
+        if is_member.exists():
+            return redirect("producer:producer_home")
+
+    role = Role.objects.get(name=role)
+
+    membership_content = {
+        "role": role,
+        "is_active": True,
+    }
+
+    cell.members.add(request.user, through_defaults=membership_content)
+    cell.save()
+
+    return redirect("producer:producer_home")
+
+def apply_to_producer_cell(request, cell_slug: str):
+    """
+        Produtora entrando ao grupo que faz parte.
+    """
+    cell = get_object_or_404(ProducerCell, slug=cell_slug)
+
+    if request.user.is_authenticated:
+        membership = ProducerMembership.objects.filter(person=request.user.id).first()
+
+        if membership:
+            messages.warning(request, f"Você já faz parte do {membership.cell}")
+            return redirect("cells:producer_cell_detail", cell_slug=cell_slug)
+
+        else:
+            return redirect("cells:new_producer_membership", cell_slug=cell_slug, role="membro")
+
+    else:
+        cell_membership_url = urlencode({"next": reverse("cells:new_producer_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
+        signup_url = reverse('account_signup')
+        messages.warning(request, "É necessário criar uma conta ou entrar em uma conta existente para continuar.")
+        return redirect(f"{signup_url}?{cell_membership_url}")
 
 
 def consumer_cell_detail(request, cell_slug: str):
@@ -46,7 +102,7 @@ def consumer_cell_detail(request, cell_slug: str):
         is_organizer = cell_member_membership.filter(role=organizer).exists()
         context["is_organizer"] = is_organizer
 
-    return render(request, "cells/cell_detail.html", context)
+    return render(request, "cells/consumer_cell_detail.html", context)
 
 
 @login_required
@@ -70,7 +126,7 @@ def create_cell(request):
 
             # Call script to register in IDEC pages.
 
-            return redirect("cells:new_membership", cell_slug=cell.slug, role="coordenacao")
+            return redirect("cells:new_consumer_membership", cell_slug=cell.slug, role="coordenacao")
     else:
         form = ConsumerCellRegistrationForm()
 
@@ -79,12 +135,9 @@ def create_cell(request):
 
 def list_cells(request):
     # This only works with cells and locations length are equal.
-    cells = ConsumerCell.objects.all()
-    locations = CellLocation.objects.all()
-
-    cells_locations = list(zip(cells, locations))
+    cells_locations = CellLocation.objects.all().select_related('cell')
     context = {
-        "cells": cells_locations,
+        "cells_locations": cells_locations,
     }
 
     return render(request, "cells/all_cells.html", context=context)
@@ -92,25 +145,6 @@ def list_cells(request):
 
 def application_complete(request):
     return render(request, "cells/application_complete.html")
-
-#
-# @login_required
-# def new_application(request, cell_slug: str):
-#     cell = get_object_or_404(ConsumerCell, slug=cell_slug)
-#
-#     if request.user.is_authenticated:
-#         is_member = cell.members.filter(id=request.user.id)
-#         has_application = Application.objects.filter(person=request.user, cell=cell, is_pending=True)
-#
-#         if is_member.exists() or has_application.exists():
-#             return HttpResponse("Você já é membro ou já possui uma aplicação para esta célula!")
-#
-#     application = Application()
-#     application.cell = cell
-#     application.person = request.user
-#     application.save()
-#
-#     return redirect("cells:application_complete")
 
 def apply_to_consumer_cell(request, cell_slug: str):
     """
@@ -130,16 +164,16 @@ def apply_to_consumer_cell(request, cell_slug: str):
             return redirect("cells:consumer_cell_detail", cell_slug=cell_slug)
 
         else:
-            return redirect("cells:new_membership", cell_slug=cell_slug, role="membro")
+            return redirect("cells:new_consumer_membership", cell_slug=cell_slug, role="membro")
 
     else:
-        cell_membership_url = urlencode({"next": reverse("cells:new_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
+        cell_membership_url = urlencode({"next": reverse("cells:new_consumer_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
         signup_url = reverse('account_signup')
         messages.warning(request, "É necessário criar uma conta ou entrar em uma conta existente para continuar.")
         return redirect(f"{signup_url}?{cell_membership_url}")
 
 
-def new_membership(request, cell_slug: str, role: str = "membro"):
+def new_consumer_membership(request, cell_slug: str, role: str = "membro"):
     """
         Cria a relação da pessoa com a célula.
 
