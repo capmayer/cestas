@@ -151,7 +151,7 @@ def producer_home(request):
     producer_cell = get_producer_cell(request.user)
     week_cycle = get_week_cycle(producer_cell)
 
-    week_cycle_infos = week_cycle.baskets.aggregate(Count('id'), Sum('total_price'))
+    week_cycle_infos = week_cycle.baskets.filter(is_paid=True).aggregate(Count('id'), Sum('total_price'))
     paid_baskets = week_cycle.baskets.filter(is_paid=True).count()
     cells_count = producer_cell.consumer_cells.count()
 
