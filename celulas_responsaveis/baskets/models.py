@@ -117,6 +117,7 @@ class Unit(models.Model):
 
     name = models.CharField(max_length=15)
     increment = models.FloatField(default=1.0)
+    k_unit = models.CharField(max_length=15, default="")
     unit = models.CharField(max_length=15)
 
     def __str__(self):
@@ -155,6 +156,10 @@ class ProductWithPrice(models.Model):
         return f"{self.name}"
 
     def reduce_available_quantity(self, value):
+        if self.unit.increment < 1:
+            value = value / 1000
+
+
         self.available_quantity = self.available_quantity - value
 
         if self.available_quantity == 0.0:

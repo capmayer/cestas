@@ -2,6 +2,16 @@
 
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css");
 
+input[type="number"] {
+  -webkit-appearance: textfield;
+     -moz-appearance: textfield;
+          appearance: textfield;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
 .alert-debug {
   color: black;
   background-color: white;
@@ -60,7 +70,26 @@ body {
 }
 
 .requested_quantity{
-  text-align: center;
+  border: 1px solid grey;
+}
+
+.inline-group {
+  max-width: 12rem;
+  padding: .5rem;
+}
+
+.inline-group .form-control {
+  text-align: right;
+}
+
+.form-control[type="number"]::-webkit-inner-spin-button,
+.form-control[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.request_buttons{
+  height: 20px;
 }
 
 .sidebar .nav-link {

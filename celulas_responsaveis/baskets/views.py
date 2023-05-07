@@ -1,4 +1,5 @@
 import datetime
+import decimal
 from collections import defaultdict
 from math import ceil
 
@@ -356,6 +357,91 @@ def basket_detail(request, basket_number: str):
     context = {"basket":basket}
     return render(request, "baskets/basket_detail.html", context=context)
 
+@login_required
+def basket_detail_edit(request, basket_number: str):
+    basket = Basket.objects.get(number=basket_number)
+
+    if is_cycle_over(basket.week_cycle):
+        return HttpResponse("Encerrada a alteração de pedidos.")
+
+    products_list = ProductsList.objects.filter(producer_cell=basket.consumer_cell.producer_cell).first()
+    actual_products = {product.name: product.requested_quantity for product in basket.products.all()}
+
+    context = {}
+    initial_values = []
+
+    for product in products_list.products.filter(is_available=True).order_by("name"):
+        requested_quantity = 0
+        actual_quantity = actual_products.get(product.name, None)
+
+        if actual_quantity:
+            requested_quantity = actual_quantity
+
+        initial_values.append({
+            "name": product.name,
+            "price": product.price,
+            "unit": product.unit,
+            "requested_quantity": decimal.Decimal(requested_quantity).to_integral(),
+            "product_pk": product.pk,
+        })
+
+    if request.method == "POST":
+        basket_formset = BasketFormSet(request.POST, initial=initial_values)
+
+        if basket_formset.is_valid():
+            total_price = 0.0
+
+            for form in basket_formset:
+
+                if form.is_valid():
+                    requested_quantity = form.cleaned_data["requested_quantity"]
+                    sold_product = SoldProduct.objects.filter(name=form.cleaned_data["name"], basket=basket).first()
+
+                    if requested_quantity > 0.0:
+                        if sold_product:
+                            sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
+                        else:
+                            sold_product = SoldProduct()
+                            sold_product.name = form.cleaned_data["name"]
+                            sold_product.price = form.cleaned_data["price"]
+                            sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
+                            sold_product.basket = basket
+
+                            unit = Unit.objects.get(name=form.cleaned_data["unit"])
+                            sold_product.unit = unit
+
+                        current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
+                        current_product.reduce_available_quantity(sold_product.requested_quantity)
+                        current_product.save()
+
+                        sold_product.save()
+                        if sold_product.unit.increment < 1:
+                            total_price += sold_product.price * (sold_product.requested_quantity / 1000)
+                        else:
+                            total_price += sold_product.price * sold_product.requested_quantity
+
+                    if requested_quantity == 0 and sold_product:
+                        sold_product.delete()
+
+            basket.total_price = total_price
+            basket.save()
+            messages.success(request, "Pedido realizado!")
+            return redirect("baskets:basket_requested", request_number=basket.number)
+        else:
+            context["basket_form"] = basket_formset
+            map(lambda error: messages.error(request, error), basket_formset.non_form_errors())
+            context["messages"] = messages.get_messages(request)
+            return render(request, "baskets/request_products.html", context=context)
+
+
+    basket_formset = BasketFormSet(initial=initial_values)
+    context = {
+        "basket": basket,
+        "basket_form": basket_formset,
+    }
+
+    return render(request, "baskets/basket_detail_edit.html", context=context)
+
 
 @login_required
 def request_products(request):
@@ -373,7 +459,7 @@ def request_products(request):
     if not month_cycle:
         return HttpResponse("Ops, não existem produtos cadastrados.")
 
-    week_cycle = month_cycle.week_cycles.latest("number")
+    week_cycle = month_cycle.week_cycles.last()
 
     if not week_cycle:
         return HttpResponse("Ops, não existem produtos cadastrados.")
@@ -445,6 +531,7 @@ def request_products(request):
         else:
             context["basket_form"] = basket_formset
             map(lambda error: messages.error(request, error), basket_formset.non_form_errors())
+            context["messages"] = messages.get_messages(request)
             return render(request, "baskets/request_products.html", context=context)
 
 
