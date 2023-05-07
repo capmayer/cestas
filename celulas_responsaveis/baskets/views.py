@@ -407,7 +407,7 @@ def basket_detail_edit(request, basket_number: str):
                             sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
                             sold_product.basket = basket
 
-                            unit = Unit.objects.get(name=form.cleaned_data["unit"])
+                            unit = Unit.objects.get(pk=form.unit_pk)
                             sold_product.unit = unit
 
                         current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
@@ -514,7 +514,7 @@ def request_products(request):
                         sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
                         sold_product.basket = additional_basket
 
-                        unit = Unit.objects.get(name=form.cleaned_data["unit"])
+                        unit = Unit.objects.get(pk=form.unit_pk)
                         sold_product.unit = unit
 
                         current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
@@ -530,7 +530,7 @@ def request_products(request):
             return redirect("baskets:basket_requested", request_number=additional_basket.number)
         else:
             context["basket_form"] = basket_formset
-            map(lambda error: messages.error(request, error), basket_formset.non_form_errors())
+            messages.error(request, basket_formset.non_form_errors()[0])
             context["messages"] = messages.get_messages(request)
             return render(request, "baskets/request_products.html", context=context)
 

@@ -30,6 +30,8 @@ class SoldProductForm(forms.Form):
         requested_quantity_widget.attrs["class"] += " text-center"
         requested_quantity_widget.attrs["step"] = unit.increment
         requested_quantity_widget.attrs["data-unit"] = unit.unit
+        self.unit_name = unit.name
+        self.unit_pk = unit.pk
 
     def clean_requested_quantity(self):
         import re
