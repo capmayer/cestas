@@ -121,7 +121,7 @@ class Unit(models.Model):
     unit = models.CharField(max_length=15)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name}" if self.increment == 1 else f"{self.name} ({int(self.increment*1000)}{self.unit})"
 
 
 class SoldProduct(models.Model):
