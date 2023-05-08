@@ -429,7 +429,7 @@ def basket_detail_edit(request, basket_number: str):
             return redirect("baskets:basket_requested", request_number=basket.number)
         else:
             context["basket_form"] = basket_formset
-            map(lambda error: messages.error(request, error), basket_formset.non_form_errors())
+            [messages.error(request, error) for error in basket_formset.non_form_errors()]
             context["messages"] = messages.get_messages(request)
             return render(request, "baskets/request_products.html", context=context)
 
