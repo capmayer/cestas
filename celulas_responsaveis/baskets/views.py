@@ -530,7 +530,7 @@ def request_products(request):
             return redirect("baskets:basket_requested", request_number=additional_basket.number)
         else:
             context["basket_form"] = basket_formset
-            messages.error(request, basket_formset.non_form_errors()[0])
+            [messages.error(request, error) for error in basket_formset.non_form_errors()]
             context["messages"] = messages.get_messages(request)
             return render(request, "baskets/request_products.html", context=context)
 
