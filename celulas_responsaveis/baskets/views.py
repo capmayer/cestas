@@ -522,7 +522,10 @@ def request_products(request):
                         current_product.save()
                         sold_product.save()
 
-                        total_price += sold_product.price * sold_product.requested_quantity
+                        if sold_product.unit.increment < 1:
+                            total_price += sold_product.price * (sold_product.requested_quantity / 1000)
+                        else:
+                            total_price += sold_product.price * sold_product.requested_quantity
 
             additional_basket.total_price = total_price
             additional_basket.save()
