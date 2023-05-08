@@ -17,7 +17,9 @@ class SoldProductForm(forms.Form):
         label="Quantidade",
         widget=TextInput(
             attrs={
-                "class": "form-control requested_quantity"}
+                "class": "form-control requested_quantity",
+                "readonly": True,
+            },
         ),
     )
 
@@ -34,9 +36,10 @@ class SoldProductForm(forms.Form):
         self.unit_pk = unit.pk
 
     def clean_requested_quantity(self):
+        from unidecode import unidecode
         import re
         requested_quantity = self.cleaned_data["requested_quantity"]
-        requested_quantity = float(re.sub(r'[a-zA-Z]', '', requested_quantity))
+        requested_quantity = float(re.sub(r'[a-zA-Z]', '', unidecode(requested_quantity)))
 
         if requested_quantity <= 0.0:
             return requested_quantity
