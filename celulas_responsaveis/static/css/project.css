@@ -106,6 +106,10 @@ body {
   color: #2470dc;
 }
 
+.unit_width {
+  width: 200px;
+}
+
 .sidebar .nav-link:hover .feather,
 .sidebar .nav-link.active .feather {
   color: inherit;

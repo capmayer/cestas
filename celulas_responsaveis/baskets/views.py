@@ -152,7 +152,7 @@ def producer_home(request):
     producer_cell = get_producer_cell(request.user)
     week_cycle = get_week_cycle(producer_cell)
 
-    week_cycle_infos = week_cycle.baskets.filter(is_paid=True).aggregate(Count('id'), Sum('total_price'))
+    week_cycle_infos = week_cycle.baskets.all().aggregate(Count('id'), Sum('total_price'))
     paid_baskets = week_cycle.baskets.filter(is_paid=True).count()
     cells_count = producer_cell.consumer_cells.count()
 
@@ -321,7 +321,7 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
 
     week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
 
-    products = week_cycle.baskets.filter(is_paid=True).values('products__name', 'products__unit__name', 'products__unit__increment', 'products__unit__unit').annotate(requested_quantity=Sum('products__requested_quantity'))
+    products = week_cycle.baskets.all().values('products__name', 'products__unit__name', 'products__unit__increment', 'products__unit__unit').annotate(requested_quantity=Sum('products__requested_quantity'))
     context = {
         "products": products,
         "week_cycle": week_cycle,
@@ -338,7 +338,7 @@ def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
     week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
 
     cells = defaultdict(list)  # Dict[cell_name, List[Baskets]]
-    for basket in week_cycle.baskets.filter(is_paid=True):
+    for basket in week_cycle.baskets.order_by("person__name"):
         cells[basket.consumer_cell].append(basket)
 
     # Necessary to render the dict in template, otherwise a new empty list is created when template
@@ -414,11 +414,12 @@ def basket_detail_edit(request, basket_number: str):
                         current_product.reduce_available_quantity(sold_product.requested_quantity)
                         current_product.save()
 
-                        sold_product.save()
                         if sold_product.unit.increment < 1:
                             total_price += sold_product.price * (sold_product.requested_quantity / 1000)
                         else:
                             total_price += sold_product.price * sold_product.requested_quantity
+
+                        sold_product.save()
 
                     if requested_quantity == 0 and sold_product:
                         sold_product.delete()
@@ -520,12 +521,13 @@ def request_products(request):
                         current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
                         current_product.reduce_available_quantity(sold_product.requested_quantity)
                         current_product.save()
-                        sold_product.save()
 
                         if sold_product.unit.increment < 1:
                             total_price += sold_product.price * (sold_product.requested_quantity / 1000)
                         else:
                             total_price += sold_product.price * sold_product.requested_quantity
+
+                        sold_product.save()
 
             additional_basket.total_price = total_price
             additional_basket.save()

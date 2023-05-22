@@ -1,8 +1,6 @@
 import datetime
-import locale
 import random
 
-from django.contrib.sites.models import Site
 from django.db import models
 from django.urls import reverse
 
@@ -70,7 +68,7 @@ class ProductsList(models.Model):
 def basket_identification_number():
     time_now = datetime.datetime.now()
     random_number = random.randrange(0, 10**6)
-    identification = f"{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}{random_number:06d}"
+    identification = f"{random_number:06d}{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}"
     return identification
 
 class Basket(models.Model):
@@ -138,7 +136,10 @@ class SoldProduct(models.Model):
         return self.price * self.requested_quantity
 
     def __str__(self) -> str:
-        return f"{self.requested_quantity}{self.unit} de {self.product} = {self.total_price}"
+        if self.unit.increment < 1:
+            return f"{self.requested_quantity}{self.unit.unit} de {self.product} = {self.total_price}"
+        else:
+            return f"{self.requested_quantity}{self.unit.k_unit} de {self.product} = {self.total_price}"
 
 
 class ProductWithPrice(models.Model):
@@ -159,8 +160,7 @@ class ProductWithPrice(models.Model):
         if self.unit.increment < 1:
             value = value / 1000
 
-
         self.available_quantity = self.available_quantity - value
 
-        if self.available_quantity == 0.0:
+        if self.available_quantity < 0.0:
             self.is_available = False

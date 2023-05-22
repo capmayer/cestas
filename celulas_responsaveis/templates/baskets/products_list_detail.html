@@ -19,22 +19,27 @@
           {{ products_list_form.management_form}}
           <div id="form-content">
             {% for form in products_list_form %}
-              <div class="card p-2 mb-2 product-form" >
-                <div class="row">
-                  {% for hidden in form.hidden_fields %}
-                    {{ hidden }}
-                  {% endfor %}
-                  <div class="form-group col-6 col-md-3">
-                    {{ form.name|as_crispy_field }}
-                  </div>
-                  <div class="form-group col-6 col-md-3">
-                    {{ form.price|as_crispy_field }}
-                  </div>
-                  <div class="form-group col-6 col-md-3">
-                    {{ form.available_quantity|as_crispy_field }}
-                  </div>
-                  <div class="form-group col-6 col-md-3">
-                    {{ form.unit|as_crispy_field }}
+              <div class="card mb-2 product-form" >
+                <div class="card-body">
+                  <div class="d-flex flex-column flex-md-row">
+                    {% for hidden in form.hidden_fields %}
+                      {{ hidden }}
+                    {% endfor %}
+                    <div class="form-group me-3 d-flex justify-content-center" style="scale: 1.4;">
+                      {{ form.is_available }}
+                    </div>
+                    <div class="form-group d-flex">
+                      {{ form.name|as_crispy_field }}
+                    </div>
+                    <div class="form-group d-flex">
+                      {{ form.price|as_crispy_field }}
+                    </div>
+                    <div class="form-group d-flex">
+                      {{ form.available_quantity|as_crispy_field }}
+                    </div>
+                    <div class="form-group d-flex flex-column flex-md-row">
+                      {{ form.unit|as_crispy_field }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -42,25 +47,27 @@
           </div>
         </div>
         <div class="empty-form" id="empty-form">
-          <div class="card p-2 mb-2">
-            <div class="row">
-              {% for hidden in form.hidden_fields %}
-                {{ hidden }}
-              {% endfor %}
-              <div class="form-group col-6 col-md-3">
-                {{ products_list_form.empty_form.name|as_crispy_field }}
-              </div>
-              <div class="form-group col-6 col-md-3">
-                {{ products_list_form.empty_form.price|as_crispy_field }}
-              </div>
-              <div class="form-group col-6 col-md-3">
-                {{ products_list_form.empty_form.available_quantity|as_crispy_field }}
-              </div>
-              <div class="form-group col-6 col-md-3">
-                {{ products_list_form.empty_form.unit|as_crispy_field }}
-              </div>
-              <div class="empty-form">
-                {{ products_list_form.empty_form.prefix }}
+          <div class="card mb-2 product-form" >
+            <div class="card-body">
+              <div class="d-flex flex-column flex-md-row">
+                {% for hidden in products_list_form.empty_form.hidden_fields %}
+                  {{ hidden }}
+                {% endfor %}
+                <div class="form-group me-3 d-flex justify-content-center" style="scale: 1.4;">
+                  {{ products_list_form.empty_form.is_available }}
+                </div>
+                <div class="form-group d-flex">
+                  {{ products_list_form.empty_form.name|as_crispy_field }}
+                </div>
+                <div class="form-group d-flex">
+                  {{ products_list_form.empty_form.price|as_crispy_field }}
+                </div>
+                <div class="form-group d-flex">
+                  {{ products_list_form.empty_form.available_quantity|as_crispy_field }}
+                </div>
+                <div class="form-group d-flex">
+                  {{ products_list_form.empty_form.unit|as_crispy_field }}
+                </div>
               </div>
             </div>
           </div>

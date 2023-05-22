@@ -69,12 +69,13 @@ BasketFormSet = formset_factory(SoldProductForm, extra=0, formset=BaseBasketForm
 class ProductWithPriceForm(forms.ModelForm):
     class Meta:
         model = ProductWithPrice
-        fields = ["name", "price", "unit", "available_quantity"]
+        fields = ["name", "price", "unit", "available_quantity", "is_available"]
         labels = {
             "name": "Nome",
             "price": "Preço",
             "unit": "Medida",
             "available_quantity": "Quantidade",
+            "is_available": "Disponível",
         }
 
 ProductsListFormSet = inlineformset_factory(
