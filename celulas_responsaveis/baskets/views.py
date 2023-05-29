@@ -455,7 +455,7 @@ def request_products(request):
         "cell": consumer_cell,
         "messages": [],
     }
-    month_cycle = MonthCycle.objects.filter(producer_cell=consumer_cell.producer_cell).first()
+    month_cycle = MonthCycle.objects.filter(producer_cell=consumer_cell.producer_cell).last()
 
     if not month_cycle:
         return HttpResponse("Ops, não existem produtos cadastrados.")
