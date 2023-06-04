@@ -128,13 +128,11 @@ def get_week_cycle(producer_cell):
     week_cycle = month_cycle.week_cycles.last()
     # Wait one more day before closing current cycle.
     cycle_over_date = week_cycle.delivery_day + datetime.timedelta(days=1)
-    print(today.date())
-    print(cycle_over_date)
 
     if today.date() > cycle_over_date:
 
         # Check if next delivery day is in next month.
-        if next_delivery_day.replace(day=1) > week_cycle.delivery_day.replace(day=1):
+        if next_delivery_day.date().replace(day=1) > week_cycle.delivery_day.replace(day=1):
             month_cycle = MonthCycle()
             month_cycle.producer_cell = producer_cell
             month_cycle.begin = next_delivery_day.replace(day=1)
