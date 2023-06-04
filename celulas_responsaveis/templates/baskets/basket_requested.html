@@ -12,12 +12,12 @@
           </div>
         {% endfor %}
       {% endif %}
-      <h2>Faça o pagamento para o pix abaixo e envie o comprovante para o/a responsável:</h2>
+      <h2>Faça o Pix para a chave abaixo e envie o comprovante clicando no botão:</h2>
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-column flex-md-row justify-content-between">
-              <h4>Responsável:</h4>
-              <h4>{{ payment_info.receiver_name }}</h4>
+              <h4 class="fw-bold">Responsável:</h4>
+              <h4 class="fw-bold">{{ payment_info.receiver_name }}</h4>
           </div>
         </div>
       </div>
@@ -25,11 +25,11 @@
         <div class="card-body">
           <div class="d-flex flex-column flex-md-row  justify-content-between">
             <div class="d-flex me-1">
-              <h4>Chave pix:</h4>
+              <h4 class="fw-bold">Chave pix:</h4>
             </div>
             <div class="d-flex">
-              <h4 id="pix_key">{{ payment_info.pix_key }}</h4>
-              <h5><span type="button" class="badge ms-2 bg-secondary" onclick="copyPixKeyToClipboard()">COPIAR</span></h5>
+              <h5><span type="button" class="badge bg-secondary" onclick="copyPixKeyToClipboard()">COPIAR</span></h5>
+              <h4 id="pix_key" class="fw-bold ms-2 ">{{ payment_info.pix_key }}</h4>
             </div>
           </div>
         </div>
@@ -37,8 +37,8 @@
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-row justify-content-between">
-            <div class="d-flex flex-column h4">Preço total: </div>
-            <div class="d-flex flex-column h4">
+            <div class="d-flex flex-column h4 fw-bold">Preço total: </div>
+            <div class="d-flex flex-column h4 fw-bold">
               <div>R${{ basket.total_price|floatformat:2 }}</div>
             </div>
           </div>
@@ -46,7 +46,7 @@
       </div>
       <div class="row mt-2">
         <div class="mb-1 d-grid">
-          <a class="btn btn-success" href="{{ basket.get_absolute_url }}">VER PEDIDO</a>
+          <a class="btn btn-secondary" href="{{ basket.get_absolute_url }}">VER PEDIDO</a>
         </div>
         <div class="mb-1 d-grid">
           <a class="btn btn-success" target="_blank" href="{{ send_payment_confirmation_url }}">ENVIAR COMPROVANTE</a>
@@ -54,7 +54,7 @@
       </div>
     </div>
   </div>
-    <script type="text/javascript">
+  <script type="text/javascript">
     function copyPixKeyToClipboard() {
       var pixKeyElement = document.getElementById("pix_key");
       navigator.clipboard.writeText(pixKeyElement.textContent);

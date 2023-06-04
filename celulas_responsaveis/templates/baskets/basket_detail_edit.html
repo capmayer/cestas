@@ -20,7 +20,7 @@
         <h6>Pedidos encerrados, até semana que vem ;)</h6>
       {% else %}
         <div class="d-flex flex-column flex-md-row justify-content-between">
-          <h6>Alterações até {{ basket.week_cycle.request_day }}</h6>
+          <h6>Alterações até <span class="fw-bold">{{ basket.week_cycle.request_day }}</span></h6>
           <h6 class="d-flex align-items-center">{{ cycle.month_cycle }} - {{ cycle }}</h6>
         </div>
         <div class="row">
@@ -34,13 +34,12 @@
                     <div class="card-body">
                       <div class="d-flex flex-column flex-md-row justify-content-md-between justify-content-sm-center">
                         <div class="d-flex flex-column">
-                          <div class="d-flex align-self-center align-self-md-baseline h3">
+                          <div class="d-flex align-self-center align-self-md-baseline h4 fw-bold">
                               {{ form.name.value }}
                           </div>
                           <div class="d-flex align-self-center align-self-md-baseline">
-                            <div class="mb-2">
-                              R$<span id="product_price_{{ forloop.counter0}}">{{ form.price.value|floatformat:2 }} </span>
-                              <span>{{ form.unit_name }}</span>
+                            <div class="">
+                              R$<span id="product_price_{{ forloop.counter0}}">{{ form.price.value|floatformat:2 }}/</span><span>{{ form.unit_name }}</span>
                             </div>
                           </div>
                         </div>
@@ -76,8 +75,8 @@
               <div class="card">
                 <div class="card-body">
                   <div class="d-flex flex-row justify-content-between">
-                    <div class="d-flex flex-column h3">Preço total: </div>
-                    <div class="d-flex flex-column h3">
+                    <div class="d-flex flex-column h4 fw-bold">Preço total: </div>
+                    <div class="d-flex flex-column h4 fw-bold">
                       <div>R$<span id="total_price">0,00</span></div>
                     </div>
                   </div>

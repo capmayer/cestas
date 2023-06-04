@@ -21,32 +21,18 @@
         </div>
 
         {% for basket in baskets %}
-          <div class="card mb-2">
-            <div class="card-header">
-              <a class="stretched-link" data-bs-toggle="collapse" href="#collapseExample{{ basket.number }}" role="button" aria-expanded="true" aria-controls="collapseExample{{  basket.number }}"></a>
-              <div class="fw-bold h5 mt-1">{{ basket.person.name }}</div>
-            </div>
-            <div class="collapse show" id="collapseExample{{  basket.number }}">
+          <div class="h5"><span class="fw-bold">Consumidor(a):</span> {{ basket.person.name }}</div>
+          <table class="table">
+            <tbody>
               {% for product in basket.products.all %}
-                <div class="card-body border-bottom">
-                  <div class="d-flex flex-row justify-content-between">
-                    <div class="d-flex flex-column">
-                      <div class="h5">{{ product.name }}</div>
-                    </div>
-                    <div class="d-flex flex-row">
-                      <div class="d-flex align-self-center">
-                        {% if product.unit.increment < 1 %}
-                          <div class="h5">{{ product.requested_quantity|floatformat:0 }} {{ product.unit.unit }}</div>
-                        {% else %}
-                          <div class="h5">{{ product.requested_quantity|floatformat:0 }} {{ product.unit.unit }}</div>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <tr>
+                  <td class="h5">{{ product.name }}</td>
+                  <td class="h5">{{ product.formatted_requested_quantity }}</td>
+
+                </tr>
               {% endfor %}
-            </div>
-          </div>
+            </tbody>
+          </table>
         {% endfor %}
       {% endfor %}
     </div>

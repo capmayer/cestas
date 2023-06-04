@@ -11,6 +11,8 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.timezone import is_aware
 
 from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, WeekCycleForm, MonthCycleForm
 from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
@@ -29,15 +31,9 @@ def consumer_home(request):
     }
     return render(request, "baskets/home.html", context=context)
 
-
-def get_active_cycles(cell: ConsumerCell):
-    today = datetime.date.today()
-    last_week = today + datetime.timedelta(-7)
-    return MonthCycle.objects.filter(cell=cell, begin__range=[last_week, today])
-
 def is_cycle_over(cycle: WeekCycle) -> bool:
-    today = datetime.date.today()
-    return today > cycle.request_day
+    today = timezone.now()
+    return today >= cycle.request_day
 
 def get_producer_cell(user: User):
     memberships = ProducerMembership.objects.filter(person=user)
@@ -90,10 +86,15 @@ def get_week_of_month(date):
 
 def get_week_cycle(producer_cell):
     cycle_settings = CycleSettings.objects.filter(producer_cell=producer_cell).first()
-    today = datetime.date.today()
+    today = timezone.now().astimezone(timezone.get_default_timezone())
+    today = today.replace(hour=0, minute=0)
+
+    # Get monday.
     week_start_day = today - datetime.timedelta(days=today.weekday())
+
     delivery_day = week_start_day + datetime.timedelta(days=cycle_settings.week_day_delivery)
-    request_day = week_start_day + datetime.timedelta(days=cycle_settings.week_day_requests_end)
+    request_day = week_start_day + datetime.timedelta(days=cycle_settings.week_day_requests_end) + datetime.timedelta(hours=cycle_settings.week_day_requests_end_time.hour)
+
     next_delivery_day = delivery_day + datetime.timedelta(days=7)
     next_request_day = request_day + datetime.timedelta(days=7)
 
@@ -102,35 +103,37 @@ def get_week_cycle(producer_cell):
         month_cycle = MonthCycle()
         month_cycle.producer_cell = producer_cell
 
+        # Check if next delivery day is in the next month.
         if next_delivery_day.replace(day=1) > delivery_day.replace(day=1):
-            begin = week_start_day + datetime.timedelta(days=7)
+            month_cycle.begin = next_delivery_day.replace(day=1)
         else:
-            begin = week_start_day
-        month_cycle.begin = begin.replace(day=1)
+            month_cycle.begin = delivery_day.replace(day=1)
+
         month_cycle.save()
 
         week_cycle = WeekCycle()
         week_cycle.month_cycle = month_cycle
 
         if today > delivery_day:
-            week_cycle.delivery_day = next_delivery_day
+            week_cycle.delivery_day = next_delivery_day.date()
             week_cycle.request_day = next_request_day
         else:
-            week_cycle.delivery_day = delivery_day
+            week_cycle.delivery_day = delivery_day.date()
             week_cycle.request_day = request_day
 
         week_cycle.number = get_week_of_month(week_cycle.delivery_day)
         week_cycle.save()
-
         return week_cycle
 
     week_cycle = month_cycle.week_cycles.last()
-
     # Wait one more day before closing current cycle.
     cycle_over_date = week_cycle.delivery_day + datetime.timedelta(days=1)
+    print(today.date())
+    print(cycle_over_date)
 
-    if today > cycle_over_date:
+    if today.date() > cycle_over_date:
 
+        # Check if next delivery day is in next month.
         if next_delivery_day.replace(day=1) > week_cycle.delivery_day.replace(day=1):
             month_cycle = MonthCycle()
             month_cycle.producer_cell = producer_cell
@@ -139,9 +142,9 @@ def get_week_cycle(producer_cell):
 
         week_cycle = WeekCycle()
         week_cycle.month_cycle = month_cycle
-        week_cycle.delivery_day = next_delivery_day
+        week_cycle.delivery_day = next_delivery_day.date()
         week_cycle.request_day = next_request_day
-        week_cycle.number = get_week_of_month(week_cycle.delivery_day)
+        week_cycle.number = get_week_of_month(next_delivery_day)
 
         week_cycle.save()
 
@@ -197,6 +200,18 @@ def producer_payment_confirmation(request, basket_number: str):
     }
 
     return render(request, "baskets/producer_payment_confirmation.html", context=context)
+
+@login_required
+def producer_cells_list(request):
+    producer_cell = get_producer_cell(request.user)
+    site_domain = Site.objects.get_current().domain
+    context = {
+        "producer_cell": producer_cell,
+        "site_domain": site_domain,
+    }
+
+    return render(request, "baskets/producer_cells_list.html", context=context)
+
 
 @login_required
 def products_list_detail(request):
@@ -321,7 +336,20 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
 
     week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
 
-    products = week_cycle.baskets.all().values('products__name', 'products__unit__name', 'products__unit__increment', 'products__unit__unit').annotate(requested_quantity=Sum('products__requested_quantity'))
+    def format_requested_quantity(product):
+        unit = Unit.objects.get(pk=product["products__unit_id"])
+        requested_quantity = product["requested_quantity"]
+        if requested_quantity > 1000:
+            formatted_quantity = f"{requested_quantity / 1000} {unit.k_unit}"
+        else:
+            formatted_quantity = f"{int(requested_quantity)} {unit.unit}"
+
+        product["formatted_requested_quantity"] = formatted_quantity
+        return product
+
+    products = week_cycle.baskets.all().values('products__name', 'products__unit_id').annotate(requested_quantity=Sum('products__requested_quantity'))
+    products = [format_requested_quantity(product) for product in products]
+
     context = {
         "products": products,
         "week_cycle": week_cycle,
@@ -398,7 +426,10 @@ def basket_detail_edit(request, basket_number: str):
                     sold_product = SoldProduct.objects.filter(name=form.cleaned_data["name"], basket=basket).first()
 
                     if requested_quantity > 0.0:
+                        current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
+
                         if sold_product:
+                            current_product.add_available_quantity(sold_product.requested_quantity)
                             sold_product.requested_quantity = form.cleaned_data["requested_quantity"]
                         else:
                             sold_product = SoldProduct()
@@ -410,7 +441,7 @@ def basket_detail_edit(request, basket_number: str):
                             unit = Unit.objects.get(pk=form.unit_pk)
                             sold_product.unit = unit
 
-                        current_product = ProductWithPrice.objects.get(pk=form.initial["product_pk"])
+
                         current_product.reduce_available_quantity(sold_product.requested_quantity)
                         current_product.save()
 

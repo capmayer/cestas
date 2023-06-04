@@ -1,8 +1,8 @@
-import datetime
 import random
 
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 from celulas_responsaveis.cells.models import ConsumerCell, ProducerCell
 from celulas_responsaveis.users.models import User
@@ -12,6 +12,7 @@ class CycleSettings(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="cycle_settings", on_delete=models.CASCADE)
     week_day_requests_end = models.IntegerField()
     week_day_delivery = models.IntegerField()
+    week_day_requests_end_time = models.TimeField()
 
 def hex_uuid():
     pass
@@ -38,13 +39,13 @@ class MonthCycle(models.Model):
         return self.begin.strftime('%m%Y')
 
     def __str__(self) -> str:
-        return f"Ciclo de {MONTH_TO_PORTUGUESE[self.begin.month - 1]}"
+        return f"Ciclo de {MONTH_TO_PORTUGUESE[self.begin.month]}"
 
 
 class WeekCycle(models.Model):
     month_cycle = models.ForeignKey(MonthCycle, related_name="week_cycles", on_delete=models.CASCADE)
     delivery_day = models.DateField()
-    request_day = models.DateField()
+    request_day = models.DateTimeField()
     number = models.IntegerField()
 
     def get_number_of_baskets(self):
@@ -66,7 +67,7 @@ class ProductsList(models.Model):
         return f"Lista de produtos {self.producer_cell}"
 
 def basket_identification_number():
-    time_now = datetime.datetime.now()
+    time_now = timezone.now()
     random_number = random.randrange(0, 10**6)
     identification = f"{random_number:06d}{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}"
     return identification
@@ -141,6 +142,11 @@ class SoldProduct(models.Model):
         else:
             return f"{self.requested_quantity}{self.unit.k_unit} de {self.product} = {self.total_price}"
 
+    def formatted_requested_quantity(self):
+        if self.requested_quantity >= 1000:
+            return f"{self.requested_quantity/1000} {self.unit.k_unit}"
+
+        return f"{int(self.requested_quantity)} {self.unit.unit}"
 
 class ProductWithPrice(models.Model):
     product = models.ForeignKey(Product, related_name="+", null=True, on_delete=models.SET_NULL)
@@ -164,3 +170,9 @@ class ProductWithPrice(models.Model):
 
         if self.available_quantity < 0.0:
             self.is_available = False
+
+    def add_available_quantity(self, value):
+        if self.unit.increment < 1:
+            value = value / 1000
+
+        self.available_quantity = self.available_quantity + value

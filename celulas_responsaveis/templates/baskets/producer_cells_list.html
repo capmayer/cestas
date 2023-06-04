@@ -1,0 +1,33 @@
+{% extends "base_producer.html" %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col-md-10">
+      <div class="row mb-4">
+        <div class="col-12">
+          <h3 class="fw-bold">Células atendidas</h3>
+        </div>
+      </div>
+      {% for cell in producer_cell.consumer_cells.all %}
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex flex-column flex-md-row justify-content-between">
+              <div class="d-flex align-items-center">
+                <h5 class="fw-bold">CCR {{ cell }}</h5>
+              </div>
+              <div class="d-flex flex-column flex-md-row align-items-center">
+                <span class="btn btn-success" onclick="copyCellLink('{% url 'cells:apply_to_consumer_cell' cell_slug=cell.slug %}')">COPIAR LINK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <script type="text/javascript">
+    function copyCellLink(cell_link) {
+      navigator.clipboard.writeText('https://{{site_domain}}' + cell_link);
+    }
+
+  </script>
+{% endblock content %}
