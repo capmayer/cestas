@@ -182,6 +182,18 @@ def producer_cycle_requests(request, month_identifier: str, week_cycle_number: i
     return render(request, "baskets/producer_requests.html", context=context)
 
 @login_required
+def producer_list_consumers(request):
+    producer_cell = get_producer_cell(request.user)
+
+    consumers = ConsumerMembership.objects.filter(cell__producer_cell=producer_cell)
+
+    context = {
+        "consumers": consumers
+    }
+
+    return render(request, "baskets/producer_list_consumers.html", context=context)
+
+@login_required
 def producer_payment_confirmation(request, basket_number: str):
     producer_cell = get_producer_cell(request.user)
 
@@ -202,7 +214,7 @@ def producer_payment_confirmation(request, basket_number: str):
 @login_required
 def producer_cells_list(request):
     producer_cell = get_producer_cell(request.user)
-    site_domain = Site.objects.get_current().domain
+    site_domain = Site.objects.get_current().domain  # Necessary to show full url.
     context = {
         "producer_cell": producer_cell,
         "site_domain": site_domain,
