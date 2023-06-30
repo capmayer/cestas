@@ -1,0 +1,50 @@
+version: '3.5'
+
+services:
+  django: 
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+#    image: registry.codigos.ufsc.br/lacaf/plataforma-ccr:latest
+    depends_on:
+      - postgres
+    ports:
+      - 5000:5000
+    environment:
+      USE_DOCKER: yes
+      IPYTHONDIR: /app/.ipython
+      REDIS_URL: redis://redis:6379/0
+      CELERY_FLOWER_USER: gytLESIQnemhJHhaRvjIAeaKVMoqTuMh
+      CELERY_FLOWER_PASSWORD: w0uNckBJC3IBfdYRJMYlFQDvQCr4i9m4qIxHMVzYHfDLrnOh9SQIPy20MKN6mZUq
+      DJANGO_EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+      DJANGO_EMAIL_HOST: ""
+      DJANGO_EMAIL_HOST_USER: ""
+      DJANGO_EMAIL_HOST_PASSWORD: ""
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SECRET_KEY: "ASDF"
+      DJANGO_ADMIN_URL: ""
+      DJANGO_ALLOWED_HOSTS: "localhost"
+      USE_X_FORWARDED_HOST: True
+      DJANGO_SECURE_SSL_REDIRECT: False
+      SECURE_PROXY_SSL_HEADER: ('HTTP_X_FORWARDED_PROTO', 'https')
+      POSTGRES_HOST: &db-host postgres
+      POSTGRES_PORT: &db-port 5432
+      POSTGRES_DB: &db-name celulas_responsaveis
+      POSTGRES_USER: &db-user hyaMbuEzMGImMkurnGIMBMkonYyHWZlZ
+      POSTGRES_PASSWORD: &db-pass 6QbBWrm7kfR9Ub8g2YiB11OabezSWAXJrv8IO5c4HKda9OxMIMIfnXuJuao4YcG3
+    command: /start
+
+  postgres:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:Z
+    environment:
+      POSTGRES_HOST: *db-host
+      POSTGRES_PORT: *db-port
+      POSTGRES_DB: *db-name
+      POSTGRES_USER: *db-user
+      POSTGRES_PASSWORD: *db-pass
+
+volumes:
+  postgres_data: 
+
