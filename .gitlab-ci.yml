@@ -22,16 +22,16 @@ build:
 # URL de Webhook será enviada pela SeTIC mediante requisição via chamado.
 # Esta variável deve ser configurada no codigos.ufsc.br:
 # Dentro do projeto > Settings > CI/CD > Secret Variables
-#portainer: 
-#  stage: portainer
-#  only:
-#    - master
-#    - main
-#  variables:
-#    GIT_CHECKOUT: "false"
-#  script:
-#          - if [[ ! -z "${WEBHOOK_PORTAINER}" ]]; then
-#            for url in $(echo ${WEBHOOK_PORTAINER} | sed "s/,/ /g"); do wget --post-data '' -O - "$url"; done
-#            else
-#              echo "Empty \$WEBHOOK_PORTAINER" ; exit 1;
-#            fi
+portainer: 
+  stage: portainer
+  only:
+    - master
+    - main
+  variables:
+    GIT_CHECKOUT: "false"
+  script:
+          - if [[ ! -z "${WEBHOOK_PORTAINER}" ]]; then
+            for url in $(echo ${WEBHOOK_PORTAINER} | sed "s/,/ /g"); do wget --post-data '' -O - "$url"; done
+            else
+              echo "Empty \$WEBHOOK_PORTAINER" ; exit 1;
+            fi
