@@ -21,7 +21,7 @@ services:
       DJANGO_EMAIL_HOST_USER: ""
       DJANGO_EMAIL_HOST_PASSWORD: ""
       DJANGO_SETTINGS_MODULE: config.settings.production
-      DJANGO_SECRET_KEY: "ASDF"
+      DJANGO_SECRET_KEY: "teste"
       DJANGO_ADMIN_URL: "admin"
       DJANGO_ALLOWED_HOSTS: "localhost"
       USE_X_FORWARDED_HOST: True
