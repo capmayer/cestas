@@ -26,19 +26,28 @@
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-column flex-md-row justify-content-between">
-            <h5 class="fw-bold">Local de partilha: </h5>
-            <h5>{{ location.get_full_address }}</h5>
+            <h5 class="fw-bold">Dia de partilha: </h5>
+            <h5>{{ location.share_day }}</h5>
           </div>
         </div>
       </div>
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-column flex-md-row justify-content-between">
-            <h5 class="fw-bold">Horário de partilha: </h5>
+            <h5 class="fw-bold">Horário: </h5>
             <h5>{{ cell.share_time }}</h5>
           </div>
         </div>
       </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-md-row justify-content-between">
+            <h5 class="fw-bold">Local: </h5>
+            <h5>{{ location.get_full_address }}</h5>
+          </div>
+        </div>
+      </div>
+      {% if cell.statute_file %}
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-column flex-md-row justify-content-between">
@@ -47,6 +56,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-column flex-md-row justify-content-between">
