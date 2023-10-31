@@ -44,6 +44,10 @@ class ProducerCell(models.Model):
 class ConsumerCell(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    share_time = models.CharField(max_length=30, default="")
+    message_group_link = models.CharField(max_length=120, default="")
+    statute_file = models.FileField(upload_to="cells_statute", blank=True)
+
     is_active = models.BooleanField(default=False)
     created = models.DateField(auto_now_add=True)
     slug = models.SlugField(max_length=120)
