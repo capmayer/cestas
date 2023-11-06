@@ -64,8 +64,10 @@
 
       {% if ACCOUNT_ALLOW_REGISTRATION %}
         <p class="col col-sm-12" style="margin-bottom:30px;">
-            Não possuí uma conta ainda, <a href="{{ signup_url }}">cadastre-se aqui</a>.
-
+          {% blocktranslate trimmed %}
+            If you have not created an account yet, then please
+            <a href="{{ signup_url }}">sign up</a> first.
+          {% endblocktranslate %}
         </p>
       {% endif %}
 

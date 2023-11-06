@@ -42,19 +42,22 @@
 
   </head>
 
-    <nav class="navbar navbar-color sticky-top navbar-expand-lg bg-success">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#"></a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="d-flex">
-          <a class="btn" href="{% url 'account_logout' %}">SAIR</a>
-        </div>
-      </div>
-    </nav>
+    <header class="navbar navbar-dark sticky-top bg-success flex-md-nowrap p-0 shadow">
+      <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">CCRs</a>
+      <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <ul class="navbar-nav ms-auto">
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            {{ user.get_greetings }}
+          </li>
+        {% endif %}
+      </ul>
+    </header>
 
   <body>
+
     <div class="container-fluid">
       <div class="row">
         <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
@@ -95,6 +98,7 @@
 
         <main class="col-md-10 ms-sm-auto px-md-4">
           <div class="">
+
             {% block content %}
             {% endblock content %}
           </div>
