@@ -1,9 +1,14 @@
+from enum import Enum
+
 from django.contrib.auth.models import AbstractUser
 from django.db.models import CharField
 from django.urls import reverse
 from datetime import datetime
 from django.utils.translation import gettext_lazy as _
 
+class UserViewer(Enum):
+    CONSUMER = "CS"
+    PRODUCER = "PD"
 
 class User(AbstractUser):
     """
@@ -21,6 +26,12 @@ class User(AbstractUser):
     address = CharField(blank=True, max_length=255)
     city = CharField(blank=True, max_length=100)
     state = CharField(blank=True, max_length=2)
+
+    VIEW_CHOICES = (
+        (UserViewer.CONSUMER.value, "Consumer"),
+        (UserViewer.PRODUCER.value, "Producer"),
+    )
+    viewing_as = CharField(choices=VIEW_CHOICES, default=UserViewer.CONSUMER.value, max_length=3)
 
     def get_absolute_url(self):
         """Get url for user's detail view.
@@ -40,3 +51,6 @@ class User(AbstractUser):
             greeting = "Boa tarde"
 
         return f"{greeting}, {self.name.split(' ')[0]}"
+
+    def is_producer(self) -> bool:
+        return self.viewing_as == UserViewer.PRODUCER.value
