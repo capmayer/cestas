@@ -159,6 +159,9 @@ class ProductWithPrice(models.Model):
 
     additional_products_list = models.ForeignKey(ProductsList, related_name="products", on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ("name", )
+
     def __str__(self) -> str:
         return f"{self.name}"
 
