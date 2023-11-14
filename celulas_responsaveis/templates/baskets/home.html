@@ -3,7 +3,8 @@
 {% block content %}
   <div class="row justify-content-md-center mt-4">
     <div class="col-sm-11 col-lg-8">
-      <h3 class="fw-bold">Minhas cestas</h3>
+      <a class="btn btn-success w-100" href="{% url 'baskets:request_products'%}">PEDIR ADICIONAIS</a>
+      <h3 class="fw-bold mt-3">Minhas cestas</h3>
       {% if not baskets %}
         <h1>
           Você ainda não possui cestas.
