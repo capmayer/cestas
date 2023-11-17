@@ -20,6 +20,7 @@ from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle
 from celulas_responsaveis.cells.models import ConsumerCell, PaymentInfo, ProducerMembership, ConsumerMembership, \
     ProducerCell
 from celulas_responsaveis.users.models import User
+from celulas_responsaveis.utils.template_message import consumer_message
 
 
 @login_required
@@ -179,7 +180,7 @@ def producer_cycle_requests(request, month_identifier: str, week_cycle_number: i
         "baskets": baskets,
         "week_cycle": week_cycle,
     }
-    return render(request, "baskets/baskets_requested.html", context=context)
+    return render(request, "baskets/producer/baskets_requested.html", context=context)
 
 @login_required
 def producer_list_consumers(request):
@@ -349,7 +350,7 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
     def format_requested_quantity(product):
         unit = Unit.objects.get(pk=product["products__unit_id"])
         requested_quantity = product["requested_quantity"]
-        if requested_quantity > 1000:
+        if requested_quantity >= 1000:
             formatted_quantity = f"{requested_quantity / 1000} {unit.k_unit}"
         else:
             formatted_quantity = f"{int(requested_quantity)} {unit.unit}"
@@ -401,9 +402,7 @@ def basket_detail_edit(request, basket_number: str):
     context = {}
 
     if is_cycle_over(basket.week_cycle):
-        context["back_url"] = request.META.get("HTTP_REFERER", "")
-        context["message"] = "Alterações encerradas."
-        return render(request, "info_message.html", context)
+        return consumer_message(request, "Alterações encerradas.")
 
     products_list = ProductsList.objects.filter(producer_cell=basket.consumer_cell.producer_cell).first()
     actual_products = {product.name: product.requested_quantity for product in basket.products.all()}
@@ -475,7 +474,7 @@ def basket_detail_edit(request, basket_number: str):
             context["basket_form"] = basket_formset
             [messages.error(request, error) for error in basket_formset.non_form_errors()]
             context["messages"] = messages.get_messages(request)
-            return render(request, "baskets/producer/request_products.html", context=context)
+            return render(request, "baskets/consumer/request_products.html", context=context)
 
 
     basket_formset = BasketFormSet(initial=initial_values)
@@ -519,7 +518,7 @@ def request_products(request):
     context["is_cycle_over"] = is_cycle_over(week_cycle)
 
     if not products_lists or is_cycle_over(week_cycle):
-        return render(request, "baskets/request_products.html", context=context)
+        return render(request, "baskets/consumer/request_products.html", context=context)
 
     products_list = products_lists.first()
     initial_values = []
@@ -535,7 +534,7 @@ def request_products(request):
 
     if request.method == "POST":
         if is_cycle_over(week_cycle):
-            return HttpResponse("Oops, os pedidos estão encerrados para esse ciclo.")
+            return consumer_message(request,"Os pedidos foram encerrados.")
 
         basket_formset = BasketFormSet(request.POST, initial=initial_values)
 
@@ -580,7 +579,7 @@ def request_products(request):
             context["basket_form"] = basket_formset
             [messages.error(request, error) for error in basket_formset.non_form_errors()]
             context["messages"] = messages.get_messages(request)
-            return render(request, "baskets/request_products.html", context=context)
+            return render(request, "baskets/consumer/request_products.html", context=context)
 
 
     basket_formset = BasketFormSet(initial=initial_values)
@@ -589,7 +588,7 @@ def request_products(request):
     context["cell"] = consumer_cell
     context["basket_form"] = basket_formset
 
-    return render(request, "baskets/request_products.html", context=context)
+    return render(request, "baskets/consumer/request_products.html", context=context)
 
 def get_send_message_url(basket, payment_info):
     from django.utils.http import urlencode
