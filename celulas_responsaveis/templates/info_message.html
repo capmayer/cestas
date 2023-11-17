@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Page not found{% endblock %}
+
+{% block content %}
+ <div class="row justify-content-md-center mt-4">
+    <div class="col-sm-11 col-lg-8">
+      <h1>{% if message %}{{ message }}{% endif %}</h1>
+      <a class="btn btn-success w-100" href={{ back_url }}>VOLTAR</a>
+    </div>
+ </div>
+{% endblock content %}

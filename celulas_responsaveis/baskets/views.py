@@ -39,7 +39,7 @@ def get_producer_cell(user: User):
     memberships = ProducerMembership.objects.filter(person=user)
 
     if not memberships.exists():
-        raise PermissionDenied("Você não possui permissão para esta ação")
+        raise PermissionDenied("Você precisa fazer parte de algum grupo.")
 
     return memberships.first().cell
 
@@ -47,7 +47,7 @@ def get_consumer_cell(user: User):
     memberships = ConsumerMembership.objects.filter(person=user)
 
     if not memberships.exists():
-        raise PermissionDenied("Você não possui permissão para esta ação")
+        raise PermissionDenied("Você precisa fazer parte de alguma CCR para realizar essa ação.")
 
     return memberships.first().cell
 
@@ -164,7 +164,7 @@ def producer_home(request):
         "paid_baskets": paid_baskets,
     }
 
-    return render(request, "baskets/producer_home.html", context=context)
+    return render(request, "baskets/producer/home.html", context=context)
 
 @login_required
 def producer_cycle_requests(request, month_identifier: str, week_cycle_number: int):
@@ -179,7 +179,7 @@ def producer_cycle_requests(request, month_identifier: str, week_cycle_number: i
         "baskets": baskets,
         "week_cycle": week_cycle,
     }
-    return render(request, "baskets/producer_requests.html", context=context)
+    return render(request, "baskets/baskets_requested.html", context=context)
 
 @login_required
 def producer_list_consumers(request):
@@ -209,7 +209,7 @@ def producer_payment_confirmation(request, basket_number: str):
         "week_cycle": week_cycle,
     }
 
-    return render(request, "baskets/producer_payment_confirmation.html", context=context)
+    return render(request, "baskets/producer/payment_confirmation.html", context=context)
 
 @login_required
 def producer_cells_list(request):
@@ -220,7 +220,7 @@ def producer_cells_list(request):
         "site_domain": site_domain,
     }
 
-    return render(request, "baskets/producer_cells_list.html", context=context)
+    return render(request, "baskets/producer/cells_list.html", context=context)
 
 
 @login_required
@@ -393,19 +393,21 @@ def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
 def basket_detail(request, basket_number: str):
     basket = Basket.objects.get(number=basket_number)
     context = {"basket":basket}
-    return render(request, "baskets/basket_detail.html", context=context)
+    return render(request, "baskets/producer/basket_detail.html", context=context)
 
 @login_required
 def basket_detail_edit(request, basket_number: str):
     basket = Basket.objects.get(number=basket_number)
+    context = {}
 
     if is_cycle_over(basket.week_cycle):
-        return HttpResponse("Encerrada a alteração de pedidos.")
+        context["back_url"] = request.META.get("HTTP_REFERER", "")
+        context["message"] = "Alterações encerradas."
+        return render(request, "info_message.html", context)
 
     products_list = ProductsList.objects.filter(producer_cell=basket.consumer_cell.producer_cell).first()
     actual_products = {product.name: product.requested_quantity for product in basket.products.all()}
 
-    context = {}
     initial_values = []
 
     for product in products_list.products.filter(is_available=True).order_by("name"):
@@ -473,7 +475,7 @@ def basket_detail_edit(request, basket_number: str):
             context["basket_form"] = basket_formset
             [messages.error(request, error) for error in basket_formset.non_form_errors()]
             context["messages"] = messages.get_messages(request)
-            return render(request, "baskets/request_products.html", context=context)
+            return render(request, "baskets/producer/request_products.html", context=context)
 
 
     basket_formset = BasketFormSet(initial=initial_values)
