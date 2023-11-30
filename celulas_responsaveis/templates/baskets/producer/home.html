@@ -4,51 +4,60 @@
 {% block content %}
   <div class="row mt-4">
     <div class="col col-12 col-md-8">
-      <h3 class="fw-bold"> {{ week_cycle.month_cycle }} - {{ week_cycle }}</h3>
+      <h3 class="fw-bold">Balanço</h3>
+      <div class="row mt-2">
+        <div class="col-12 col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex flex-row justify-content-between">
+                <h5 class="fw-bold">Cadernetas</h5>
+                <h5>R${{ wallets_balance|floatformat:2 }}</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex flex-row justify-content-between">
+                <h5 class="fw-bold">Transferências</h5>
+                {% if pending_deposits_sum %}
+                <h5>R${{ pending_deposits_sum|floatformat:2 }}</h5>
+                {% else %}
+                <h5>R$0,00</h5>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <h3 class="fw-bold mt-4">{{ week_cycle }} <span class="h5">(ciclo {{ week_cycle.month_cycle }})</span></h3>
       <div class="d-flex flex-column flex-md-row justify-content-between">
         <h6>Pedidos até {{ week_cycle.request_day }}</h6>
         <h6>Entrega {{ week_cycle.delivery_day }}</h6>
       </div>
-      <div class="row mt-3">
-        <div class="col-12 col-md-6 mb-1">
+      <div class="row mt-2">
+        <div class="col-12 col-md-6">
           <div class="card">
             <div class="card-body">
               <div class="d-flex flex-row justify-content-between">
-                <div class="p-1"><h5>Pedidos adicionais:</h5></div>
-                <div class="p-1"><h5>{{ week_cycle_infos.id__count }}</h5></div>
+                <h5 class="fw-bold">Pedidos adicionais</h5>
+                <h5>{{ week_cycle_infos.id__count }}</h5>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-12 col-md-6 mb-1">
+        <div class="col-12 col-md-6">
           <div class="card">
             <div class="card-body">
               <div class="d-flex flex-row justify-content-between">
-                <div class="p-1"><h5>Pedidos pagos:</h5></div>
-                <div class="p-1"><h5>{{ paid_baskets }}</h5></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 mb-1">
-          <div class="card">
-            <div class="card-body">
-              <div class="d-flex flex-row justify-content-between">
-                <div class="p-1"><h5>Células atendidas:</h5></div>
-                <div class="p-1"><h5>{{ cells_count }}</h5></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 mb-1">
-          <div class="card">
-            <div class="card-body">
-              <div class="d-flex flex-row justify-content-between">
-                <div class="p-1"><h5>Valor comercializado:</h5></div>
+                <h5 class="fw-bold">Valor comercializado</h5>
                 {% if week_cycle_infos.total_price__sum %}
-                  <div class="p-1"><h5>R${{ week_cycle_infos.total_price__sum|floatformat:2 }}</h5></div>
+                  <h5>R${{ week_cycle_infos.total_price__sum|floatformat:2 }}</h5>
                 {% else %}
-                   <div class="p-1"><h5>R$ 0</h5></div>
+                  <h5>R$ 0</h5>
                 {% endif %}
               </div>
             </div>

@@ -89,7 +89,7 @@ def month_cycles(request):
     """
     producer_cell = get_producer_cell(request.user)
 
-    month_cycles = MonthCycle.objects.filter(producer_cell=producer_cell)
+    month_cycles = MonthCycle.objects.filter(producer_cell=producer_cell).order_by("begin__month")
 
     context = {
         "month_cycles": month_cycles,
@@ -170,14 +170,14 @@ def producer_home(request):
     week_cycle = get_week_cycle(producer_cell)
 
     week_cycle_infos = week_cycle.baskets.all().aggregate(Count('id'), Sum('total_price'))
-    paid_baskets = week_cycle.baskets.filter(is_paid=True).count()
-    cells_count = producer_cell.consumer_cells.count()
+    deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=False).aggregate(Sum("value"))
+    wallets = Wallet.objects.filter(producer_cell=producer_cell).aggregate(Sum("current_balance"))
 
     context = {
         "week_cycle": week_cycle,
         "week_cycle_infos": week_cycle_infos,
-        "cells_count": cells_count,
-        "paid_baskets": paid_baskets,
+        "pending_deposits_sum": deposits["value__sum"],
+        "wallets_balance": wallets["current_balance__sum"],
     }
 
     return render(request, "baskets/producer/home.html", context=context)
@@ -645,7 +645,7 @@ def basket_requested(request, request_number: str):
 def consumers_wallets(request):
     producer_cell = get_producer_cell(request.user)
 
-    wallets = Wallet.objects.filter(producer_cell=producer_cell).order_by("-current_balance")
+    wallets = Wallet.objects.filter(producer_cell=producer_cell, current_balance__gt=0, current_balance__lt=0).order_by("current_balance")
 
     context = {
         "wallets": wallets,

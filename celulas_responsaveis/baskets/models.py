@@ -40,7 +40,7 @@ class MonthCycle(models.Model):
         return self.begin.strftime('%m%Y')
 
     def __str__(self) -> str:
-        return f"Ciclo de {MONTH_TO_PORTUGUESE[self.begin.month - 1]}"
+        return f"{MONTH_TO_PORTUGUESE[self.begin.month - 1]}"
 
 
 class WeekCycle(models.Model):
