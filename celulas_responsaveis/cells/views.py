@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 import folium
@@ -180,6 +179,8 @@ def new_consumer_membership(request, cell_slug: str, role: str = "membro"):
      View com função de criar a relação entre pessoa e célula. É utilizado para adicionar membros em células de consumo.
      O paramêtro 'role' define a função do membro na célula, por exemplo, estar na coordenação da célula.
     """
+    from celulas_responsaveis.wallets.models import Wallet
+
     cell = get_object_or_404(ConsumerCell, slug=cell_slug)
 
     if request.user.is_authenticated:
@@ -198,6 +199,16 @@ def new_consumer_membership(request, cell_slug: str, role: str = "membro"):
     cell.members.add(request.user, through_defaults=membership_content)
     cell.save()
 
+    if cell.producer_cell:
+        membership = ConsumerMembership.objects.get(cell=cell, person=request.user)
+
+        wallet = Wallet()
+        wallet.consumer_membership = membership
+        wallet.person = request.user
+        wallet.producer_cell = membership.cell.producer_cell
+
+        wallet.save()
+
     if role.name == "membro":
         return redirect("baskets:request_products")
     else:
@@ -215,6 +226,8 @@ def cell_management(request, cell_slug: str):
         "membership": membership,
     }
     return render(request, "cells/cell_management.html", context)
+
+
 
 # @login_required
 # def approve_application(request, cell_slug: str, application_uuid: str):

@@ -1,9 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="row justify-content-md-center mt-4">
+  <div class="row justify-content-md-center">
     <div class="col-sm-11 col-lg-8">
-      <a class="btn btn-success w-100" href="{% url 'baskets:request_products'%}">PEDIR ADICIONAIS</a>
       <h3 class="fw-bold mt-3">Minhas cestas</h3>
       {% if not baskets %}
         <h1>
@@ -19,6 +18,8 @@
         </div>
       </div>
       {% endfor %}
+
+      <a class="btn btn-secondary w-100 mt-2" href="{% url 'baskets:consumer_home' %}">VOLTAR</a>
     </div>
   </div>
 

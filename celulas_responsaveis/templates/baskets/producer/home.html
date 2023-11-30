@@ -57,7 +57,6 @@
       </div>
 
       <div class="d-grid mt-3">
-          <a href="{% url 'producer:producer_cycle_requests' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" class="btn btn-success mb-2">PAGAMENTOS</a>
           <a href="{% url 'producer:week_cycle_report' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" class="btn btn-success mb-2">RELATÓRIO POR CCR</a>
           <a href="{% url 'producer:week_cycle_total_products' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" class="btn btn-success mb-2">RELATÓRIO PRODUTOS</a>
       </div>

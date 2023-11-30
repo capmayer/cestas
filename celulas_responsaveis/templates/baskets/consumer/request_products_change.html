@@ -12,15 +12,15 @@
           </div>
         {% endfor %}
       {% endif %}
-
-      <h3 class="fw-bold">Alterar pedido</h3>
-      {% if closed_cycle %}
-        <h6>O ciclo ainda não começou!</h6>
-      {% elif is_cycle_over %}
-        <h6>Pedidos encerrados, até semana que vem ;)</h6>
+      {% if is_cycle_over %}
+        <h3 class="fw-bold">Célula {{ cell.name }}:</h3>
+        <h6>Alterações encerradas, até semana que vem ;)</h6>
       {% else %}
+        <div class="d-flex flex-column flex-md-row align-self-center">
+          <h3 class="fw-bold">Alterar pedido <span class="h5">(#{{ basket.number}})</span></h3>
+        </div>
         <div class="d-flex flex-column flex-md-row justify-content-between">
-          <h6>Alterações até <span class="fw-bold">{{ basket.week_cycle.request_day }}</span></h6>
+          <h6>Pedidos até <span class="fw-bold">{{ cycle.request_day }}</span></h6>
           <h6 class="d-flex align-items-center">{{ cycle.month_cycle }} - {{ cycle }}</h6>
         </div>
         <div class="row">
@@ -38,10 +38,11 @@
                               {{ form.name.value }}
                           </div>
                           <div class="d-flex align-self-center align-self-md-baseline">
-                            <div class="">
+                            <div>
                               R$<span id="product_price_{{ forloop.counter0}}">{{ form.price.value|floatformat:2 }}/</span><span>{{ form.unit_name }}</span>
                             </div>
                           </div>
+
                         </div>
                         <div class="d-flex flex-column align-self-center">
                           <div class="d-flex flex-row">
@@ -85,8 +86,10 @@
               <div class="d-flex flex-column">
                 <button class="btn btn-success btn-block mt-1" type="submit">ALTERAR</button>
               </div>
+              <a class="btn btn-secondary mt-1 w-100" href="{% url 'baskets:basket_detail' basket_number=basket.number %}">VOLTAR</a>
+
             </form>
-        </div>
+          </div>
       {% endif %}
     </div>
   </div>

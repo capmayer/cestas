@@ -10,7 +10,7 @@
     <meta name="description" content="Plataforma Cooperativada de Consumo Responsável">
     <meta name="author" content="LACAF/UFSC">
 
-    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
+    <link rel="icon" href="{% static 'images/favicons/logo.ico' %}">
 
     {% block css %}
     <!-- Latest compiled and minified Bootstrap CSS -->
@@ -48,7 +48,7 @@
             {% if user.is_producer %}
               <a class="btn btn-success me-1" href="{% url 'producer:producer_home'%}">PAINEL PRODUTOR</a>
             {% else %}
-              <a class="btn btn-success me-1" href="{% url 'baskets:consumer_home'%}">CESTAS</a>
+              <a class="btn btn-success me-1" href="{% url 'baskets:consumer_home'%}">PAINEL CONSUMIDOR</a>
             {% endif %}
             <a class="btn btn-outline-success" href="{% url 'account_logout' %}">SAIR</a>
           {% else %}

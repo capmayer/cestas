@@ -10,8 +10,9 @@ urlpatterns = [
     path('produtores/ciclos/<str:month_identifier>/<int:week_cycle_number>/relatorio', views.week_cycle_report, name="week_cycle_report"),
     path('produtores/ciclos/<str:month_identifier>/<int:week_cycle_number>/pedidos', views.producer_cycle_requests, name="producer_cycle_requests"),
     path('produtores/ciclos/<str:month_identifier>/<int:week_cycle_number>/produtos', views.week_cycle_total_products, name="week_cycle_total_products"),
-    path('produtores/pedido/<str:basket_number>', views.producer_payment_confirmation, name="producer_payment_confirmation"),
+    path('produtores/deposito/<str:deposit_number>', views.producer_deposit_confirmation, name="producer_deposit_confirmation"),
     path('produtores/produtos/', views.products_list_detail, name="products_list_detail"),
     path('produtores/celulas/', views.producer_cells_list, name="producer_cells_list"),
-    path('pedido/<str:basket_number>', views.requested_basket_url, name="requested_basket_url"),
+    path('produtores/consumidores/', views.consumers_wallets, name="consumers_wallets"),
+    path('produtores/depositos/', views.consumers_deposits, name="consumers_deposits"),
 ]

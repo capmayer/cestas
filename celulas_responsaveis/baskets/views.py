@@ -21,16 +21,31 @@ from celulas_responsaveis.cells.models import ConsumerCell, PaymentInfo, Produce
     ProducerCell
 from celulas_responsaveis.users.models import User
 from celulas_responsaveis.utils.template_message import consumer_message
+from celulas_responsaveis.wallets.models import Deposit, Wallet
 
 
 @login_required
-def consumer_home(request):
+def consumer_baskets(request):
     baskets = Basket.objects.filter(person=request.user)
 
     context = {
         "baskets": baskets,
     }
-    return render(request, "baskets/home.html", context=context)
+    return render(request, "baskets/consumer/consumer_baskets.html", context=context)
+
+@login_required
+def consumer_home(request):
+    membership = ConsumerMembership.objects.filter(person=request.user).first()
+
+    context = {
+        "consumer_cell": None
+    }
+    if membership:
+        context = {
+            "consumer_cell": membership.cell,
+        }
+
+    return render(request, "baskets/consumer/home.html", context=context)
 
 def is_cycle_over(cycle: WeekCycle) -> bool:
     today = timezone.now()
@@ -195,22 +210,24 @@ def producer_list_consumers(request):
     return render(request, "baskets/producer_list_consumers.html", context=context)
 
 @login_required
-def producer_payment_confirmation(request, basket_number: str):
+def producer_deposit_confirmation(request, deposit_number: str):
     producer_cell = get_producer_cell(request.user)
 
-    basket = Basket.objects.get(number=basket_number)
-    week_cycle = basket.week_cycle
+    deposit = Deposit.objects.get(number=deposit_number)
 
     if request.method == "POST":
-        basket.is_paid = True
-        basket.save()
+        wallet = deposit.wallet
+        wallet.deposit(deposit.value)
+        wallet.save()
+
+        deposit.confirmed = True
+        deposit.save()
 
     context = {
-        "basket": basket,
-        "week_cycle": week_cycle,
+        "deposit": deposit,
     }
 
-    return render(request, "baskets/producer/payment_confirmation.html", context=context)
+    return render(request, "baskets/producer/producer_deposit_confirmation.html", context=context)
 
 @login_required
 def producer_cells_list(request):
@@ -393,13 +410,24 @@ def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
 @login_required
 def basket_detail(request, basket_number: str):
     basket = Basket.objects.get(number=basket_number)
-    context = {"basket":basket}
-    return render(request, "baskets/producer/basket_detail.html", context=context)
+    context = {
+        "basket": basket,
+        "is_cycle_over": is_cycle_over(basket.week_cycle),
+    }
+    return render(request, "baskets/consumer/basket_detail.html", context=context)
 
 @login_required
 def basket_detail_edit(request, basket_number: str):
     basket = Basket.objects.get(number=basket_number)
-    context = {}
+
+    if request.user != basket.person:
+        raise PermissionDenied("Opss, está cesta é de outra pessoa.")
+
+    context = {
+        "basket": basket,
+        "cycle": basket.week_cycle,
+        "cell": basket.consumer_cell,
+    }
 
     if is_cycle_over(basket.week_cycle):
         return consumer_message(request, "Alterações encerradas.")
@@ -466,9 +494,16 @@ def basket_detail_edit(request, basket_number: str):
                     if requested_quantity == 0 and sold_product:
                         sold_product.delete()
 
+            difference = total_price - basket.total_price
+            if difference > 0:
+                basket.wallet.withdraw(abs(difference))
+            else:
+                basket.wallet.deposit(abs(difference))
+
+            basket.wallet.save()
             basket.total_price = total_price
             basket.save()
-            messages.success(request, "Pedido realizado!")
+            messages.success(request, "Pedido alterado!")
             return redirect("baskets:basket_requested", request_number=basket.number)
         else:
             context["basket_form"] = basket_formset
@@ -478,12 +513,9 @@ def basket_detail_edit(request, basket_number: str):
 
 
     basket_formset = BasketFormSet(initial=initial_values)
-    context = {
-        "basket": basket,
-        "basket_form": basket_formset,
-    }
+    context["basket_form"] = basket_formset
 
-    return render(request, "baskets/basket_detail_edit.html", context=context)
+    return render(request, "baskets/consumer/request_products_change.html", context=context)
 
 
 @login_required
@@ -539,7 +571,10 @@ def request_products(request):
         basket_formset = BasketFormSet(request.POST, initial=initial_values)
 
         if basket_formset.is_valid():
+            wallet = Wallet.objects.get(person=request.user, producer_cell=consumer_cell.producer_cell)
+
             additional_basket = Basket()
+            additional_basket.wallet = wallet
             additional_basket.person = request.user
             additional_basket.week_cycle = week_cycle
             additional_basket.consumer_cell = consumer_cell
@@ -573,7 +608,10 @@ def request_products(request):
 
             additional_basket.total_price = total_price
             additional_basket.save()
-            messages.success(request, "Pedido realizado!")
+
+            additional_basket.wallet.withdraw(additional_basket.total_price)
+
+            messages.success(request, "Pedido enviado!")
             return redirect("baskets:basket_requested", request_number=additional_basket.number)
         else:
             context["basket_form"] = basket_formset
@@ -590,48 +628,40 @@ def request_products(request):
 
     return render(request, "baskets/consumer/request_products.html", context=context)
 
-def get_send_message_url(basket, payment_info):
-    from django.utils.http import urlencode
-
-    domain = Site.objects.get_current().domain
-    payment_url = reverse("producer:requested_basket_url", kwargs={"basket_number": basket.number})
-
-    text = (
-        f"Olá, {payment_info.receiver_name} fiz um pedido de adicionais!\n"
-        f"O valor do pedido foi de R${basket.total_price:.2f}\n\n"
-        f"Aqui está o comprovante e o link do pedido:\n"
-        f"https://{domain}{payment_url}"
-    )
-    text_encoded = urlencode({"text": text})
-
-    return f"https://wa.me/{payment_info.receiver_contact}?{text_encoded}"
-
-@login_required
-def requested_basket_url(request, basket_number: str):
-    """
-    Redireciona para a confirmação de pagamento se a pessoa que clicou foi um produtor/a ou para
-    o detalhes do pedido caso seja consumidor/a.
-    """
-
-    try:
-        producer_cell = get_producer_cell(request.user)
-    except PermissionDenied:
-        return redirect("baskets:basket_detail", basket_number=basket_number)
-    else:
-        return redirect("producer:producer_payment_confirmation", basket_number=basket_number)
-
 
 @login_required
 def basket_requested(request, request_number: str):
     consumer_cell = get_consumer_cell(request.user)
-    payment_info = PaymentInfo.objects.filter(producer_cell=consumer_cell.producer_cell).first()
     basket = Basket.objects.get(number=request_number)
-    send_payment_confirmation_url = get_send_message_url(basket, payment_info)
 
     context = {
-        "payment_info": payment_info,
         "cell": consumer_cell,
         "basket": basket,
-        "send_payment_confirmation_url": send_payment_confirmation_url,
     }
-    return render(request, "baskets/basket_requested.html", context)
+    return render(request, "baskets/consumer/basket_requested.html", context)
+
+
+@login_required
+def consumers_wallets(request):
+    producer_cell = get_producer_cell(request.user)
+
+    wallets = Wallet.objects.filter(producer_cell=producer_cell)
+
+    context = {
+        "wallets": wallets,
+        "producer_cells": producer_cell,
+    }
+
+    return render(request, "baskets/producer/consumers_wallets.html", context=context)
+
+@login_required
+def consumers_deposits(request):
+    producer_cell = get_producer_cell(request.user)
+
+    deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=False).order_by("created_date")
+
+    context = {
+        "deposits": deposits,
+    }
+
+    return render(request, "baskets/producer/consumers_deposits.html", context=context)

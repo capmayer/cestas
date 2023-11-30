@@ -13,7 +13,7 @@
     <meta name="description" content="Plataforma Cooperativada de Consumo Responsável">
     <meta name="author" content="LACAF/UFSC">
 
-    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
+    <link rel="icon" href="{% static 'images/favicons/logo.ico' %}">
 
     {% block css %}
     <!-- Latest compiled and minified Bootstrap CSS -->
@@ -68,9 +68,24 @@
 
               <hr>
               <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="{% url 'producer:consumers_deposits' %}">
+                  <span data-feather="home" class="align-text-bottom"></span>
+                  Transferências
+                </a>
+              </li>
+              <hr>
+
+              <li class="nav-item">
                 <a class="nav-link" aria-current="page" href="{% url 'producer:month_cycles' %}">
                   <span data-feather="home" class="align-text-bottom"></span>
                   Ciclos
+                </a>
+              </li>
+              <hr>
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="{% url 'producer:consumers_wallets' %}">
+                  <span data-feather="home" class="align-text-bottom"></span>
+                  Consumidores
                 </a>
               </li>
               <hr>

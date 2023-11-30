@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="row justify-content-md-center mt-4">
+    <div class="col-sm-11 col-lg-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+        <h3 class="fw-bold">Registrar transfência</h3>
+          <h5>
+            Registre na plataforma uma transferência realizada, com essa informação conseguimos atualizar o saldo da sua
+            caderneta.
+          </h5>
+          <h5>
+            A transferência deve ser realizada diretamente para o/a produtor/a responsável pelas finanças do grupo
+             <a href="{% url 'cells:producer_cell_detail' cell_slug=payment_info.producer_cell.slug %}">{{ payment_info }}</a>.
+           </h5>
+           <div class="card">
+            <div class="card-body">
+              <div class="d-flex flex-column flex-md-row justify-content-between">
+                  <h5 class="fw-bold">Nome:</h5>
+                  <h5 class="fw-bold">{{ payment_info.receiver_name }}</h5>
+              </div>
+            </div>
+             <div class="card">
+              <div class="card-body">
+                <div class="d-flex flex-column flex-md-row  justify-content-between">
+                  <div class="d-flex me-1">
+                    <h5 class="fw-bold">Chave Pix:</h5>
+                  </div>
+                  <div class="d-flex">
+                    <h5><span type="button" class="badge bg-secondary" onclick="copyPixKeyToClipboard()">COPIAR</span></h5>
+                    <h5 id="pix_key" class="fw-bold ms-2 ">{{ payment_info.pix_key }}</h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <h5 class="mt-2">
+            Informe o valor transferido no campo abaixo e então clique no botão Registrar.
+           </h5>
+          <form action="{% url 'wallets:consumer_deposit' %}"  method="post">
+            <div class="d-flex mt-2 flex-column flex-md-row justify-content-between">
+              <div class="d-flex h4 fw-bold align-items-center">
+                  {{ deposit_form.value.label }}
+              </div>
+              <div class="d-flex flex-row h4 fw-bold align-items-center">
+                  R$ {{ deposit_form.value }}
+              </div>
+            </div>
+            {% csrf_token %}
+            <button class="btn btn-success mt-3 w-100" type="submit">REGISTRAR TRANSFERÊNCIA</button>
+          </form>
+        <a href="{% url 'wallets:consumer_wallet' %}" class="btn btn-secondary mt-1 w-100">VOLTAR</a>
+      </div>
+    </div>
+
+ <script type="text/javascript">
+    function copyPixKeyToClipboard() {
+      var pixKeyElement = document.getElementById("pix_key");
+      navigator.clipboard.writeText(pixKeyElement.textContent);
+    }
+
+  </script>
+
+
+{% endblock %}

@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from celulas_responsaveis.cells.models import ConsumerCell, ProducerCell
 from celulas_responsaveis.users.models import User
+from celulas_responsaveis.wallets.models import Wallet
 
 
 class CycleSettings(models.Model):
@@ -77,6 +78,7 @@ class Basket(models.Model):
     Representa uma cesta de pedidos adicionais.
     """
     person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
+    wallet = models.ForeignKey(Wallet, related_name="baskets", null=True, on_delete=models.SET_NULL)
     week_cycle = models.ForeignKey(WeekCycle, related_name="baskets", on_delete=models.CASCADE)
     consumer_cell = models.ForeignKey(ConsumerCell, related_name="+", on_delete=models.CASCADE)
     number = models.CharField(default=basket_identification_number, editable=False, unique=True, max_length=20)
