@@ -14,7 +14,7 @@
             <a href="{% url 'producer:producer_deposit_confirmation' deposit_number=deposit.number %}" class="stretched-link"></a>
             <div class="d-flex flex-column flex-md-row justify-content-between">
               <div class="d-flex align-items-center">
-                <h5 class="fw-bold">{{ deposit.person }}</h5>
+                <h5 class="fw-bold">{{ deposit.wallet.person.name }}</h5>
               </div>
               <div class="d-flex flex-column flex-md-row align-items-center">
                 <h5 class="fw-bold">R$ {{ deposit.value|floatformat:2 }}</h5>

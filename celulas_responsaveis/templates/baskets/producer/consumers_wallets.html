@@ -13,7 +13,7 @@
           <div class="card-body">
             <div class="d-flex flex-column flex-md-row justify-content-between">
               <div class="d-flex align-items-center">
-                <h5 class="fw-bold">{{ wallet.person }}</h5>
+                <h5 class="fw-bold">{{ wallet.person.name }}</h5>
               </div>
               <div class="d-flex flex-column flex-md-row align-items-center">
                 <h5 class="fw-bold">R$ {{ wallet.current_balance|floatformat:2 }}</h5>
