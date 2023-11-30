@@ -24,9 +24,9 @@ class ConsumerMembershipAdmin(admin.ModelAdmin):
         from celulas_responsaveis.wallets.models import Wallet
 
         for membership in queryset:
-            if membership.wallet is None:
+            if not membership.wallet.exists():
                 new_wallet = Wallet()
-                new_wallet.consumer_membership = self
+                new_wallet.consumer_membership = membership
                 new_wallet.producer_cell = membership.cell.producer_cell
                 new_wallet.person = membership.person
 
