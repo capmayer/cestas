@@ -645,7 +645,7 @@ def basket_requested(request, request_number: str):
 def consumers_wallets(request):
     producer_cell = get_producer_cell(request.user)
 
-    wallets = Wallet.objects.filter(producer_cell=producer_cell, current_balance__gt=0, current_balance__lt=0).order_by("current_balance")
+    wallets = Wallet.objects.filter(producer_cell=producer_cell).exclude(current_balance="0").order_by("current_balance")
 
     context = {
         "wallets": wallets,
