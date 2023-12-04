@@ -610,6 +610,7 @@ def request_products(request):
             additional_basket.save()
 
             additional_basket.wallet.withdraw(additional_basket.total_price)
+            additional_basket.wallet.save()
 
             messages.success(request, "Pedido enviado!")
             return redirect("baskets:basket_requested", request_number=additional_basket.number)
