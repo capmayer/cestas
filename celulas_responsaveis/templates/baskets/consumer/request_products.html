@@ -12,6 +12,7 @@
           </div>
         {% endfor %}
       {% endif %}
+
       {% if closed_cycle %}
         <h3 class="fw-bold">Célula {{ cell.name }}:</h3>
         <h6>O ciclo ainda não começou!</h6>
@@ -87,13 +88,12 @@
                 </div>
               </div>
               <div class="d-flex flex-column">
-                <button class="btn btn-success btn-block mt-1" type="submit">ENVIAR PEDIDO</button>
+                <button class="btn btn-success btn-block mt-2" type="submit">ENVIAR PEDIDO</button>
               </div>
             </form>
-
-          <a class="btn btn-secondary mb-2" href="{% url 'baskets:consumer_home' %}">VOLTAR</a>
         </div>
       {% endif %}
+      <a class="btn btn-secondary mt-1 w-100" href="{% url 'baskets:consumer_home' %}">VOLTAR</a>
     </div>
   </div>
   <script type="text/javascript">
