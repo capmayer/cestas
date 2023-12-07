@@ -1,0 +1,47 @@
+{% extends "base_producer.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col col-12 col-md-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+
+      <h3 class="fw-bold">Produtos <span class="h5">({{ products_list.products.count }} registrados)</span></h3>
+      <a class="btn btn-success w-100 mt-1 mb-1" href="{% url 'producer:new_product'%}">ADICIONAR PRODUTO</a>
+      {% for product in products_list.products.all %}
+        <div class="card mt-1">
+          <div class="card-body">
+            <a href="{% url 'producer:product_detail' product_id=product.id %}" class="stretched-link"></a>
+            <div class="d-flex flex-column flex-md-row align-items-center">
+              <div class="d-flex flex-column me-md-auto">
+                <div class="fw-bold h4">{{ product.name }}</div>
+                {% if product.is_available %}
+                  <div class="h6"><span class="fw-bold">Disponível:</span> {{ product.available_quantity|floatformat:2 }} {{ product.unit.unit }}</div>
+                {% else %}
+                  <div class="h6 fw-bold">Indisponível</div>
+                {% endif %}
+              </div>
+              <div class="d-flex me-md-2">
+                <h5 class="">R$ {{ product.available_quantity|floatformat:2 }}/{{ product.unit.unit }}</h5>
+              </div>
+              <div class="d-flex">
+                <button class="btn btn-success">EDITAR</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+{% endblock content %}

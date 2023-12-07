@@ -1,0 +1,24 @@
+{% extends "base_producer.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <div class="row mt-4">
+    <div class="col col-12 col-md-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <h3 class="fw-bold">Alterar produto</h3>
+      <form action="{% url 'producer:product_detail' product_id=product.id %}"  method="post">
+        {% csrf_token %}
+        {{ product_form|crispy }}
+        <button class="btn btn-success mt-1 w-100" type="submit">ALTERAR</button>
+      </form>
+      <a class="btn btn-danger mt-1 w-100" href="{% url 'producer:product_delete' product_id=product.id %}">DELETAR</a>
+      <a class="btn btn-secondary mt-1 w-100" href="{% url 'producer:products_list_detail' %}">VOLTAR</a>
+    </div>
+  </div>
+{% endblock %}
