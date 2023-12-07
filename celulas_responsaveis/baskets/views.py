@@ -14,7 +14,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import is_aware
 
-from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, WeekCycleForm, MonthCycleForm
+from celulas_responsaveis.baskets.forms import ProductsListFormSet, BasketFormSet, WeekCycleForm, MonthCycleForm, \
+    ProductWithPriceForm
 from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
     ProductWithPrice, CycleSettings
 from celulas_responsaveis.cells.models import ConsumerCell, PaymentInfo, ProducerMembership, ConsumerMembership, \
@@ -240,6 +241,15 @@ def producer_cells_list(request):
 
     return render(request, "baskets/producer/cells_list.html", context=context)
 
+@login_required
+def producer_product_delete(request, product_id):
+    producer_cell = get_producer_cell(request.user)
+    product = ProductWithPrice.objects.get(id=product_id)
+    if producer_cell == product.additional_products_list.producer_cell:
+        product.delete()
+        messages.success(request, f"{product.name} deletado!")
+
+    return redirect("producer:products_list_detail")
 
 @login_required
 def products_list_detail(request):
@@ -248,30 +258,66 @@ def products_list_detail(request):
     products_list = ProductsList.objects.filter(producer_cell=producer_cell).first()
 
     context = dict()
+
+    if products_list is None:
+        products_list = ProductsList()
+        products_list.producer_cell = producer_cell
+        products_list.save()
+
     context["products_list"] = products_list
 
+    return render(request, "baskets/producer/products_list_detail.html", context=context)
+
+@login_required
+def producer_product_detail(request, product_id):
+    producer_cell = get_producer_cell(request.user)
+    product = ProductWithPrice.objects.get(id=product_id)
+
     if request.method == "POST":
-        if not products_list:
-            products_list = ProductsList()
-            products_list.producer_cell = producer_cell
-            products_list.save()
+        product_form = ProductWithPriceForm(request.POST, instance=product)
 
-        products_list_form = ProductsListFormSet(request.POST, instance=products_list)
+        if product_form.is_valid():
+            product = product_form.save(commit=False)
+            product.save()
+            messages.success(request, f"{product.name} alterado!")
 
-        if products_list_form.is_valid():
-            products_list_form.save()
-            context["products_list_form"] = products_list_form
-            messages.success(request, "Lista salva.")
+        return redirect("producer:products_list_detail")
 
-            return render(request, "baskets/products_list_detail.html", context=context)
-        else:
-            context["products_list_form"] = products_list_form
-            return render(request, "baskets/products_list_detail.html", context=context)
+    product_form = ProductWithPriceForm(instance=product)
+    context = {
+        "product_form": product_form,
+        "product": product,
+    }
 
-    products_list_form = ProductsListFormSet(instance=products_list)
-    context["products_list_form"] = products_list_form
+    return render(request, "baskets/producer/product_detail.html", context=context)
 
-    return render(request, "baskets/products_list_detail.html", context=context)
+
+@login_required
+def producer_new_product(request):
+    producer_cell = get_producer_cell(request.user)
+
+    if request.method == "POST":
+        product_form = ProductWithPriceForm(request.POST)
+
+        if product_form.is_valid():
+            product_list = ProductsList.objects.get(producer_cell=producer_cell)
+
+            product = product_form.save(commit=False)
+            product.additional_products_list = product_list
+            product.save()
+
+            messages.success(request, f"{product.name} adicionado!")
+
+        return redirect("producer:products_list_detail")
+
+    product_form = ProductWithPriceForm()
+    context = {
+        "product_form": product_form,
+
+    }
+
+    return render(request, "baskets/producer/product_add.html", context=context)
+
 
 @login_required
 def new_month_cycle(request):

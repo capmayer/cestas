@@ -23,6 +23,7 @@ MONTH_TO_PORTUGUESE = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho
 class MonthCycle(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="month_cycles", on_delete=models.CASCADE)
     begin = models.DateField()
+    consumers = models.ManyToManyField(User, through="MonthlyConsumer", through_fields=("month_cycle", "person"))
 
     def get_report_url(self):
         return reverse("producer:consumer_cell_week_cycle_detail", kwargs={"cell_slug": self.producer_cell.slug, "cycle_number": self.number})
@@ -41,6 +42,22 @@ class MonthCycle(models.Model):
 
     def __str__(self) -> str:
         return f"{MONTH_TO_PORTUGUESE[self.begin.month - 1]}"
+
+
+class BasketType(models.Model):
+    name = models.CharField(max_length=15)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class MonthlyConsumer(models.Model):
+    month_cycle = models.ForeignKey(MonthCycle, related_name="+", on_delete=models.CASCADE)
+    person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
+    basket_type = models.ForeignKey(BasketType, related_name="+", null=True, on_delete=models.SET_NULL)
+
+    wallet = models.ForeignKey(Wallet, related_name="month_cycles", on_delete=models.CASCADE)
+    total_price = models.FloatField(default=0)
 
 
 class WeekCycle(models.Model):
