@@ -24,13 +24,13 @@
               <div class="d-flex flex-column me-md-auto">
                 <div class="fw-bold h4">{{ product.name }}</div>
                 {% if product.is_available %}
-                  <div class="h6"><span class="fw-bold">Disponível:</span> {{ product.available_quantity|floatformat:2 }} {{ product.unit.unit }}</div>
+                  <div class="h6"><span class="fw-bold">Disponível:</span> {{ product.available_quantity|floatformat:2 }} {{ product.unit.name }}</div>
                 {% else %}
                   <div class="h6 fw-bold">Indisponível</div>
                 {% endif %}
               </div>
               <div class="d-flex me-md-2">
-                <h5 class="">R$ {{ product.available_quantity|floatformat:2 }}/{{ product.unit.unit }}</h5>
+                <h5 class="">R$ {{ product.available_quantity|floatformat:2 }}/{{ product.unit.name }}</h5>
               </div>
               <div class="d-flex">
                 <button class="btn btn-success">EDITAR</button>
