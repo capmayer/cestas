@@ -692,7 +692,7 @@ def basket_requested(request, request_number: str):
 def consumers_wallets(request):
     producer_cell = get_producer_cell(request.user)
 
-    wallets = Wallet.objects.filter(producer_cell=producer_cell).exclude(current_balance="0").order_by("current_balance")
+    wallets = Wallet.objects.filter(producer_cell=producer_cell).order_by("current_balance")
 
     context = {
         "wallets": wallets,
@@ -700,6 +700,34 @@ def consumers_wallets(request):
     }
 
     return render(request, "baskets/producer/consumers_wallets.html", context=context)
+
+@login_required
+def consumer_wallet(request, consumer_username):
+    producer_cell = get_producer_cell(request.user)
+
+    wallet = Wallet.objects.get(person__username=consumer_username, producer_cell=producer_cell)
+
+    context = {
+        "wallet": wallet
+    }
+
+    if request.method == "POST":
+        if wallet.current_balance < 0:
+            deposit = Deposit()
+            deposit.wallet = wallet
+            deposit.value = wallet.absolute_current_balance
+            deposit.confirmed = True
+            deposit.save()
+
+            wallet.deposit(deposit.value)
+            wallet.save()
+
+            messages.success(request, "Saldo quitado com sucesso!")
+
+        else:
+            messages.error(request, "O saldo da caderneta é positivo. Operação só pode ser realizada para saldos negativos.")
+
+    return render(request, "baskets/producer/consumer_wallet.html", context=context)
 
 @login_required
 def consumers_deposits(request):

@@ -8,8 +8,6 @@ from celulas_responsaveis.cells.models import ProducerCell, ConsumerMembership
 from celulas_responsaveis.users.models import User
 
 
-# Create your models here.
-
 @dataclass
 class Registry:
     number: str
@@ -24,6 +22,10 @@ class Wallet(models.Model):
     consumer_membership = models.ForeignKey(ConsumerMembership, related_name="wallet", on_delete=models.CASCADE)
     producer_cell = models.ForeignKey(ProducerCell, related_name="+", on_delete=models.CASCADE)
     current_balance = models.FloatField(default=0)
+
+    @property
+    def absolute_current_balance(self) -> float:
+        return abs(self.current_balance)
 
     def check_balance(self):
         confirmed_deposits = self.deposits.filter(confirmed=True)

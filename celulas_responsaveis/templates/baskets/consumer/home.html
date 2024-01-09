@@ -6,7 +6,7 @@
       {% if consumer_cell %}
         <h3 class="fw-bold">Ações disponíveis</h3>
         <a class="btn btn-success w-100" href="{% url 'baskets:request_products'%}">PEDIR ADICIONAIS</a>
-        <a class="btn btn-success w-100 mt-1" href="{% url 'wallets:consumer_wallet'%}">CARTEIRA</a>
+        <a class="btn btn-success w-100 mt-1" href="{% url 'wallets:consumer_wallet'%}">CADERNETA</a>
         <a class="btn btn-success w-100 mt-1" href="{% url 'baskets:consumer_baskets'%}">CESTAS</a>
         <a class="btn btn-success w-100 mt-1" href="{% url 'cells:consumer_cell_detail' cell_slug=consumer_cell.slug %}">MINHA CÉLULA</a>
       {% else %}

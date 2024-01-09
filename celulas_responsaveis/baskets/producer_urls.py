@@ -16,6 +16,7 @@ urlpatterns = [
     path('produtores/produtos/<int:product_id>', views.producer_product_detail, name="product_detail"),
     path('produtores/produtos/<int:product_id>/delete', views.producer_product_delete, name="product_delete"),
     path('produtores/celulas/', views.producer_cells_list, name="producer_cells_list"),
-    path('produtores/consumidores/', views.consumers_wallets, name="consumers_wallets"),
+    path('produtores/cadernetas/', views.consumers_wallets, name="consumers_wallets"),
+    path('produtores/cadernetas/<str:consumer_username>/', views.consumer_wallet, name="consumer_wallet"),
     path('produtores/depositos/', views.consumers_deposits, name="consumers_deposits"),
 ]
