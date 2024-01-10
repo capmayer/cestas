@@ -49,6 +49,7 @@ def consumer_home(request):
     return render(request, "baskets/consumer/home.html", context=context)
 
 def is_cycle_over(cycle: WeekCycle) -> bool:
+    """ Used for consumer views. """
     today = timezone.now()
     return today >= cycle.request_day
 
@@ -168,14 +169,20 @@ def get_week_cycle(producer_cell):
 @login_required
 def producer_home(request):
     producer_cell = get_producer_cell(request.user)
-    week_cycle = get_week_cycle(producer_cell)
+    current_week = producer_cell.current_week
 
-    week_cycle_infos = week_cycle.baskets.all().aggregate(Count('id'), Sum('total_price'))
+    today = timezone.now()
+    today = today.replace(hour=0, minute=0)
+
+    if current_week is None or current_week.delivery_day + datetime.timedelta(days=2) < today.date():
+        return redirect("producer:new_week_cycle")
+
+    week_cycle_infos = current_week.baskets.all().aggregate(Count('id'), Sum('total_price'))
     deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=False).aggregate(Sum("value"))
     wallets = Wallet.objects.filter(producer_cell=producer_cell).aggregate(Sum("current_balance"))
 
     context = {
-        "week_cycle": week_cycle,
+        "week_cycle": current_week,
         "week_cycle_infos": week_cycle_infos,
         "pending_deposits_sum": deposits["value__sum"],
         "wallets_balance": wallets["current_balance__sum"],
@@ -354,30 +361,43 @@ def new_week_cycle(request):
     Esse processo pode ser automatizado no futuro, mas carece debate.
     """
     producer_cell = get_producer_cell(request.user)
-    last_month_cycle = producer_cell.month_cycles.last()
+    current_month = producer_cell.month_cycles.last()
 
-    if not last_month_cycle:
-        raise Http404("Month cycle not found!")
+    today = timezone.now()
 
-    last_week_cycle = last_month_cycle.week_cycles.last()
-
+    if current_month is None or current_month.begin < today.replace(day=1).date():
+        current_month = MonthCycle(
+            producer_cell=producer_cell,
+            begin=today.replace(day=1),
+        )
+        current_month.save()
+    print(current_month.week_cycles.last())
     context = {}
 
     if request.method == "POST":
         cycle_form = WeekCycleForm(request.POST)
 
         if cycle_form.is_valid():
-            cycle = WeekCycle()
-            cycle.number = cycle_form.cleaned_data["number"]
-            cycle.delivery_day = cycle_form.cleaned_data["delivery_day"]
-            cycle.request_day = cycle_form.cleaned_data["request_day"]
-            cycle.month_cycle = last_month_cycle
-            cycle.save()
+            current_week = WeekCycle()
+            current_week.number = cycle_form.cleaned_data["number"]
+            current_week.delivery_day = cycle_form.cleaned_data["delivery_day"]
+            current_week.request_day = cycle_form.cleaned_data["request_day"]
+            current_week.month_cycle = current_month
+            current_week.save()
 
             return redirect("producer:products_list_detail")
+
     else:
-        cycle_number = last_week_cycle.number + 1 if last_week_cycle else 1
-        cycle_form = WeekCycleForm(initial={"number": cycle_number})
+        initial_cycle = {
+            "number": 1,
+        }
+
+        if current_week := producer_cell.current_week:
+            initial_cycle["delivery_day"] = current_week.delivery_day + datetime.timedelta(days=7)
+            initial_cycle["request_day"] = current_week.request_day + datetime.timedelta(days=7)
+            initial_cycle["number"] = current_week.number + 1
+
+        cycle_form = WeekCycleForm(initial=initial_cycle)
         context["cycle_form"] = cycle_form
 
     return render(request, "baskets/new_week_cycle.html", context)

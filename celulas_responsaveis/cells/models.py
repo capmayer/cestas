@@ -36,6 +36,13 @@ class ProducerCell(models.Model):
     def get_cycles_url(self):
         return reverse("producer:cell_cycles", kwargs={"cell_slug": self.slug})
 
+    @property
+    def current_week(self):
+        if current_month := self.month_cycles.last():
+            return current_month.week_cycles.last()
+
+        return None
+
     def save(self, **kwargs) -> None:
         unique_slugify(self, self.name)
         super(ProducerCell, self).save(**kwargs)

@@ -5,6 +5,7 @@ from . import views
 app_name = 'producer'
 urlpatterns = [
     path('produtores/', views.producer_home, name="producer_home"),
+    path('produtores/nova-semana/', views.new_week_cycle, name="new_week_cycle"),
     path('produtores/ciclos', views.month_cycles, name="month_cycles"),
     path('produtores/ciclos/<str:month_identifier>/', views.month_cycle_detail, name="month_cycle_detail"),
     path('produtores/ciclos/<str:month_identifier>/<int:week_cycle_number>/relatorio', views.week_cycle_report, name="week_cycle_report"),

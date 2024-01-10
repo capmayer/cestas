@@ -90,6 +90,6 @@ class MonthCycleForm(forms.Form):
 
 
 class WeekCycleForm(forms.Form):
-    number = forms.CharField(label="Semana")
-    request_day = forms.DateField(label="Fim dos pedidos", initial=datetime.date.today() + datetime.timedelta(3))
-    delivery_day = forms.DateField(label="Dia de entrega", initial=datetime.date.today() + datetime.timedelta(5))
+    number = forms.IntegerField(label="Semana", initial=1)
+    request_day = forms.DateTimeField(label="Pedidos até", initial=datetime.date.today())
+    delivery_day = forms.DateField(label="Entrega dia", initial=datetime.date.today() + datetime.timedelta(1))
