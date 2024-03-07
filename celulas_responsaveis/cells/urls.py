@@ -14,4 +14,9 @@ urlpatterns = [
     path("ccr/<str:cell_slug>/coordenar/", views.cell_management, name="management"),
     path("ccr/<str:cell_slug>/entrar/", views.apply_to_consumer_cell, name="apply_to_consumer_cell"),
     path("ccr/<str:cell_slug>/entrando/<str:role>", views.new_consumer_membership, name="new_consumer_membership"),
+    path("produtores/configuracoes", views.producer_cell_settings, name="producer_settings"),
+    path("plano/", views.consumer_participation_settings, name="consumer_participation_settings"),
+    path("plano/cancelar/", views.consumer_stop_participation, name="consumer_stop_participation"),
+    path("plano/cancelamento/", views.consumer_cancellation_survey, name="consumer_cancellation_survey"),
+
 ]

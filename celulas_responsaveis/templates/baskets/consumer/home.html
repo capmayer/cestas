@@ -3,11 +3,22 @@
 {% block content %}
   <div class="row justify-content-md-center mt-4">
     <div class="col-sm-11 col-lg-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
       {% if consumer_cell %}
         <h3 class="fw-bold">Ações disponíveis</h3>
-        <a class="btn btn-success w-100" href="{% url 'baskets:request_products'%}">PEDIR ADICIONAIS</a>
+        {% if membership.is_active %}
+          <a class="btn btn-success w-100" href="{% url 'baskets:request_products'%}">PEDIR ADICIONAIS</a>
+          <a class="btn btn-success w-100 mt-1" href="{% url 'cells:consumer_participation_settings'%}">MEU PLANO</a>
+        {% endif %}
         <a class="btn btn-success w-100 mt-1" href="{% url 'wallets:consumer_wallet'%}">CADERNETA</a>
-        <a class="btn btn-success w-100 mt-1" href="{% url 'baskets:consumer_baskets'%}">CESTAS</a>
+        <a class="btn btn-success w-100 mt-1" href="{% url 'baskets:consumer_baskets'%}">MINHAS CESTAS</a>
         <a class="btn btn-success w-100 mt-1" href="{% url 'cells:consumer_cell_detail' cell_slug=consumer_cell.slug %}">MINHA CÉLULA</a>
       {% else %}
         <h4>Você ainda não faz parte de uma célula.</h4>

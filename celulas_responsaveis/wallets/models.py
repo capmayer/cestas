@@ -10,6 +10,7 @@ from celulas_responsaveis.users.models import User
 
 @dataclass
 class Registry:
+    name: str
     number: str
     date: str
     value: float
@@ -32,8 +33,9 @@ class Wallet(models.Model):
 
         deposits_value = sum([deposit.value for deposit in confirmed_deposits])
         baskets_value = sum([basket.total_price for basket in self.baskets.all()])
+        month_cycles = sum([cycle.total_price for cycle in self.month_cycles.all()])
 
-        self.current_balance = deposits_value - baskets_value
+        self.current_balance = deposits_value - baskets_value - month_cycles
 
     def withdraw(self, value: float):
         self.current_balance = self.current_balance - value
@@ -44,11 +46,13 @@ class Wallet(models.Model):
     def ordered_registries(self):
         deposits = self.deposits.order_by("-created_date")[:10]
         baskets = self.baskets.order_by("-created_date")[:10]
+        month_cycles = self.month_cycles.order_by("-created_date")[:10]
 
-        deposit_entries = [Registry(number=deposit.number, date=deposit.created_date, value=deposit.value, debt=False, pendent=not deposit.confirmed) for deposit in deposits]
-        basket_entries = [Registry(number=basket.number, date=basket.created_date, value=basket.total_price, debt=True) for basket in baskets]
+        deposit_entries = [Registry(name="Transferência", number=deposit.number, date=deposit.created_date, value=deposit.value, debt=False, pendent=not deposit.confirmed) for deposit in deposits]
+        basket_entries = [Registry(name="Cesta adicionais", number=basket.number, date=basket.created_date, value=basket.total_price, debt=True) for basket in baskets]
+        month_cycles_entries = [Registry(name=f"Ciclo {cycle.month_cycle}", number=cycle.number, date=cycle.created_date, value=cycle.total_price, debt=True) for cycle in month_cycles]
 
-        entries = deposit_entries + basket_entries
+        entries = deposit_entries + basket_entries + month_cycles_entries
 
         return sorted(entries, key=lambda entry: entry.date, reverse=True)[:10]
 

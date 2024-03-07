@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
-from celulas_responsaveis.baskets.views import get_consumer_cell, get_producer_cell
+from celulas_responsaveis.baskets.views import get_consumer_membership, get_producer_membership
 from celulas_responsaveis.cells.models import PaymentInfo, ConsumerMembership
 from celulas_responsaveis.wallets.forms import DepositForm
 from celulas_responsaveis.wallets.models import Wallet, Deposit
@@ -14,7 +14,8 @@ from celulas_responsaveis.wallets.models import Wallet, Deposit
 
 @login_required
 def consumer_deposit(request):
-    consumer_cell = get_consumer_cell(request.user)
+    consumer_membership = get_consumer_membership(request.user)
+    consumer_cell = consumer_membership.cell
     payment_info = PaymentInfo.objects.filter(producer_cell=consumer_cell.producer_cell).first()
 
     if request.method == "POST":
@@ -62,7 +63,8 @@ def get_deposit_confirmation_message(payment_info, deposit):
 
 @login_required
 def consumer_deposit_detail(request, deposit_number):
-    consumer_cell = get_consumer_cell(request.user)
+    consumer_membership = get_consumer_membership(request.user)
+    consumer_cell = consumer_membership.cell
     deposit = Deposit.objects.get(number=deposit_number)
     payment_info = PaymentInfo.objects.get(producer_cell=consumer_cell.producer_cell)
     deposit_confirmation_url = get_deposit_confirmation_message(payment_info, deposit)
@@ -97,7 +99,7 @@ def redirect_deposit_confirmation(request, deposit_number):
     """
 
     try:
-        producer_cell = get_producer_cell(request.user)
+        producer_membership = get_producer_membership(request.user)
     except PermissionDenied:
         return redirect("wallets:consumer_deposit_detail", deposit_number=deposit_number)
     else:

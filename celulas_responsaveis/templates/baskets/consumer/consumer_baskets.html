@@ -5,10 +5,9 @@
     <div class="col-sm-11 col-lg-8">
       <h3 class="fw-bold mt-3">Minhas cestas</h3>
       {% if not baskets %}
-        <h1>
+        <h5>
           Você ainda não possui cestas.
-        </h1>
-        <h3>Considere entrar em uma célula, <a class="" href="{% url 'cells:list_cells' %}">veja mais.</a></h3>
+        </h5>
       {% endif %}
       {% for basket in baskets %}
       <div class="card">
@@ -18,7 +17,6 @@
         </div>
       </div>
       {% endfor %}
-
       <a class="btn btn-secondary w-100 mt-2" href="{% url 'baskets:consumer_home' %}">VOLTAR</a>
     </div>
   </div>

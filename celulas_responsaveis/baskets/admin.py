@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from celulas_responsaveis.baskets.models import Basket, MonthCycle, ProductsList, ProductWithPrice, \
-    Product, SoldProduct, Unit, WeekCycle, CycleSettings
+    Product, SoldProduct, Unit, WeekCycle, CycleSettings, OfferedBasketType, ConsumerBasketTypeChoice, MonthlyConsumer
 from celulas_responsaveis.cells.models import ConsumerMembership
 
 
@@ -31,3 +31,6 @@ admin.site.register(SoldProduct)
 admin.site.register(Unit)
 admin.site.register(CycleSettings)
 admin.site.register(WeekCycle)
+admin.site.register(OfferedBasketType)
+admin.site.register(ConsumerBasketTypeChoice)
+admin.site.register(MonthlyConsumer)

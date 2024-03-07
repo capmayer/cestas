@@ -48,6 +48,16 @@ class ProducerCell(models.Model):
         super(ProducerCell, self).save(**kwargs)
 
 
+class ProducerCellSettings(models.Model):
+    cell = models.ForeignKey(ProducerCell, related_name="cell_settings", on_delete=models.CASCADE)
+
+    # Allow consumers to buy additional products only if in month cycle.
+    buy_only_in_month_cycle = models.BooleanField(default=True)
+
+    # Allow consumers to participate in cycle biweekly.
+    biweekly_baskets = models.BooleanField(default=True)
+
+
 class ConsumerCell(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()

@@ -18,11 +18,19 @@ class CycleSettings(models.Model):
 def hex_uuid():
     pass
 
+
+def basket_identification_number():
+    time_now = timezone.now()
+    random_number = random.randrange(0, 10**6)
+    identification = f"{random_number:06d}{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}"
+    return identification
+
 MONTH_TO_PORTUGUESE = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 
 class MonthCycle(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="month_cycles", on_delete=models.CASCADE)
     begin = models.DateField()
+    number_of_weeks = models.IntegerField(default=4)
     consumers = models.ManyToManyField(User, through="MonthlyConsumer", through_fields=("month_cycle", "person"))
 
     def get_report_url(self):
@@ -41,7 +49,7 @@ class MonthCycle(models.Model):
         return self.begin.strftime('%m%Y')
 
     def __str__(self) -> str:
-        return f"{MONTH_TO_PORTUGUESE[self.begin.month - 1]}"
+        return f"{MONTH_TO_PORTUGUESE[self.begin.month - 1]}/{self.begin.year}"
 
 
 class BasketType(models.Model):
@@ -51,13 +59,44 @@ class BasketType(models.Model):
         return self.name
 
 
+class OfferedBasketType(models.Model):
+    producer_cell = models.ForeignKey(ProducerCell, related_name="+", on_delete=models.CASCADE)
+    name = models.CharField(max_length=15)
+    price = models.FloatField()
+    average_weight = models.FloatField()
+    number_of_products = models.IntegerField()
+    description = models.TextField()
+
+    def __str__(self) -> str:
+        return f"{self.name} (R${self.price:.2f})"
+
+
+class PeriodType(models.TextChoices):
+    Weekly = "WK", "Semanal"
+    Biweekly = "BW", "Quinzenal"
+
+
 class MonthlyConsumer(models.Model):
     month_cycle = models.ForeignKey(MonthCycle, related_name="+", on_delete=models.CASCADE)
     person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
-    basket_type = models.ForeignKey(BasketType, related_name="+", null=True, on_delete=models.SET_NULL)
+    number = models.CharField(default=basket_identification_number, editable=False, unique=True, max_length=20)
+
+    consumer_cell = models.ForeignKey(ConsumerCell, related_name="+", null=True, on_delete=models.SET_NULL)
+    consumer_basket_choice = models.ForeignKey(OfferedBasketType, related_name="+", null=True, on_delete=models.SET_NULL)
+    period = models.CharField(max_length=2, choices=PeriodType.choices, default=PeriodType.Weekly)
 
     wallet = models.ForeignKey(Wallet, related_name="month_cycles", on_delete=models.CASCADE)
     total_price = models.FloatField(default=0)
+
+    created_date = models.DateTimeField(auto_now_add=True)
+
+
+class ConsumerBasketTypeChoice(models.Model):
+    person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
+    consumer_cell = models.ForeignKey(ConsumerCell, related_name="+", on_delete=models.CASCADE)
+
+    offered_basket_type = models.ForeignKey(OfferedBasketType, null=True, blank=True, related_name="+", on_delete=models.SET_NULL)
+    period = models.CharField(max_length=2, choices=PeriodType.choices, default=PeriodType.Weekly)
 
 
 class WeekCycle(models.Model):
@@ -84,11 +123,6 @@ class ProductsList(models.Model):
     def __str__(self) -> str:
         return f"Lista de produtos {self.producer_cell}"
 
-def basket_identification_number():
-    time_now = timezone.now()
-    random_number = random.randrange(0, 10**6)
-    identification = f"{random_number:06d}{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}"
-    return identification
 
 class Basket(models.Model):
     """

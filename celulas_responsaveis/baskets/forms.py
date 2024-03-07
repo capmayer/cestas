@@ -1,12 +1,35 @@
 import datetime
 
-import numpy as np
 from django import forms
 from django.core.exceptions import ValidationError
-from django.forms import formset_factory, inlineformset_factory, NumberInput, BaseFormSet, TextInput
+from django.forms import formset_factory, inlineformset_factory, BaseFormSet, TextInput
+from django.utils import timezone
 
-from celulas_responsaveis.baskets.models import ProductsList, ProductWithPrice, Unit, MonthCycle
+from celulas_responsaveis.baskets.models import ProductsList, ProductWithPrice, OfferedBasketType, \
+    ConsumerBasketTypeChoice
+from celulas_responsaveis.cells.models import ProducerCell, ProducerCellSettings
 
+
+class ConsumerBTChoiceForm(forms.ModelForm):
+    class Meta:
+        model = ConsumerBasketTypeChoice
+        fields = ["offered_basket_type", "period"]
+        labels = {
+            "period": "Periodo"
+        }
+
+    offered_basket_type = forms.ModelChoiceField(label="Tamanho da cesta", queryset=OfferedBasketType.objects.all(), widget=forms.RadioSelect())
+
+    def __init__(self, *args, **kwargs):
+        producer_cell = kwargs.pop('producer_cell', None)
+        producer_cell_settings = ProducerCellSettings.objects.get(cell=producer_cell)
+
+        super().__init__(*args, **kwargs)
+        self.fields["offered_basket_type"].queryset = OfferedBasketType.objects.filter(
+            producer_cell=producer_cell
+        )
+        if not producer_cell_settings.biweekly_baskets:
+            self.fields["period"].widget = forms.HiddenInput()
 
 class SoldProductForm(forms.Form):
     name = forms.CharField(label="Produto", max_length=60, disabled=True)
@@ -86,10 +109,21 @@ ProductsListFormSet = inlineformset_factory(
 )
 
 class MonthCycleForm(forms.Form):
-    begin = forms.DateField(label="Início do ciclo", initial=datetime.date.today().replace(day=1))
+    begin = forms.IntegerField(label="Dia de inicio do ciclo", initial=10)
+    number_of_weeks = forms.IntegerField(label="Informe o número de semanas")
 
+DAYS_OF_WEEK = (
+    (0, 'Segunda-feira'),
+    (1, 'Terça-feira'),
+    (2, 'Quarta-feira'),
+    (3, 'Quinta-feira'),
+    (4, 'Sexta-feira'),
+    (5, 'Sábado'),
+    (6, 'Domingo'),
+)
 
 class WeekCycleForm(forms.Form):
     number = forms.IntegerField(label="Semana", initial=1)
-    request_day = forms.DateTimeField(label="Pedidos até", initial=datetime.date.today())
-    delivery_day = forms.DateField(label="Entrega dia", initial=datetime.date.today() + datetime.timedelta(1))
+    request_day = forms.ChoiceField(label="Pedidos adicionais até", choices=DAYS_OF_WEEK)
+    request_time = forms.TimeField(label="Horário limite para pedidos", initial="12:00")
+    delivery_day = forms.ChoiceField(label="Dia de entrega", choices=DAYS_OF_WEEK)

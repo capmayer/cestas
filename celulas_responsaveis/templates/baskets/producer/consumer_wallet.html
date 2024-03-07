@@ -35,13 +35,8 @@
           <div class="card-body">
             <div class="d-flex flex-row justify-content-between">
               <div class="d-flex flex-column">
-                {% if registry.debt %}
-                <h5 class="fw-bold me-1">Cesta</h5>
-                {% else %}
-                <h5 class="fw-bold me-1">Transferência {% if registry.pendent %} <span class="fw-normal">(pendente)</span> {% endif %}</h5>
-                {% endif %}
+                <h5 class="fw-bold me-1">{{ registry.name }} {% if registry.pendent %} <span class="fw-normal">(pendente)</span> {% endif %}</h5>
                 <div class="p">{{ registry.date|date:'d/m/Y H:i' }}</div>
-
               </div>
               {% if registry.debt %}
                 <div class="d-flex flex-row">

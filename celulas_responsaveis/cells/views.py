@@ -1,13 +1,18 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, get_object_or_404, redirect
 import folium
 from django.urls import reverse
 from django.utils.http import urlencode
 
-from celulas_responsaveis.cells.forms import ConsumerCellRegistrationForm
+from celulas_responsaveis.baskets.forms import ConsumerBTChoiceForm
+from celulas_responsaveis.baskets.models import ConsumerBasketTypeChoice
+from celulas_responsaveis.baskets.views import get_producer_membership, get_consumer_membership
+from celulas_responsaveis.cells.forms import ConsumerCellRegistrationForm, ProducerCellSettingsForm, \
+    ConsumerMembershipForm
 from celulas_responsaveis.cells.models import ConsumerCell, CellLocation, Application, Role, ConsumerMembership, \
-    ProducerCell, ProducerMembership
+    ProducerCell, ProducerMembership, ProducerCellSettings
 
 
 def generate_cell_map(latitude: float, longitude: float) -> str:
@@ -209,10 +214,7 @@ def new_consumer_membership(request, cell_slug: str, role: str = "membro"):
 
         wallet.save()
 
-    if role.name == "membro":
-        return redirect("baskets:request_products")
-    else:
-        return redirect("cells:consumer_cell_detail", cell_slug=cell_slug)
+    return redirect("cells:consumer_participation_settings")
 
 @login_required
 def cell_management(request, cell_slug: str):
@@ -226,6 +228,90 @@ def cell_management(request, cell_slug: str):
         "membership": membership,
     }
     return render(request, "cells/cell_management.html", context)
+
+
+@login_required
+def producer_cell_settings(request):
+    producer_membership = get_producer_membership(request.user)
+    cell = producer_membership.cell
+    cell_settings = ProducerCellSettings.objects.get(cell=cell)
+
+    if request.method == "POST":
+        cell_settings_form = ProducerCellSettingsForm(request.POST, instance=cell_settings)
+
+        if cell_settings_form.is_valid():
+            cell_settings_form.save()
+            messages.success(request, "Alterações salvas.")
+    else:
+        cell_settings_form = ProducerCellSettingsForm(instance=cell_settings)
+
+    context = {
+        "cell": cell,
+        "cell_settings_form": cell_settings_form,
+    }
+
+    return render(request, "cells/producer_cell_settings.html", context)
+
+
+@login_required
+def consumer_stop_participation(request):
+    membership = get_consumer_membership(request.user)
+
+    if request.method == "POST":
+        cm_form = ConsumerMembershipForm(request.POST, instance=membership)
+
+        if cm_form.is_valid():
+            membership = cm_form.save(commit=False)
+            membership.is_active = False
+            membership.save()
+            messages.success(request, "Sua participação foi cancelada.")
+
+            return redirect("cells:consumer_cancellation_survey")
+
+@login_required
+def consumer_cancellation_survey(request):
+    # TODO: add survey.
+    membership = get_consumer_membership(request.user)
+    context = {
+        "membership": membership,
+    }
+    return render(request, "cells/consumer_cancellation_survey.html", context=context)
+
+@login_required
+def consumer_participation_settings(request):
+    memberships = ConsumerMembership.objects.filter(person=request.user)
+
+    if not memberships.exists():
+        raise PermissionDenied("Você precisa fazer parte de alguma CCR para realizar essa ação.")
+
+    membership = memberships.first()
+    cell = membership.cell
+    bt_choice = ConsumerBasketTypeChoice.objects.filter(person=request.user, consumer_cell=cell)
+
+    if bt_choice.exists():
+        bt_choice = bt_choice.first()
+    else:
+        bt_choice = None
+
+
+    if request.method == "POST":
+        bt_choice_form = ConsumerBTChoiceForm(request.POST, instance=bt_choice, producer_cell=cell.producer_cell)
+        if bt_choice_form.is_valid():
+            bt_choice = bt_choice_form.save(commit=False)
+            bt_choice.consumer_cell = cell
+            bt_choice.person = request.user
+            bt_choice.save()
+
+            messages.success(request, message="Alterações salvas.")
+            return redirect("baskets:consumer_home")
+    else:
+        bt_choice_form = ConsumerBTChoiceForm(instance=bt_choice, producer_cell=cell.producer_cell)
+
+    context = {
+        "cell": cell,
+        "bt_choice_form": bt_choice_form,
+    }
+    return render(request, "cells/consumer_participation_settings.html", context=context)
 
 
 

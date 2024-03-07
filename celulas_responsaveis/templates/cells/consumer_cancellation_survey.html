@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="row justify-content-md-center mt-4">
+    <div class="col-sm-11 col-lg-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <div class="row">
+        <h3 class="fw-bold">Participação cancelada</h3>
+        <p>Sua participação na CCR {{ membership.cell }} foi cancelada.</p>
+      </div>
+
+  </div>
+
+  </div>
+{% endblock %}
+
+

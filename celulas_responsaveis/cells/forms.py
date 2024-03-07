@@ -1,6 +1,6 @@
 from django import forms
 
-from celulas_responsaveis.cells.models import ApplicationSurvey
+from celulas_responsaveis.cells.models import ApplicationSurvey, ProducerCellSettings, ConsumerMembership
 
 
 class ConsumerCellRegistrationForm(forms.Form):
@@ -25,3 +25,22 @@ class ApplicationForm(forms.Form):
 
             for question in self.questions_instances:
                 self.fields[question.name] = forms.CharField(max_length=255, required=True)
+
+
+class ProducerCellSettingsForm(forms.ModelForm):
+    class Meta:
+        model = ProducerCellSettings
+        fields = ["buy_only_in_month_cycle", "biweekly_baskets"]
+        labels = {
+            "buy_only_in_month_cycle": "Pedidos adicionais apenas para participantes do ciclo",
+            "biweekly_baskets": "Adquirir cestas quinzenais."
+        }
+
+class ConsumerMembershipForm(forms.ModelForm):
+    class Meta:
+        model = ConsumerMembership
+        fields = ["is_active"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["is_active"].widget = forms.HiddenInput()

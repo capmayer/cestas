@@ -2,14 +2,16 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-
-  <div class="row justify-content-md-center mt-4">
-   <div class="col-sm-11 col-lg-8">
-      <h3>Nova semana:</h3>
-      <form class="card p-3" action="{% url 'producer:new_week_cycle' %}" method="post">
+   <div class="row mt-4">
+    <div class="col col-12 col-md-8">
+      <h3 class="fw-bold">Nova semana</h3>
+      <p>Ciclo mensal de {{ month_cycle }}</p>
+      <form action="{% url 'producer:new_week_cycle' %}" method="post">
         {% csrf_token %}
-        {{ cycle_form|crispy }}
-        <input class="btn btn-success" type="submit" value="INICIAR SEMANA">
+        <div class="card p-3">
+          {{ cycle_form|crispy }}
+        </div>
+        <input class="btn btn-success w-100 mt-2" type="submit" value="INICIAR SEMANA">
       </form>
 
     </div>

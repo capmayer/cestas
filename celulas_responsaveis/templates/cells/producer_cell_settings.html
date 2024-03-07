@@ -1,0 +1,25 @@
+{% extends "base_producer.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col-md-10">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <h3 class="mb-4 fw-bold">Configurações: </h3>
+      <form action="{% url 'cells:producer_settings' %}" method="post">
+        {% csrf_token %}
+        <div class="card p-3">
+          {{ cell_settings_form|crispy }}
+        </div>
+        <input class="btn btn-success w-100 mt-2" type="submit" value="SALVAR">
+      </form>
+    </div>
+  </div>
+{% endblock content %}
