@@ -355,8 +355,9 @@ def new_month_cycle(request):
 
             for membership in memberships:
                 consumer_basket_choice = ConsumerBasketTypeChoice.objects.filter(person=membership.person)
-                if consumer_basket_choice.exists() and consumer_basket_choice.offered_basket_type is not None:
-                    price = offered_basket_to_price[consumer_basket_choice.offered_basket_type.id]
+                if consumer_basket_choice.exists():
+                    basket_choice = consumer_basket_choice.first()
+                    price = offered_basket_to_price[basket_choice.offered_basket_type.id]
                     total_price = price * month_cycle.number_of_weeks
 
                     wallet = membership.wallet.first()
@@ -364,9 +365,9 @@ def new_month_cycle(request):
                     wallet.save()
 
                     thought_values = {
-                        "consumer_basket_choice": consumer_basket_choice.offered_basket_type,
+                        "consumer_basket_choice": basket_choice.offered_basket_type,
                         "consumer_cell": membership.cell,
-                        "period": consumer_basket_choice.period,
+                        "period": basket_choice.period,
                         "wallet": wallet,
                         "total_price": total_price,
                     }
