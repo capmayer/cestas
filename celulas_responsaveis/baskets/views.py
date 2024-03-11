@@ -355,7 +355,7 @@ def new_month_cycle(request):
 
             for membership in memberships:
                 consumer_basket_choice = ConsumerBasketTypeChoice.objects.filter(person=membership.person)
-                if consumer_basket_choice.exists():
+                if consumer_basket_choice.exists() and consumer_basket_choice.offered_basket_type is not None:
                     price = offered_basket_to_price[consumer_basket_choice.offered_basket_type.id]
                     total_price = price * month_cycle.number_of_weeks
 
