@@ -37,7 +37,7 @@ class ConsumerMembershipAdmin(admin.ModelAdmin):
 
             # If producer cell of consumer cell changed, then we create a new wallet for this relation.
             if membership.wallet.exists():
-                wallet = membership.wallet
+                wallet = membership.wallet.last()
 
                 if wallet.producer_cell != membership.cell.producer_cell:
                     create_wallet()

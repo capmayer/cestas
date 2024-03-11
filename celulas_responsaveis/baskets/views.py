@@ -354,26 +354,27 @@ def new_month_cycle(request):
             offered_basket_to_price = {basket.id: basket.price for basket in offered_baskets}
 
             for membership in memberships:
-                consumer_basket_choice = ConsumerBasketTypeChoice.objects.get(person=membership.person)
-                price = offered_basket_to_price[consumer_basket_choice.offered_basket_type.id]
-                total_price = price * month_cycle.number_of_weeks
+                consumer_basket_choice = ConsumerBasketTypeChoice.objects.filter(person=membership.person)
+                if consumer_basket_choice.exists():
+                    price = offered_basket_to_price[consumer_basket_choice.offered_basket_type.id]
+                    total_price = price * month_cycle.number_of_weeks
 
-                wallet = membership.wallet.first()
-                wallet.withdraw(total_price)
-                wallet.save()
+                    wallet = membership.wallet.first()
+                    wallet.withdraw(total_price)
+                    wallet.save()
 
-                thought_values = {
-                    "consumer_basket_choice": consumer_basket_choice.offered_basket_type,
-                    "consumer_cell": membership.cell,
-                    "period": consumer_basket_choice.period,
-                    "wallet": wallet,
-                    "total_price": total_price,
-                }
+                    thought_values = {
+                        "consumer_basket_choice": consumer_basket_choice.offered_basket_type,
+                        "consumer_cell": membership.cell,
+                        "period": consumer_basket_choice.period,
+                        "wallet": wallet,
+                        "total_price": total_price,
+                    }
 
-                month_cycle.consumers.add(
-                    membership.person,
-                    through_defaults=thought_values,
-                )
+                    month_cycle.consumers.add(
+                        membership.person,
+                        through_defaults=thought_values,
+                    )
 
             month_cycle.save()
             return  redirect("producer:new_week_cycle")
