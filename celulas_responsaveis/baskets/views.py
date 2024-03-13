@@ -203,6 +203,43 @@ def producer_cycle_requests(request, month_identifier: str, week_cycle_number: i
     }
     return render(request, "baskets/producer/baskets_requested.html", context=context)
 
+def producer_edit_week_cycle(request, week_id: int):
+    producer_cell = get_producer_membership(request.user).cell
+    week_cycle = WeekCycle.objects.get(id = week_id)
+
+    if request.method == 'POST':
+        cycle_form = WeekCycleForm(request.POST)
+
+        if cycle_form.is_valid():
+            week_cycle.number = cycle_form.cleaned_data['number']
+
+            new_request_day = week_cycle.request_day - datetime.timedelta(week_cycle.request_day.weekday() - int(cycle_form.cleaned_data["request_day"]))
+            week_cycle.request_day = new_request_day
+            new_delivery_day = week_cycle.delivery_day - datetime.timedelta(week_cycle.delivery_day.weekday() - int(cycle_form.cleaned_data["delivery_day"]))
+            week_cycle.delivery_day = new_delivery_day
+        
+            week_cycle.save()
+
+        return redirect('producer:producer_home')
+    else:
+        current_data = {
+            'number': week_cycle.number
+        }
+        
+        current_data["delivery_day"] = week_cycle.delivery_day.weekday()
+        current_data["request_time"] = week_cycle.request_day.time()
+        current_data["request_day"] = week_cycle.request_day.weekday()
+        current_data["number"] = week_cycle.number 
+
+        cycle_form = WeekCycleForm(initial = current_data)
+
+    context = {
+        'cycle_form':cycle_form,
+        'week_cycle': week_cycle
+    }
+    return render(request, "baskets/producer/edit_week_cycle.html", context=context)
+
+
 @login_required
 def producer_list_consumers(request):
     producer_membership = get_producer_membership(request.user)
@@ -427,6 +464,11 @@ def new_week_cycle(request):
             current_week.request_day = request_day
             current_week.delivery_day = get_weekday_date(int(cycle_form.cleaned_data["delivery_day"]))
             current_week.month_cycle = current_month
+
+            if current_week.request_day < today.date():
+                current_week.request_day += datetime.timedelta(days=7)
+                current_week.delivery_day += datetime.timedelta(days=7)
+
             current_week.save()
 
             return redirect("producer:products_list_detail")
