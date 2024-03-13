@@ -1,0 +1,15 @@
+{% extends "base_producer.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col-md-10">
+      <h3 class="mb-4"> Editar ciclo: </h3>
+      <form class="card p-3" action="{% url 'producer:edit_week_cycle' week_id=week_cycle.id %}" method="post">
+        {% csrf_token %}
+        {{cycle_form|crispy}}
+        <input class="btn btn-success" type="submit" value="SALVAR">
+      </form>
+    </div>
+  </div>
+{% endblock content %}
