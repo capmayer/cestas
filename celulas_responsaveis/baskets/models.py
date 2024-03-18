@@ -90,6 +90,9 @@ class MonthlyConsumer(models.Model):
 
     created_date = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.person} - {self.month_cycle.producer_cell}"
+
 
 class ConsumerBasketTypeChoice(models.Model):
     person = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
@@ -98,6 +101,8 @@ class ConsumerBasketTypeChoice(models.Model):
     offered_basket_type = models.ForeignKey(OfferedBasketType, null=True, blank=True, related_name="+", on_delete=models.SET_NULL)
     period = models.CharField(max_length=2, choices=PeriodType.choices, default=PeriodType.Weekly)
 
+    def __str__(self):
+        return f"{self.person.name} - {self.offered_basket_type} ({self.period})"
 
 class WeekCycle(models.Model):
     month_cycle = models.ForeignKey(MonthCycle, related_name="week_cycles", on_delete=models.CASCADE)

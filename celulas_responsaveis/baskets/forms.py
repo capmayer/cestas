@@ -129,3 +129,8 @@ class WeekCycleForm(forms.Form):
     request_day = forms.ChoiceField(label="Pedidos adicionais até", choices=DAYS_OF_WEEK)
     request_time = forms.TimeField(label="Horário limite para pedidos", initial="12:00")
     delivery_day = forms.ChoiceField(label="Dia de entrega", choices=DAYS_OF_WEEK)
+
+
+    def clean(self):
+        if self.cleaned_data["request_day"] > self.cleaned_data["delivery_day"]:
+            raise ValidationError("Delivery day must be greater or equal to request day.")

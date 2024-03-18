@@ -5,7 +5,7 @@ from math import ceil
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.models import Site
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ViewDoesNotExist
 from django.db.models import Sum, Count
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -391,7 +391,7 @@ def new_month_cycle(request):
             offered_basket_to_price = {basket.id: basket.price for basket in offered_baskets}
 
             for membership in memberships:
-                consumer_basket_choice = ConsumerBasketTypeChoice.objects.filter(person=membership.person)
+                consumer_basket_choice = ConsumerBasketTypeChoice.objects.filter(person=membership.person, consumer_cell=membership.cell)
                 if consumer_basket_choice.exists():
                     basket_choice = consumer_basket_choice.first()
                     price = offered_basket_to_price[basket_choice.offered_basket_type.id]
@@ -569,12 +569,17 @@ def week_cycle_baskets(request, month_identifier: str, week_cycle_number: int):
     month_cycle = MonthCycle.objects.filter(producer_cell=producer_membership.cell, begin__month=month_date.month, begin__year=month_date.year).first()
 
     monthly_consumers = MonthlyConsumer.objects.filter(month_cycle=month_cycle).order_by("consumer_cell")
-    basket_type_count = monthly_consumers.annotate(basket_count=Count("consumer_basket_choice"))
+    offered_basket_types = OfferedBasketType.objects.filter(producer_cell=month_cycle.producer_cell)
+
+    basket_types_sum = {}
+    for offered_basket_type in offered_basket_types:
+        basket_types_sum[offered_basket_type.name] = monthly_consumers.filter(consumer_basket_choice=offered_basket_type).count()
 
     context = {
+        "offered_basket_types":offered_basket_types,
         "consumers": monthly_consumers,
         "week_cycle": producer_membership.cell.current_week,
-        "basket_type_count": basket_type_count,
+        "basket_types_sum": basket_types_sum,
     }
 
     return render(request, "baskets/producer/week_cycle_baskets.html", context=context)
@@ -707,14 +712,13 @@ def request_products(request):
         "messages": [],
     }
     month_cycle = MonthCycle.objects.filter(producer_cell=consumer_cell.producer_cell).last()
-
     if not month_cycle:
-        return HttpResponse("Ops, não existem produtos cadastrados.")
+        raise PermissionDenied("O ciclo deste mês ainda não foi iniciado.")
 
     week_cycle = month_cycle.week_cycles.last()
 
     if not week_cycle:
-        return HttpResponse("Ops, não existem produtos cadastrados.")
+        raise PermissionDenied("Os pedidos adicionais não foram abertos.")
 
     current_basket = Basket.objects.filter(week_cycle=week_cycle, person=request.user).first()
     if current_basket:
@@ -723,10 +727,13 @@ def request_products(request):
 
     products_lists = ProductsList.objects.filter(producer_cell=consumer_cell.producer_cell)
 
+    if not products_lists.exists():
+        raise PermissionDenied("O produtor ainda não registrou produtos.")
+
     context["cycle"] = week_cycle
     context["is_cycle_over"] = is_cycle_over(week_cycle)
 
-    if not products_lists or is_cycle_over(week_cycle):
+    if is_cycle_over(week_cycle):
         return render(request, "baskets/consumer/request_products.html", context=context)
 
     products_list = products_lists.first()
