@@ -10,13 +10,13 @@
         </div>
       </div>
       <div class="row mt-2">
-        {% for basket_type in basket_type_count %}
+        {% for bt_name, bt_sum in basket_types_sum.items %}
           <div class="col-12 col-md-6">
             <div class="card">
               <div class="card-body">
                 <div class="d-flex flex-row justify-content-between">
-                  <h5 class="fw-bold">{{ basket_type.consumer_basket_choice.name }}</h5>
-                  <h5>{{ basket_type.basket_count }} cestas</h5>
+                  <h5 class="fw-bold">{{ bt_name }}</h5>
+                  <h5>{{ bt_sum }} cestas</h5>
                 </div>
               </div>
             </div>
@@ -29,8 +29,9 @@
           <div class="card">
             <div class="card-body">
               <div class="d-flex flex-row justify-content-between">
-                <h5 class="me-2">{{ consumer.person.name }}</h5>
-                <h5 class="">{{ consumer.consumer_basket_choice }}</h5>
+                <h5 class="">{{ consumer.personwg.name }}</h5>
+                <h5 class="ms-auto">{{ consumer.consumer_cell }}</h5>
+                <h5 class="ms-3">{{ consumer.consumer_basket_choice }}</h5>
               </div>
             </div>
           </div>

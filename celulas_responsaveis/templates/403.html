@@ -3,7 +3,8 @@
 {% block title %}Forbidden (403){% endblock %}
 
 {% block content %}
-<h1>Acesso negado.</h1>
 
-<p>{% if exception %}{{ exception }}{% else %}You're not allowed to access this page.{% endif %}</p>
+<h3 class="mt-3">{% if exception %}{{ exception }}{% else %}You're not allowed to access this page.{% endif %}</h3>
+<p>Acesso negado.</p>
+
 {% endblock content %}
