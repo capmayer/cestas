@@ -212,9 +212,10 @@ def producer_edit_week_cycle(request, week_id: int):
 
         if cycle_form.is_valid():
             week_cycle.number = cycle_form.cleaned_data['number']
-
+            
             new_request_day = week_cycle.request_day - datetime.timedelta(week_cycle.request_day.weekday() - int(cycle_form.cleaned_data["request_day"]))
-            week_cycle.request_day = new_request_day
+            request_time = cycle_form.cleaned_data['request_time']
+            week_cycle.request_day = datetime.datetime(new_request_day.year, new_request_day.month, new_request_day.day, request_time.hour, request_time.minute)
             new_delivery_day = week_cycle.delivery_day - datetime.timedelta(week_cycle.delivery_day.weekday() - int(cycle_form.cleaned_data["delivery_day"]))
             week_cycle.delivery_day = new_delivery_day
         
@@ -516,7 +517,7 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
                                             begin__year=month_date.year).last()
 
     week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
-
+    
     def format_requested_quantity(product):
         unit = Unit.objects.get(pk=product["products__unit_id"])
         requested_quantity = product["requested_quantity"]
@@ -528,8 +529,12 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
         product["formatted_requested_quantity"] = formatted_quantity
         return product
 
-    products = week_cycle.baskets.all().values('products__name', 'products__unit_id').annotate(requested_quantity=Sum('products__requested_quantity'))
+    products = week_cycle.baskets.all().values('products__name', 'products__unit_id', 'products__price').annotate(requested_quantity=Sum('products__requested_quantity'))
     products = [format_requested_quantity(product) for product in products]
+
+    for product in products:
+        product['total_price_product'] = product['requested_quantity'] * product['products__price']
+
 
     context = {
         "products": products,
