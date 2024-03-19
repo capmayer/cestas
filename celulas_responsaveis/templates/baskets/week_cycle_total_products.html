@@ -15,6 +15,11 @@
         <h3 class="fw-bold">Produtos vendidos</h3>
         <h6>{{ week_cycle.month_cycle }} - {{ week_cycle }}</h6>
       </div>
+      <div class="d-flex flex-row justify-content-between">
+          <div class="h4 d-flex">Nome</div>
+          <div class="h4 d-flex ms-2">Quantidade</div>
+          <div class="h4 d-flex ms-2">Valor Total</div>
+      </div> 
       {% for product in products %}
         <div class="card">
           <div class="card-body">
@@ -22,9 +27,14 @@
               <div class="d-flex flex-column">
                 <div class="h4">{{ product.products__name }}</div>
               </div>
-              <div class="d-flex flex-row">
-                <div class="d-flex align-self-center h4">
+              <div class="d-flex ms-2">
+                <div class="h4">
                   {{ product.formatted_requested_quantity }}
+                </div>
+              </div>
+              <div class="d-flex ms-2">
+                <div class="h4">
+                  R$ {{ product.total_price_product }}
                 </div>
               </div>
             </div>
