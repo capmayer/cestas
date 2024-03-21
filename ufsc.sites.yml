@@ -10,7 +10,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
-#    image: registry.codigos.ufsc.br/lacaf/plataforma-ccr:latest
+    volumes:
+      - production_django_media:/app/celulas_responsaveis/media
     depends_on:
       - postgres
     ports:
