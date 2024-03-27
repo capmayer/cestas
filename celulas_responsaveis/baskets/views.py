@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import csv
 from collections import defaultdict
 from math import ceil
 
@@ -535,12 +536,29 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
     for product in products:
         product['total_price_product'] = product['requested_quantity'] * product['products__price']
 
-
     context = {
         "products": products,
         "week_cycle": week_cycle,
     }
-    return render(request, 'baskets/week_cycle_total_products.html', context=context)
+
+    if request.method == 'POST' and request.POST.get('download_csv'):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=produtosvendidos.csv'
+
+        # Create a csv writer
+        writer = csv.writer(response)
+
+        # Add column headings 
+        writer.writerow(['Nome', 'Quantidade', 'Valor Total'])
+
+        # Loop through the content
+        for product in products:
+            writer.writerow([product['products__name'], product['requested_quantity'], product['total_price_product']])
+        
+
+        return response
+        
+    return render(request, 'baskets/week_cycle_total_products.html', context=context) 
 
 @login_required
 def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
@@ -564,6 +582,8 @@ def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
     }
 
     return render(request, "baskets/producer/week_cycle_report.html", context=context)
+
+
 
 
 @login_required

@@ -11,10 +11,11 @@
           </div>
         {% endfor %}
       {% endif %}
-      <div class="row">
+      <div class="d-flex flex-row justify-content-between">
         <h3 class="fw-bold">Produtos vendidos</h3>
-        <h6>{{ week_cycle.month_cycle }} - {{ week_cycle }}</h6>
+        <button class="btn btn-success" type="submit" form="download-csv-form"><i class="bi bi-file-earmark-text"></i></button>
       </div>
+      <h6>{{ week_cycle.month_cycle }} - {{ week_cycle }}</h6>
       <div class="d-flex flex-row justify-content-between">
           <div class="h4 d-flex">Nome</div>
           <div class="h4 d-flex ms-2">Quantidade</div>
@@ -45,5 +46,9 @@
     </div>
   </div>
 
+  <form id="download-csv-form" action="{% url 'producer:week_cycle_total_products' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" method="POST" autocomplete="off">
+    {% csrf_token %}
+    <input type="hidden" name="download_csv" value="true">
+  </form>
 
 {% endblock %}
