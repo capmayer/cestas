@@ -57,16 +57,32 @@ class ProducerCellAdmin(admin.ModelAdmin):
                 cell_settings.cell = cell
                 cell_settings.save()
 
+class PaymentInfoAdmin(admin.ModelAdmin):
+    list_display = ["producer_cell", "receiver_name", "pix_key"]
+
+
+class ProducerMembershipAdmin(admin.ModelAdmin):
+    list_display = ["cell", "person", "role", "is_active", "join_date"]
+
+
+class ConsumerCellAdmin(admin.ModelAdmin):
+    list_display = ["name", "share_day", "share_time", "statute_file", "producer_cell"]
+
+
+class ProducerCellSettingsAdmin(admin.ModelAdmin):
+    list_display = ["cell", "buy_only_in_month_cycle", "biweekly_baskets"]
+
+
 # Register your models here.
 admin.site.register(ApplicationSurvey)
 admin.site.register(ApplicationQuestion)
 admin.site.register(Application)
 admin.site.register(ApplicationAnswer)
-admin.site.register(ConsumerCell)
+admin.site.register(ConsumerCell, ConsumerCellAdmin)
 admin.site.register(CellLocation)
 admin.site.register(ProducerCell, ProducerCellAdmin)
 admin.site.register(ConsumerMembership, ConsumerMembershipAdmin)
 admin.site.register(Role)
-admin.site.register(PaymentInfo)
-admin.site.register(ProducerMembership)
-admin.site.register(ProducerCellSettings)
+admin.site.register(PaymentInfo, PaymentInfoAdmin)
+admin.site.register(ProducerMembership, ProducerMembershipAdmin)
+admin.site.register(ProducerCellSettings, ProducerCellSettingsAdmin)
