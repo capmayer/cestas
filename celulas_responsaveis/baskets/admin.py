@@ -40,7 +40,11 @@ class SoldProductAdmin(admin.ModelAdmin):
 
 
 class WeekCycleAdmin(admin.ModelAdmin):
-    list_display = ["month_cycle", "delivery_day", "request_day", "number"]
+    list_display = ["month_cycle", "delivery_day", "request_day", "number", "get_producer_cell_name"]
+
+    @admin.display(description='Producer cell name', ordering='month_cycle__producer_cell')
+    def get_producer_cell_name(self, obj):
+        return obj.month_cycle.producer_cell
 
 
 class OfferedBasketTypeAdmin(admin.ModelAdmin):
