@@ -13,5 +13,10 @@ class WalletAdmin(admin.ModelAdmin):
             wallet.check_balance()
             wallet.save()
 
+
+class DepositAdmin(admin.ModelAdmin):
+    list_display = ["value", "wallet", "confirmed", "number"]
+
+
 admin.site.register(Wallet, WalletAdmin)
-admin.site.register(Deposit)
+admin.site.register(Deposit, DepositAdmin)

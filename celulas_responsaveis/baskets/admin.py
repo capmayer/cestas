@@ -22,15 +22,50 @@ class BasketAdmin(admin.ModelAdmin):
                 basket.wallet = wallet
                 basket.save()
 
+
+class MonthCycleAdmin(admin.ModelAdmin):
+    list_display = ["producer_cell", "begin", "number_of_weeks"]
+
+
+class ProductsListAdmin(admin.ModelAdmin):
+    list_display = ["producer_cell"]
+
+
+class ProductWithPriceAdmin(admin.ModelAdmin):
+    list_display = ["name", "price", "unit", "available_quantity", "is_available", "additional_products_list"]
+
+
+class SoldProductAdmin(admin.ModelAdmin):
+    list_display = ["name", "product", "price", "unit", "requested_quantity", "basket"]
+
+
+class WeekCycleAdmin(admin.ModelAdmin):
+    list_display = ["month_cycle", "delivery_day", "request_day", "number"]
+
+
+class OfferedBasketTypeAdmin(admin.ModelAdmin):
+    list_display = ["producer_cell", "name", "price", "average_weight", "number_of_products"]
+
+
+class ConsumerBasketTypeChoiceAdmin(admin.ModelAdmin):
+    list_display = ["person", "consumer_cell", "offered_basket_type", "period"]
+
+
+
+class MonthlyConsumerAdmin(admin.ModelAdmin):
+    list_display = ["month_cycle", "person", "number", "consumer_cell", "consumer_basket_choice", "wallet", "total_price", "created_date"]
+
+
+
 admin.site.register(Basket, BasketAdmin)
-admin.site.register(MonthCycle)
-admin.site.register(ProductsList)
+admin.site.register(MonthCycle, MonthCycleAdmin)
+admin.site.register(ProductsList, ProductsListAdmin)
 admin.site.register(Product)
-admin.site.register(ProductWithPrice)
-admin.site.register(SoldProduct)
+admin.site.register(ProductWithPrice, ProductWithPriceAdmin)
+admin.site.register(SoldProduct, SoldProductAdmin)
 admin.site.register(Unit)
 admin.site.register(CycleSettings)
-admin.site.register(WeekCycle)
-admin.site.register(OfferedBasketType)
-admin.site.register(ConsumerBasketTypeChoice)
-admin.site.register(MonthlyConsumer)
+admin.site.register(WeekCycle, WeekCycleAdmin)
+admin.site.register(OfferedBasketType, OfferedBasketTypeAdmin)
+admin.site.register(ConsumerBasketTypeChoice, ConsumerBasketTypeChoiceAdmin)
+admin.site.register(MonthlyConsumer, MonthlyConsumerAdmin)
