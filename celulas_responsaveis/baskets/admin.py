@@ -6,7 +6,7 @@ from celulas_responsaveis.cells.models import ConsumerMembership
 
 
 class BasketAdmin(admin.ModelAdmin):
-    list_display = ["person", "consumer_cell", "week_cycle", "created_date", "total_price"]
+    list_display = ["person", "consumer_cell", "week_cycle", "created_date", "total_price", "get_producer_cell_name"]
 
     actions = ["update_wallet"]
 
@@ -21,6 +21,10 @@ class BasketAdmin(admin.ModelAdmin):
 
                 basket.wallet = wallet
                 basket.save()
+
+    @admin.display(description='Producer cell name', ordering='consumer_cell__producer_cell')
+    def get_producer_cell_name(self, obj):
+        return obj.consumer_cell.producer_cell
 
 
 class MonthCycleAdmin(admin.ModelAdmin):
