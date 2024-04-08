@@ -120,7 +120,7 @@ class WeekCycle(models.Model):
         return self.month_cycle.producer_cell.consumer_cells.count()
 
     def __str__(self) -> str:
-        return f"Semana {self.number}"
+        return f"Semana {self.number} - {self.month_cycle} - {self.month_cycle.producer_cell}"
 
 class ProductsList(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="product_list", on_delete=models.CASCADE)
