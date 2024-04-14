@@ -8,10 +8,10 @@
           <h3 class="fw-bold">Transferências pendentes</h3>
         </div>
       </div>
-      {% if not deposits %}
+      {% if not pending_deposits %}
       <h5>Nenhuma transferência pendente.</h5>
       {% endif %}
-      {% for deposit in deposits %}
+      {% for deposit in pending_deposits %}
         <div class="card">
           <div class="card-body">
             <a href="{% url 'producer:producer_deposit_confirmation' deposit_number=deposit.number %}" class="stretched-link"></a>
@@ -28,13 +28,13 @@
       {% endfor %}
     <div class="row mt-3 mb-3">
       <div class="col-12">
-        <h3 class="fw-bold">Últimas transferências confirmadas</h3>
+        <h3 class="fw-bold">Últimas transferências</h3>
       </div>
     </div>
-    {% if not confirmed_deposits %}
+    {% if not other_deposits %}
       <h5>Nenhuma transferência confirmada.</h5>
       {% endif %}
-      {% for deposit in confirmed_deposits %}
+      {% for deposit in other_deposits %}
         <div class="card">
           <div class="card-body">
             <a href="{% url 'producer:producer_deposit_confirmation' deposit_number=deposit.number %}" class="stretched-link"></a>

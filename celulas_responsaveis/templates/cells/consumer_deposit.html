@@ -46,7 +46,7 @@
           <h5 class="mt-2">
             Informe o valor transferido no campo abaixo e então clique no botão Registrar.
            </h5>
-          <form action="{% url 'wallets:consumer_deposit' %}"  method="post">
+          <form action="{% url 'wallets:consumer_deposit' %}"  method="post" enctype="multipart/form-data">
             <div class="d-flex mt-2 flex-column flex-md-row justify-content-between">
               <div class="d-flex h4 fw-bold align-items-center">
                   {{ deposit_form.value.label }}
@@ -54,6 +54,11 @@
               <div class="d-flex flex-row h4 fw-bold align-items-center">
                   R$ {{ deposit_form.value }}
               </div>
+            </div>
+            <h4 class="fw-bold">Adicionar Comprovante</h4>
+            <div class="d-flex mt-2 flex-column flex-md-row">
+              {{ deposit_form.payment_file }}
+              {{ deposit_form.payment_file.errors }}
             </div>
             {% csrf_token %}
             <button class="btn btn-success mt-3 w-100" type="submit">REGISTRAR TRANSFERÊNCIA</button>
