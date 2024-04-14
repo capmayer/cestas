@@ -16,10 +16,23 @@
         <div class="card-body">
           <div class="d-flex flex-row justify-content-between">
             <div class="d-flex flex-column h4 fw-bold">
-              Consumidor(a):
+              Consumidor(a)
             </div>
             <div class="d-flex flex-column h4 fw-bold">
               <div>{{ deposit.wallet.person.name }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-row justify-content-between">
+            <div class="d-flex flex-column h4 fw-bold">
+              Estado
+            </div>
+            <div class="d-flex flex-column h4 fw-bold">
+              <div>{% if deposit.confirmed %}Confirmado{% elif deposit.rejected %}Recusado{% else %}Aguardando{% endif %}</div>
             </div>
           </div>
         </div>
@@ -28,7 +41,7 @@
         <div class="card-body">
           <div class="d-flex flex-row justify-content-between">
             <div class="d-flex flex-column h4 fw-bold">
-              Célula:
+              Célula
             </div>
             <div class="d-flex flex-column h4 fw-bold">
               <div>CCR {{ deposit.wallet.consumer_membership.cell }}</div>
@@ -36,11 +49,11 @@
           </div>
         </div>
       </div>
-        <div class="card">
+      <div class="card">
         <div class="card-body">
           <div class="d-flex flex-row justify-content-between">
             <div class="d-flex flex-column h4 fw-bold">
-              Data:
+              Data
             </div>
             <div class="d-flex flex-column h4">
               <div>{{ deposit.created_date|date:'d/m/Y H:i' }}h</div>
@@ -51,21 +64,57 @@
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-row justify-content-between">
-            <div class="d-flex flex-column h4 fw-bold">Valor transferência: </div>
+            <div class="d-flex flex-column h4 fw-bold">Valor transferência</div>
             <div class="d-flex flex-column h4 fw-bold">
               <div>R$ {{ deposit.value|floatformat:2 }}</div>
             </div>
           </div>
         </div>
       </div>
-      <h4>{{ payment_info.description }}</h4>
+      {% if deposit.payment_file %}
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex flex-row justify-content-between">
+              <div class="d-flex flex-column h4 fw-bold">
+                {% if deposit.payment_file_is_image %}
+                  <div class="d-flex flex-column h4 fw-bold">
+                    <img src="{{ deposit.payment_file.url}}" style="max-width:100%;max-height:100%;flex-shrink:0;">
+                  </div>
+                {% elif deposit.payment_file_is_pdf %}
+                  <div class="d-flex flex-column h4 fw-bold">
+                    <a target="_blank" href="{{ deposit.payment_file.url }}">Ver comprovante</a>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex flex-row justify-content-between">
+              <div class="d-flex flex-column h4 fw-bold">Comprovante não enviado</div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+
       <div class="d-grid mt-2">
         {% if deposit.confirmed %}
-          <a class="btn btn-success disabled mb-2" type="submit" href="">CONFIRMADO</a>
+          <a class="btn btn-success disabled mb-1" type="submit" href="">CONFIRMADO</a>
         {% else %}
           <form action="{% url 'producer:producer_deposit_confirmation' deposit_number=deposit.number %}" method="post">
             {% csrf_token %}
-            <button class="btn btn-success mb-2 w-100" type="submit">CONFIRMAR</button>
+            <button class="btn btn-success mb-1 w-100" type="submit">CONFIRMAR</button>
+          </form>
+        {% endif %}
+        {% if deposit.rejected %}
+          <a class="btn btn-danger disabled mb-1" type="submit" href="">REJEITADO</a>
+        {% else %}
+          <form action="{% url 'producer:producer_deposit_reject' deposit_number=deposit.number %}" method="post">
+            {% csrf_token %}
+            <button class="btn btn-danger mb-1 w-100" type="submit">REJEITAR</button>
           </form>
         {% endif %}
           <a href="{% url 'producer:consumers_deposits' %}" class="btn btn-secondary">VOLTAR</a>

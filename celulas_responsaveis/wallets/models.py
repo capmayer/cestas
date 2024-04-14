@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from random import randrange
 
 from django.db import models
@@ -48,13 +49,16 @@ class Wallet(models.Model):
         baskets = self.baskets.order_by("-created_date")[:10]
         month_cycles = self.month_cycles.order_by("-created_date")[:10]
 
-        deposit_entries = [Registry(name="Transferência", number=deposit.number, date=deposit.created_date, value=deposit.value, debt=False, pendent=not deposit.confirmed) for deposit in deposits]
+        deposit_entries = [Registry(name="Transferência", number=deposit.number, date=deposit.created_date, value=deposit.value, debt=False, pendent=not deposit.confirmed and not deposit.rejected) for deposit in deposits]
         basket_entries = [Registry(name="Cesta adicionais", number=basket.number, date=basket.created_date, value=basket.total_price, debt=True) for basket in baskets]
         month_cycles_entries = [Registry(name=f"Ciclo {cycle.month_cycle}", number=cycle.number, date=cycle.created_date, value=cycle.total_price, debt=True) for cycle in month_cycles]
 
         entries = deposit_entries + basket_entries + month_cycles_entries
 
         return sorted(entries, key=lambda entry: entry.date, reverse=True)[:10]
+
+    def __str__(self):
+        return f"{self.person} - {self.producer_cell}"
 
 
 def deposit_identification_number():
@@ -63,10 +67,36 @@ def deposit_identification_number():
     identification = f"{random_number:06d}{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}"
     return identification
 
+
+def user_directory_path(instance, filename):
+    return f"person_{instance.wallet.person}/{filename}"
+
+
 class Deposit(models.Model):
     number = models.CharField(default=deposit_identification_number, editable=False, unique=True, max_length=20)
     wallet = models.ForeignKey(Wallet, related_name="deposits", on_delete=models.CASCADE)
     value = models.FloatField()
     confirmed = models.BooleanField(default=False)
+
+    rejected = models.BooleanField(default=False)
+    rejected_reason = models.CharField(max_length=30, null=True)
+
     created_date = models.DateTimeField(auto_now_add=True)
 
+    payment_file = models.FileField(upload_to=user_directory_path, null=True)
+
+    @property
+    def payment_file_filename(self):
+        return Path(self.payment_file.name).name
+
+    @property
+    def payment_file_is_image(self) -> bool:
+        if self.payment_file is not None:
+            return Path(self.payment_file.name).suffix in [".jpeg", ".png", ".jpg"]
+        return False
+
+    @property
+    def payment_file_is_pdf(self) -> bool:
+        if self.payment_file is not None:
+            return Path(self.payment_file.name).suffix in [".pdf"]
+        return False

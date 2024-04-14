@@ -15,6 +15,7 @@ class CycleSettings(models.Model):
     week_day_delivery = models.IntegerField()
     week_day_requests_end_time = models.TimeField()
 
+
 def hex_uuid():
     pass
 
@@ -25,7 +26,9 @@ def basket_identification_number():
     identification = f"{random_number:06d}{time_now.day:02d}{time_now.month:02d}{time_now.year:04d}"
     return identification
 
+
 MONTH_TO_PORTUGUESE = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+
 
 class MonthCycle(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="month_cycles", on_delete=models.CASCADE)
@@ -104,6 +107,7 @@ class ConsumerBasketTypeChoice(models.Model):
     def __str__(self):
         return f"{self.person.name} - {self.offered_basket_type} ({self.period})"
 
+
 class WeekCycle(models.Model):
     month_cycle = models.ForeignKey(MonthCycle, related_name="week_cycles", on_delete=models.CASCADE)
     delivery_day = models.DateField()
@@ -121,6 +125,7 @@ class WeekCycle(models.Model):
 
     def __str__(self) -> str:
         return f"Semana {self.number} - {self.month_cycle} - {self.month_cycle.producer_cell}"
+
 
 class ProductsList(models.Model):
     producer_cell = models.ForeignKey(ProducerCell, related_name="product_list", on_delete=models.CASCADE)
@@ -205,6 +210,7 @@ class SoldProduct(models.Model):
             return f"{self.requested_quantity/1000} {self.unit.k_unit}"
 
         return f"{int(self.requested_quantity)} {self.unit.unit}"
+
 
 class ProductWithPrice(models.Model):
     product = models.ForeignKey(Product, related_name="+", null=True, on_delete=models.SET_NULL)

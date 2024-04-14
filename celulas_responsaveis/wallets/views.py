@@ -19,7 +19,7 @@ def consumer_deposit(request):
     payment_info = PaymentInfo.objects.filter(producer_cell=consumer_cell.producer_cell).first()
 
     if request.method == "POST":
-        deposit_form = DepositForm(request.POST)
+        deposit_form = DepositForm(request.POST, request.FILES)
 
         if deposit_form.is_valid():
             wallet = Wallet.objects.get(person=request.user, producer_cell=consumer_cell.producer_cell)
@@ -27,6 +27,7 @@ def consumer_deposit(request):
             deposit = Deposit()
             deposit.wallet = wallet
             deposit.value = deposit_form.cleaned_data["value"]
+            deposit.payment_file = request.FILES["payment_file"]
 
             deposit.save()
 

@@ -1,0 +1,79 @@
+[
+  {
+    "model": "cells.ConsumerCell",
+    "pk": 1,
+    "fields": {
+      "name": "Centro",
+      "description": "foo",
+      "share_time": "10h as 16h",
+      "share_day": "Segunda",
+      "is_active": "True",
+      "created": "2023-03-02",
+      "slug": "centro"
+    }
+  },
+  {
+    "model": "cells.ConsumerCell",
+    "pk": 2,
+    "fields": {
+      "name": "Trindade",
+      "description": "foo",
+      "share_time": "10h as 16h",
+      "share_day": "Segunda",
+      "is_active": "True",
+      "created": "2023-04-02",
+      "slug": "trindade"
+    }
+  },
+  {
+    "model": "cells.CellLocation",
+    "pk": 1,
+    "fields": {
+      "cell": 1,
+      "address": "Arqtec",
+      "neighborhood": "Centro",
+      "city": "Floripa",
+      "state": "SC",
+      "latitude": 10,
+      "longitude": 10
+    }
+  },
+  {
+    "model": "cells.CellLocation",
+    "pk": 2,
+    "fields": {
+      "cell": 2,
+      "address": "TrindasTime",
+      "neighborhood": "Trindade",
+      "city": "Floripa",
+      "state": "SC",
+      "latitude": 10,
+      "longitude": 10
+    }
+  },
+  {
+    "model": "cells.Role",
+    "pk": 1,
+    "fields": {
+      "name": "membro"
+    }
+  },
+  {
+    "model": "cells.Role",
+    "pk": 2,
+    "fields": {
+      "name": "coordenacao"
+    }
+  },
+  {
+    "model": "cells.ProducerCell",
+    "pk": 1,
+    "fields": {
+      "name": "Associada",
+      "description": "",
+      "is_active": "True",
+      "created": "2023-04-02",
+      "slug": "associada"
+    }
+  }
+]

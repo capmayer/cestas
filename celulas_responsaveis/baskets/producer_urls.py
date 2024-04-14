@@ -15,6 +15,7 @@ urlpatterns = [
     path('produtores/ciclos/<str:month_identifier>/<int:week_cycle_number>/pedidos', views.producer_cycle_requests, name="producer_cycle_requests"),
     path('produtores/ciclos/<str:month_identifier>/<int:week_cycle_number>/produtos', views.week_cycle_total_products, name="week_cycle_total_products"),
     path('produtores/deposito/<str:deposit_number>', views.producer_deposit_confirmation, name="producer_deposit_confirmation"),
+    path('produtores/deposito/<str:deposit_number>/rejeitar', views.producer_deposit_reject, name="producer_deposit_reject"),
     path('produtores/produtos/', views.products_list_detail, name="products_list_detail"),
     path('produtores/produtos/novo', views.producer_new_product, name="new_product"),
     path('produtores/produtos/<int:product_id>', views.producer_product_detail, name="product_detail"),

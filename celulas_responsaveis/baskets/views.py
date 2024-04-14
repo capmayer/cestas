@@ -213,13 +213,13 @@ def producer_edit_week_cycle(request, week_id: int):
 
         if cycle_form.is_valid():
             week_cycle.number = cycle_form.cleaned_data['number']
-            
+
             new_request_day = week_cycle.request_day - datetime.timedelta(week_cycle.request_day.weekday() - int(cycle_form.cleaned_data["request_day"]))
             request_time = cycle_form.cleaned_data['request_time']
             week_cycle.request_day = datetime.datetime(new_request_day.year, new_request_day.month, new_request_day.day, request_time.hour, request_time.minute)
             new_delivery_day = week_cycle.delivery_day - datetime.timedelta(week_cycle.delivery_day.weekday() - int(cycle_form.cleaned_data["delivery_day"]))
             week_cycle.delivery_day = new_delivery_day
-        
+
             week_cycle.save()
 
         return redirect('producer:producer_home')
@@ -227,11 +227,11 @@ def producer_edit_week_cycle(request, week_id: int):
         current_data = {
             'number': week_cycle.number
         }
-        
+
         current_data["delivery_day"] = week_cycle.delivery_day.weekday()
         current_data["request_time"] = week_cycle.request_day.time()
         current_data["request_day"] = week_cycle.request_day.weekday()
-        current_data["number"] = week_cycle.number 
+        current_data["number"] = week_cycle.number
 
         cycle_form = WeekCycleForm(initial = current_data)
 
@@ -266,6 +266,7 @@ def producer_deposit_confirmation(request, deposit_number: str):
         wallet.save()
 
         deposit.confirmed = True
+        deposit.rejected = False
         deposit.save()
 
     context = {
@@ -273,6 +274,31 @@ def producer_deposit_confirmation(request, deposit_number: str):
     }
 
     return render(request, "baskets/producer/producer_deposit_confirmation.html", context=context)
+
+@login_required
+def producer_deposit_reject(request, deposit_number: str):
+    producer_membership = get_producer_membership(request.user)
+
+    deposit = Deposit.objects.get(number=deposit_number)
+
+    if request.method == "POST":
+        deposit.rejected = True
+
+        if deposit.confirmed:
+            wallet = deposit.wallet
+            wallet.withdraw(deposit.value)
+            wallet.save()
+
+            deposit.confirmed = False
+
+        deposit.save()
+
+    context = {
+        "deposit": deposit,
+    }
+
+    return render(request, "baskets/producer/producer_deposit_confirmation.html", context=context)
+
 
 @login_required
 def producer_cells_list(request):
@@ -518,7 +544,7 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
                                             begin__year=month_date.year).last()
 
     week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
-    
+
     def format_requested_quantity(product):
         unit = Unit.objects.get(pk=product["products__unit_id"])
         requested_quantity = product["requested_quantity"]
@@ -548,17 +574,17 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
         # Create a csv writer
         writer = csv.writer(response)
 
-        # Add column headings 
+        # Add column headings
         writer.writerow(['Nome', 'Quantidade', 'Valor Total'])
 
         # Loop through the content
         for product in products:
             writer.writerow([product['products__name'], product['requested_quantity'], product['total_price_product']])
-        
+
 
         return response
-        
-    return render(request, 'baskets/week_cycle_total_products.html', context=context) 
+
+    return render(request, 'baskets/week_cycle_total_products.html', context=context)
 
 @login_required
 def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
@@ -898,11 +924,12 @@ def consumers_deposits(request):
     producer_membership = get_producer_membership(request.user)
     producer_cell = producer_membership.cell
 
-    deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=False).order_by("created_date")
-    confirmed_deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=True).order_by("created_date")[:10]
+    pending_deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=False, rejected=False).order_by("created_date")
+    other_deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=True) | Deposit.objects.filter(wallet__producer_cell=producer_cell, rejected=True)
+
     context = {
-        "deposits": deposits,
-        "confirmed_deposits": confirmed_deposits,
+        "pending_deposits": pending_deposits,
+        "other_deposits": other_deposits.order_by("created_date")[:20],
     }
 
     return render(request, "baskets/producer/consumers_deposits.html", context=context)
