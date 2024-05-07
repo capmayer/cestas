@@ -548,19 +548,24 @@ def week_cycle_total_products(request, month_identifier: str, week_cycle_number:
     def format_requested_quantity(product):
         unit = Unit.objects.get(pk=product["products__unit_id"])
         requested_quantity = product["requested_quantity"]
-        if requested_quantity >= 1000:
+        if requested_quantity >= 1000 or unit.unit =="g":
             formatted_quantity = f"{requested_quantity / 1000} {unit.k_unit}"
+            formatted_number = requested_quantity / 1000
         else:
             formatted_quantity = f"{int(requested_quantity)} {unit.unit}"
+            formatted_number = requested_quantity
 
         product["formatted_requested_quantity"] = formatted_quantity
+        product["formatted_number_quantity"] = formatted_number
         return product
 
     products = week_cycle.baskets.all().values('products__name', 'products__unit_id', 'products__price').annotate(requested_quantity=Sum('products__requested_quantity'))
     products = [format_requested_quantity(product) for product in products]
 
     for product in products:
-        product['total_price_product'] = product['requested_quantity'] * product['products__price']
+        total_price = product['formatted_number_quantity'] * product['products__price']
+        formatted_total_price = "{:.2f}".format(total_price)
+        product['total_price_product'] = formatted_total_price
 
     context = {
         "products": products,
