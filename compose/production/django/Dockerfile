@@ -75,6 +75,10 @@ COPY --chown=django:django . ${APP_HOME}
 # make django owner of the WORKDIR directory as well.
 RUN chown django:django ${APP_HOME}
 
+RUN mkdir -p ${APP_HOME}/media
+RUN chown -R django:django ${APP_HOME}/media
+RUN chmod -R 755 ${APP_HOME}/media
+
 USER django
 
 ENTRYPOINT ["/entrypoint"]
