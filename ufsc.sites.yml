@@ -2,7 +2,7 @@ version: '3.5'
 
 volumes:
   postgres_data:
-  production_media:
+  production_django_media:
 
 
 services:
