@@ -21,7 +21,7 @@ class User(AbstractUser):
     name = CharField(_("Name of User"), blank=True, max_length=255)
     first_name = None  # type: ignore
     last_name = None  # type: ignore
-    phone_number = CharField(blank=True, max_length=10)
+    phone_number = CharField(blank=True, max_length=20)
     cep = CharField(blank=True, max_length=8)
     address = CharField(blank=True, max_length=255)
     city = CharField(blank=True, max_length=100)

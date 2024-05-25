@@ -1,15 +1,19 @@
 {% extends "base.html" %}
-
+{% load static i18n compress%}
 {% block content %}
   <div class="row justify-content-center mt-4">
     <div class="col-12 col-md-8">
-      <h3 class="fw-bold">Células registradas</h3>
+      <h3 class="fw-bold">Células de consumidores</h3>
+
+      <h5>Leia a <a target="_blank" href="{% static 'pdf/cartilha_consumidora.pdf' %}">Cartilha do Consumidor(a)</a>
+      para mais informações.
+      </h5>
       {% if not cells_locations %}
         <h5 class="p-4">Nenhuma célula cadastrada.</h5>
       {% endif %}
       <div class="list-group d-grip mt-3 border-0 w-auto">
         {% for location in cells_locations %}
-          <a href="{{ location.cell.get_detail_url }}" class="list-group-item list-group-item-action rounded-3 py-3">
+          <a href="{{ location.cell.get_detail_url }}" class="list-group-item list-group-item-action rounded-3 py-3 mb-1">
             <div class="d-flex flex-md-row flex-column justify-content-between">
               <h5 class="mb-1 fw-bold">CCR {{ location.cell }}</h5>
               <h5>{{ location }}</h5>

@@ -31,16 +31,6 @@ FROM python as python-run-stage
 ARG BUILD_ENVIRONMENT=production
 ARG APP_HOME=/app
 
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV BUILD_ENV ${BUILD_ENVIRONMENT}
-
-WORKDIR ${APP_HOME}
-
-RUN addgroup --system django \
-    && adduser --system --ingroup django django
-
-
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg2 dependencies
@@ -72,13 +62,8 @@ RUN chmod +x /start
 # copy application code to WORKDIR
 COPY --chown=django:django . ${APP_HOME}
 
-RUN mkdir -p ${APP_HOME}/celulas_responsaveis/media
-
 # make django owner of the WORKDIR directory as well.
 RUN chown django:django ${APP_HOME}
-
-RUN chown -R django:django ${APP_HOME}/celulas_responsaveis/media
-RUN chmod g+s ${APP_HOME}/celulas_responsaveis/media
 
 USER django
 

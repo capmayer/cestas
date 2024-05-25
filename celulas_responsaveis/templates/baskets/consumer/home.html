@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load static i18n compress%}
 {% block content %}
   <div class="row justify-content-md-center mt-4">
     <div class="col-sm-11 col-lg-8">
@@ -11,6 +11,11 @@
           </div>
         {% endfor %}
       {% endif %}
+      {% if pending_application %}
+        <h4 class="fw-bold">Solicitação de participação pendente</h4>
+        <a class="btn btn-success w-100 mt-1 mb-2" href="{% url 'cells:consumer_application_detail' application_uuid=pending_application.uuid %}">VER SOLICITAÇÃO</a>
+      {% endif %}
+
       {% if consumer_cell %}
         <h3 class="fw-bold">Ações disponíveis</h3>
         {% if membership.is_active %}
@@ -20,10 +25,12 @@
         <a class="btn btn-success w-100 mt-1" href="{% url 'wallets:consumer_wallet'%}">CADERNETA</a>
         <a class="btn btn-success w-100 mt-1" href="{% url 'baskets:consumer_baskets'%}">MINHAS CESTAS</a>
         <a class="btn btn-success w-100 mt-1" href="{% url 'cells:consumer_cell_detail' cell_slug=consumer_cell.slug %}">MINHA CÉLULA</a>
-      {% else %}
-        <h4>Você ainda não faz parte de uma célula.</h4>
+      {% elif not pending_application %}
+        <h4 class="fw-bold">Você ainda não faz parte de uma célula.</h4>
         <a class="btn btn-success w-100 mt-1" href="{% url 'cells:list_cells'%}">BUSCAR CÉLULA</a>
       {% endif %}
+      <h5 class="mt-2">Leia a <a target="_blank" href="{% static 'pdf/cartilha_consumidora.pdf' %}">Cartilha do Consumidor(a)</a> para mais informações.</h5>
+
     </div>
   </div>
 {% endblock content %}

@@ -107,6 +107,9 @@ class ConsumerBasketTypeChoice(models.Model):
     def __str__(self):
         return f"{self.person.name} - {self.offered_basket_type} ({self.period})"
 
+    def period_caption(self) -> str:
+        return str(PeriodType(self.period).label)
+
 
 class WeekCycle(models.Model):
     month_cycle = models.ForeignKey(MonthCycle, related_name="week_cycles", on_delete=models.CASCADE)
@@ -150,6 +153,7 @@ class Basket(models.Model):
 
     is_cancelled = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
+    is_ready = models.BooleanField(default=False)
     is_delivered = models.BooleanField(default=False)
 
     def __str__(self) -> str:

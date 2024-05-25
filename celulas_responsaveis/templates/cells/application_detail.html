@@ -1,0 +1,59 @@
+{% extends "base_producer.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col-sm-11 col-lg-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <h3 class="mb-4 fw-bold">Pedido para participar da célula {{ application.cell }} </h3>
+
+      <div class="card">
+        <div class="card-body d-flex flex-column flex-md-row justify-content-between">
+          <h5>Nome:</h5>
+          <h5>{{ application.person.name }} </h5>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body d-flex flex-column flex-md-row justify-content-between">
+          <h5>Email:</h5>
+          <h5>{{ application.person.email }} </h5>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body d-flex flex-column flex-md-row justify-content-between">
+          <h5>Contato:</h5>
+          <h5>{{ application.person.phone_number }} </h5>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body d-flex flex-column flex-md-row justify-content-between">
+          <h5>Tamanho cesta:</h5>
+          <h5>{{ basket_choice.offered_basket_type }} </h5>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body d-flex flex-column flex-md-row justify-content-between">
+          <h5>Periodicidade:</h5>
+          <h5>{{ basket_choice.period_caption }} </h5>
+        </div>
+      </div>
+      <form action="{% url 'cells:approve_application' application_uuid=application.uuid %}" method="post">
+        {% csrf_token %}
+        <input class="btn btn-success w-100 mt-2" type="submit" value="APROVAR">
+      </form>
+       <form action="{% url 'cells:application_detail' application_uuid=application.uuid %}" method="post">
+        {% csrf_token %}
+        <input class="btn btn-danger w-100 mt-1" type="submit" value="RECUSAR">
+      </form>
+
+      <a href="{% url 'producer:consumers_list' %}" class="btn btn-secondary mt-1 w-100">VOLTAR</a>
+    </div>
+  </div>
+{% endblock content %}

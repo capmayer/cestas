@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block inner %}
+
+Olá, {{ application.person.name }}!
+
+Sua participação na célula {{ application.cell.name }} foi confirmada.
+
+Acesse o grupo de mensagem: {{ application.cell.message_group_link }}
+
+Verifique o saldo de sua caderneta em www.celulasconsumo.ufsc.br/consumidores/caderneta/
+
+{% endblock %}

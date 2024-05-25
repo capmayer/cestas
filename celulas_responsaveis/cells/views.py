@@ -1,18 +1,24 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mail
 from django.shortcuts import render, get_object_or_404, redirect
 import folium
+from django.template import loader
+from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.html import strip_tags
 from django.utils.http import urlencode
 
 from celulas_responsaveis.baskets.forms import ConsumerBTChoiceForm
 from celulas_responsaveis.baskets.models import ConsumerBasketTypeChoice
 from celulas_responsaveis.baskets.views import get_producer_membership, get_consumer_membership
 from celulas_responsaveis.cells.forms import ConsumerCellRegistrationForm, ProducerCellSettingsForm, \
-    ConsumerMembershipForm
+    ConsumerMembershipForm, ApplicationForm
 from celulas_responsaveis.cells.models import ConsumerCell, CellLocation, Application, Role, ConsumerMembership, \
-    ProducerCell, ProducerMembership, ProducerCellSettings
+    ProducerCell, ProducerMembership, ProducerCellSettings, ApplicationAnswer
+from celulas_responsaveis.wallets.models import Wallet
 
 
 def generate_cell_map(latitude: float, longitude: float) -> str:
@@ -88,7 +94,8 @@ def consumer_cell_detail(request, cell_slug: str):
     location = CellLocation.objects.get(cell=cell)
 
     context = {
-        "is_cell_member": False,
+        "has_cell_membership": False,
+        "has_application": False,
         "is_organizer": False,
         "cell": cell,
         "location": location,
@@ -96,15 +103,16 @@ def consumer_cell_detail(request, cell_slug: str):
 
     if request.user.is_authenticated:
         # If user is a member we don't need to show application button.
-        person_membership = ConsumerMembership.objects.filter(person=request.user)
-
-        cell_member_membership = person_membership.filter(cell=cell)
-        context["is_cell_member"] = cell_member_membership.exists()
+        cell_member_membership = ConsumerMembership.objects.filter(person=request.user, cell=cell)
+        context["has_cell_membership"] = cell_member_membership.exists()
 
         organizer = Role.objects.get(name="coordenacao")
 
         is_organizer = cell_member_membership.filter(role=organizer).exists()
         context["is_organizer"] = is_organizer
+
+        has_application = Application.objects.filter(person=request.user, is_pending=True)
+        context["has_application"] = has_application.exists()
 
     return render(request, "cells/consumer_cell_detail.html", context)
 
@@ -147,10 +155,76 @@ def list_cells(request):
     return render(request, "cells/all_cells.html", context=context)
 
 
-def application_complete(request):
-    return render(request, "cells/application_complete.html")
+def application_complete(request, application_uuid: str):
+    application = get_object_or_404(Application, uuid=application_uuid)
+
+    context = {
+        "application": application,
+    }
+
+    return render(request, "cells/application_complete.html", context=context)
+
 
 def apply_to_consumer_cell(request, cell_slug: str):
+    cell = get_object_or_404(ConsumerCell, slug=cell_slug)
+
+    if request.user.is_authenticated is False:
+        cell_membership_url = urlencode(
+            {"next": reverse("cells:apply_to_consumer_cell", kwargs={"cell_slug": cell_slug})})
+        signup_url = reverse('account_signup')
+        messages.warning(request, "É necessário criar uma conta ou entrar para continuar.")
+        return redirect(f"{signup_url}?{cell_membership_url}")
+
+    application = Application.objects.filter(cell=cell, person=request.user, is_pending=True)
+    if application.exists():
+        raise RuntimeError("Já existe uma aplicação para essa célula.")
+
+    if request.method == "POST":
+        application_form = ApplicationForm(request.POST)
+        basket_choice_form = ConsumerBTChoiceForm(request.POST, producer_cell=cell.producer_cell)
+
+        if basket_choice_form.is_valid() and application_form.is_valid():
+            basket_choice = basket_choice_form.save(commit=False)
+            basket_choice.person = request.user
+            basket_choice.consumer_cell = cell
+            basket_choice.save()
+
+            application = Application()
+            application.person = request.user
+            application.cell = cell
+            application.save()
+
+            for question in application_form.questions_instances:
+                answer = application_form.cleaned_data[question.name]
+                answer_instance = ApplicationAnswer()
+                answer_instance.application = application
+                answer_instance.question = question
+                answer_instance.answer = answer
+                answer_instance.save()
+
+            return redirect("cells:application_complete", application_uuid=application.uuid)
+        else:
+            context = {
+                "application_form": application_form,
+                "basket_choice_form": basket_choice_form,
+                "cell": cell,
+            }
+            return render(request, "cells/new_application.html", context=context)
+    else:
+        application_form = ApplicationForm()
+        basket_choice_form = ConsumerBTChoiceForm(producer_cell=cell.producer_cell)
+
+    context = {
+        "application_form": application_form,
+        "basket_choice_form": basket_choice_form,
+        "cell": cell,
+    }
+
+    return render(request, "cells/new_application.html", context=context)
+
+
+
+def join_consumer_cell(request, cell_slug: str):
     """
         Define os caminhos para ingressar en uma célula.
 
@@ -161,60 +235,59 @@ def apply_to_consumer_cell(request, cell_slug: str):
     cell = get_object_or_404(ConsumerCell, slug=cell_slug)
 
     if request.user.is_authenticated:
-        membership = ConsumerMembership.objects.filter(person=request.user.id).first()
-
-        if membership:
+        if membership := ConsumerMembership.objects.filter(person=request.user, is_active=True).last():
             messages.warning(request, f"Você já faz parte da CCR {membership.cell}")
             return redirect("cells:consumer_cell_detail", cell_slug=cell_slug)
 
         else:
-            return redirect("cells:new_consumer_membership", cell_slug=cell_slug, role="membro")
+            return redirect("cells:apply_to_consumer_cell", cell_slug=cell_slug)
 
     else:
-        cell_membership_url = urlencode({"next": reverse("cells:new_consumer_membership", kwargs={"cell_slug": cell_slug, "role": "membro"})})
+        cell_membership_url = urlencode({"next": reverse("cells:apply_to_consumer_cell", kwargs={"cell_slug": cell_slug})})
         signup_url = reverse('account_signup')
-        messages.warning(request, "É necessário criar uma conta ou entrar em uma conta existente para continuar.")
+        messages.warning(request, "É necessário criar uma conta ou entrar para continuar.")
         return redirect(f"{signup_url}?{cell_membership_url}")
 
 
-def new_consumer_membership(request, cell_slug: str, role: str = "membro"):
-    """
-        Cria a relação da pessoa com a célula.
+# def new_consumer_membership(request, cell_slug: str, role: str = "membro"):
+#     """
+#         Cria a relação da pessoa com a célula.
+#
+#      View com função de criar a relação entre pessoa e célula. É utilizado para adicionar membros em células de consumo.
+#      O paramêtro 'role' define a função do membro na célula, por exemplo, estar na coordenação da célula.
+#     """
+#     from celulas_responsaveis.wallets.models import Wallet
+#
+#     cell = get_object_or_404(ConsumerCell, slug=cell_slug)
+#
+#     if request.user.is_authenticated:
+#         is_member = ConsumerMembership.objects.filter(cell=cell, person=request.user)
+#
+#         if is_member.exists():
+#             return redirect("baskets:request_products")
+#
+#     role = Role.objects.get(name=role)
+#
+#     membership_content = {
+#         "role": role,
+#         "is_active": True,
+#     }
+#
+#     cell.members.add(request.user, through_defaults=membership_content)
+#     cell.save()
+#
+#     if cell.producer_cell:
+#         membership = ConsumerMembership.objects.get(cell=cell, person=request.user)
+#
+#         wallet = Wallet()
+#         wallet.consumer_membership = membership
+#         wallet.person = request.user
+#         wallet.producer_cell = membership.cell.producer_cell
+#
+#         wallet.save()
+#
+#     return redirect("cells:consumer_participation_settings")
 
-     View com função de criar a relação entre pessoa e célula. É utilizado para adicionar membros em células de consumo.
-     O paramêtro 'role' define a função do membro na célula, por exemplo, estar na coordenação da célula.
-    """
-    from celulas_responsaveis.wallets.models import Wallet
-
-    cell = get_object_or_404(ConsumerCell, slug=cell_slug)
-
-    if request.user.is_authenticated:
-        is_member = cell.members.filter(id=request.user.id)
-
-        if is_member.exists():
-            return redirect("baskets:request_products")
-
-    role = Role.objects.get(name=role)
-
-    membership_content = {
-        "role": role,
-        "is_active": True,
-    }
-
-    cell.members.add(request.user, through_defaults=membership_content)
-    cell.save()
-
-    if cell.producer_cell:
-        membership = ConsumerMembership.objects.get(cell=cell, person=request.user)
-
-        wallet = Wallet()
-        wallet.consumer_membership = membership
-        wallet.person = request.user
-        wallet.producer_cell = membership.cell.producer_cell
-
-        wallet.save()
-
-    return redirect("cells:consumer_participation_settings")
 
 @login_required
 def cell_management(request, cell_slug: str):
@@ -313,27 +386,153 @@ def consumer_participation_settings(request):
     }
     return render(request, "cells/consumer_participation_settings.html", context=context)
 
+@login_required
+def cancel_application(request, application_uuid: str):
+    application = get_object_or_404(Application, uuid=application_uuid)
+
+    if request.user != application.person:
+        raise PermissionDenied("Essa solicitação não é sua.")
+
+    if request.method == "POST":
+        application.is_pending = False
+        application.approved = False
+        application.approved_by = request.user
+        application.save()
+        messages.success(request, message="Solicitação cancelada.")
+        return redirect("baskets:consumer_home")
+
+@login_required
+def consumer_application_detail(request, application_uuid: str):
+    application = get_object_or_404(Application, uuid=application_uuid)
+    basket_choice = ConsumerBasketTypeChoice.objects.filter(person=application.person,
+                                                            consumer_cell=application.cell).last()
+    context = {
+        "cell": application.cell,
+        "application": application,
+        "basket_choice": basket_choice,
+    }
+
+    return render(request, "cells/consumer_application_detail.html", context=context)
 
 
-# @login_required
-# def approve_application(request, cell_slug: str, application_uuid: str):
-#     """Not being used."""
-#     application = get_object_or_404(Application, uuid=application_uuid)
-#     cell = get_object_or_404(ConsumerCell, slug=cell_slug)
-#     application.is_pending = False
-#     application.approved = True
-#     application.approved_by = request.user
-#
-#     application.save()
-#
-#     role = Role.objects.get(name="Consumidor")
-#
-#     membership_content = {
-#         "role": role,
-#         "is_active": True,
-#     }
-#
-#     cell.members.add(application.person, through_defaults=membership_content)
-#     cell.save()
-#
-#     return redirect("cells:members", cell_slug=cell_slug)
+@login_required
+def edit_consumer_application(request, application_uuid: str):
+    application = get_object_or_404(Application, uuid=application_uuid)
+    basket_choice = ConsumerBasketTypeChoice.objects.filter(person=application.person,
+                                                            consumer_cell=application.cell).last()
+    cell = application.cell
+
+    if request.method == "POST":
+        application_form = ApplicationForm(request.POST, instance=application)
+        basket_choice_form = ConsumerBTChoiceForm(request.POST, instance=basket_choice, producer_cell=cell.producer_cell)
+
+        if application_form.is_valid() and basket_choice_form.is_valid():
+            basket_choice_form.save(commit=True)
+
+            for answer in application_form.answer_instances:
+                answer.answer = application_form.cleaned_data[answer.question.name]
+                answer.save()
+
+            return redirect("cells:consumer_application_detail", application_uuid=application.uuid)
+    else:
+        application_form = ApplicationForm(instance=application)
+        basket_choice_form = ConsumerBTChoiceForm(instance=basket_choice, producer_cell=cell.producer_cell)
+
+    context = {
+        "application": application,
+        "application_form": application_form,
+        "basket_choice_form": basket_choice_form,
+    }
+
+    return render(request, "cells/edit_consumer_application.html", context=context)
+
+
+
+@login_required
+def application_detail(request, application_uuid: str):
+    application = get_object_or_404(Application, uuid=application_uuid)
+    basket_choice = ConsumerBasketTypeChoice.objects.filter(person=application.person, consumer_cell=application.cell).last()
+
+    context = {
+        "application": application,
+        "basket_choice": basket_choice,
+    }
+
+    if request.method == "POST":
+        application.is_pending = False
+        application.approved = False
+        application.approved_by = request.user
+        application.save()
+
+        messages.warning(request, f"O pedido de {application.person.name} foi recusado.")
+        return redirect("producer:consumers_list")
+
+    return render(request, "cells/application_detail.html", context=context)
+
+
+def send_application_approved_mail(person_mail, context):
+    html_message = render_to_string(
+        template_name="cells/send_application_approved_mail.html",
+        context=context,
+    )
+    plain_message = strip_tags(html_message)
+
+    send_mail(
+        subject=f"Sua participação foi aprovada!",
+        message=plain_message,
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[person_mail,],
+        html_message=html_message,
+        fail_silently=True,
+    )
+
+
+@login_required
+def approve_application(request, application_uuid: str):
+    producer_membership = get_producer_membership(request.user)
+    application = get_object_or_404(Application, uuid=application_uuid)
+
+    if request.method == "POST":
+        application.is_pending = False
+        application.approved = True
+        application.approved_by = request.user
+
+        application.save()
+
+        previous_memberships = ConsumerMembership.objects.filter(person=request.user, is_active=True)
+        for previous_membership in previous_memberships:
+            previous_membership.is_active = False
+            previous_membership.save()
+
+        role = Role.objects.get(name="membro")
+
+        membership_content = {
+            "role": role,
+            "is_active": True,
+        }
+
+        cell = application.cell
+        cell.members.add(application.person, through_defaults=membership_content)
+        cell.save()
+
+        if cell.producer_cell is not None:
+            membership = ConsumerMembership.objects.get(cell=cell, person=request.user, is_active=True)
+            if previous_wallet := Wallet.objects.filter(
+                producer_cell=producer_membership.cell,
+                person=application.person
+            ).last():
+                previous_wallet.consumer_membership = membership
+                previous_wallet.save()
+            else:
+                wallet = Wallet()
+                wallet.producer_cell = cell.producer_cell
+                wallet.person = application.person
+                wallet.consumer_membership = membership
+                wallet.save()
+
+        context = {
+            "application": application,
+        }
+        send_application_approved_mail(application.person.email, context)
+        messages.success(request, f"Agora {application.person.name} faz parte da célula.")
+        return redirect("producer:consumers_list")

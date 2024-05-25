@@ -3,7 +3,9 @@
 {% block content %}
   <div class="row justify-content-md-center mt-4">
     <div class="col-8">
-      <h2>Aplicação enviada aos organizadores da célula.</h2>
+      <h2 class="fw-bold">Quase lá! Sua solicitação foi enviada para a célula</h2>
+      <h4>Fique atento ao seu email, entraremos em contato até o início do próximo ciclo.</h4>
+      <a href="{% url 'cells:consumer_application_detail' application_uuid=application.uuid %}" class="btn btn-success w-100 mt-1" type="submit">VER SOLICITAÇÃO</a>
     </div>
   </div>
 {% endblock %}

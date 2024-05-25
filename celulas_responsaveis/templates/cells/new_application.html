@@ -3,13 +3,24 @@
 
 {% block content %}
   <div class="row justify-content-md-center mt-4">
-    <div class="col-8">
-      <h3>Aplicação célula: {{ cell.name }}</h3>
-
-      <form action="{{ cell.get_absolute_url }}/aplicar" method="post">
+    <div class="col-sm-11 col-lg-7">
+      <h3 class="fw-bold">Solicitação de participação célula {{ cell.name }}</h3>
+      <form action="{% url 'cells:apply_to_consumer_cell' cell_slug=cell.slug %}" method="post">
         {% csrf_token %}
-        {{ application_form|crispy }}
-        <input class="btn btn-success" type="submit" value="Enviar">
+        <h5 class="fw-bold mt-1">Queremos saber um pouco mais sobre você</h5>
+        <div class="card">
+          <div class="card-body">
+            {{ application_form|crispy }}
+          </div>
+        </div>
+
+        <h5 class="mt-2 fw-bold">Escolha o tamanho e a periodicidade de entrega da cesta</h5>
+        <div class="card">
+          <div class="card-body">
+            {{ basket_choice_form|crispy }}
+          </div>
+        </div>
+        <input class="btn btn-success w-100 mt-2" type="submit" value="ENVIAR PEDIDO">
       </form>
     </div>
   </div>

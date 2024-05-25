@@ -148,6 +148,10 @@ class Application(models.Model):
     def __str__(self):
         return f"{self.person.email} ({self.is_pending}) -> {self.cell.name}"
 
+    def state_caption(self):
+        approved_caption = "Aceita" if self.approved else "Recusada"
+        return "Aguardando" if self.is_pending else approved_caption
+
 
 class ApplicationAnswer(models.Model):
     application = models.ForeignKey(Application, related_name="survey_answers", on_delete=models.CASCADE)
@@ -167,6 +171,9 @@ class ConsumerMembership(models.Model):
 
     def __str__(self):
         return f"{self.person.name} ({self.role}) - {self.cell}"
+
+    def is_active_caption(self):
+        return "Ativo" if self.is_active else "Inativo"
 
 
 class ProducerMembership(models.Model):

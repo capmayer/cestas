@@ -34,7 +34,7 @@ class UserSignupForm(SignupForm):
     Check UserSocialSignupForm for accounts created from social.
     """
     name = CharField(max_length=255, label="Nome completo", widget=TextInput(attrs={'placeholder': 'Nome completo'}))
-    # phone_number = CharField(max_length=10)
+    phone_number = CharField(max_length=20, label="Celular", widget=TextInput(attrs={'placeholder': "Celular"}))
     # cep = CharField(max_length=8)
     # address = CharField(max_length=255)
     # city = CharField(max_length=100)
@@ -42,7 +42,7 @@ class UserSignupForm(SignupForm):
 
     def custom_signup(self, request, user):
         user.name = self.cleaned_data["name"]
-        # user.phone_number = self.cleaned_data["phone_number"]
+        user.phone_number = self.cleaned_data["phone_number"]
         # user.city = self.cleaned_data["city"]
         # user.state = self.cleaned_data["state"]
 

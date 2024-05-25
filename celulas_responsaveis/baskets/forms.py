@@ -20,17 +20,18 @@ class ConsumerBTChoiceForm(forms.ModelForm):
             "period": "Periodo"
         }
 
-    offered_basket_type = forms.ModelChoiceField(label="Tamanho da cesta", queryset=OfferedBasketType.objects.all(), widget=forms.RadioSelect())
+    offered_basket_type = forms.ModelChoiceField(label="Tamanho da cesta", queryset=OfferedBasketType.objects.all(), widget=forms.Select(), initial=0)
 
     def __init__(self, *args, **kwargs):
-        producer_cell = kwargs.pop('producer_cell', None)
-        producer_cell_settings = ProducerCellSettings.objects.get(cell=producer_cell)
+        producer_cell_settings = None
+        if producer_cell := kwargs.pop('producer_cell', None):
+            producer_cell_settings = ProducerCellSettings.objects.get(cell=producer_cell)
 
         super().__init__(*args, **kwargs)
         self.fields["offered_basket_type"].queryset = OfferedBasketType.objects.filter(
             producer_cell=producer_cell
         )
-        if not producer_cell_settings.biweekly_baskets:
+        if producer_cell_settings and not producer_cell_settings.biweekly_baskets:
             self.fields["period"].widget = forms.HiddenInput()
 
 class SoldProductForm(forms.Form):

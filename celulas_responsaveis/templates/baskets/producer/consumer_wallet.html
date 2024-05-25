@@ -27,6 +27,9 @@
         </div>
       </div>
       <h3 class="fw-bold mt-4">Últimos registros</h3>
+        {% if not wallet.ordered_registries %}
+          <p>Sem registros.</p>
+        {% endif %}
       {% for registry in wallet.ordered_registries %}
         <div class="card">
           {% if registry.pendent %}
@@ -61,7 +64,7 @@
             {% csrf_token %}
             <button class="btn btn-success mt-3 w-100" type="submit" onclick="return confirm('O valor de R${{ wallet.absolute_current_balance|floatformat:2 }} será quitado.');">QUITAR SALDO</button>
         </form>
-        <a href="{% url 'producer:consumers_wallets' %}" class="btn btn-secondary mt-1 w-100">VOLTAR</a>
+        <a href="{% url 'producer:consumer_detail' consumer_username=wallet.person %}" class="btn btn-secondary mt-1 w-100">VOLTAR</a>
       </div>
     </div>
   </div>

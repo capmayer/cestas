@@ -9,7 +9,7 @@ from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied, ViewDoesNotExist
 from django.db.models import Sum, Count
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 
@@ -17,7 +17,7 @@ from celulas_responsaveis.baskets.forms import BasketFormSet, WeekCycleForm, Mon
     ProductWithPriceForm, ConsumerBTChoiceForm
 from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
     ProductWithPrice, CycleSettings, ConsumerBasketTypeChoice, OfferedBasketType, MonthlyConsumer
-from celulas_responsaveis.cells.models import ProducerMembership, ConsumerMembership, ConsumerCell
+from celulas_responsaveis.cells.models import ProducerMembership, ConsumerMembership, ConsumerCell, Application
 from celulas_responsaveis.users.models import User
 from celulas_responsaveis.utils.template_message import consumer_message
 from celulas_responsaveis.wallets.models import Deposit, Wallet
@@ -34,11 +34,13 @@ def consumer_baskets(request):
 
 @login_required
 def consumer_home(request):
-    membership = ConsumerMembership.objects.filter(person=request.user).first()
+    membership = ConsumerMembership.objects.filter(person=request.user).last()
+    pending_application = Application.objects.filter(person=request.user, is_pending=True).last()
 
     context = {
         "membership": membership,
-        "consumer_cell": None
+        "consumer_cell": None,
+        "pending_application": pending_application,
     }
     if membership:
         context["consumer_cell"] = membership.cell
@@ -57,7 +59,7 @@ def get_producer_membership(user: User):
     if not memberships.exists():
         raise PermissionDenied("Você precisa fazer parte de algum grupo.")
 
-    return memberships.first()
+    return memberships.last()
 
 def get_consumer_membership(user: User):
     memberships = ConsumerMembership.objects.filter(person=user)
@@ -65,7 +67,7 @@ def get_consumer_membership(user: User):
     if not memberships.exists():
         raise PermissionDenied("Você precisa fazer parte de alguma CCR para realizar essa ação.")
 
-    return memberships.first()
+    return memberships.last()
 
 @login_required
 def month_cycle_detail(request, month_identifier: str):
@@ -884,17 +886,39 @@ def basket_requested(request, request_number: str):
 
 
 @login_required
-def consumers_wallets(request):
+def consumers_list(request):
     producer_membership = get_producer_membership(request.user)
+
+    pending_applications = Application.objects.filter(cell__in=producer_membership.cell.consumer_cells.all(), is_pending=True)
 
     wallets = Wallet.objects.filter(producer_cell=producer_membership.cell).order_by("current_balance")
 
     context = {
         "wallets": wallets,
+        "pending_applications": pending_applications,
         "producer_cells": producer_membership.cell,
     }
 
-    return render(request, "baskets/producer/consumers_wallets.html", context=context)
+    return render(request, "baskets/producer/consumers_list.html", context=context)
+
+
+@login_required
+def consumer_detail(request, consumer_username):
+    producer_membership = get_producer_membership(request.user)
+
+    user = get_object_or_404(User, username=consumer_username)
+    wallet = Wallet.objects.get(person=user, producer_cell=producer_membership.cell)
+    consumer_membership = wallet.consumer_membership
+    consumer_bt_choice = ConsumerBasketTypeChoice.objects.filter(person=user, consumer_cell=consumer_membership.cell).last()
+
+    context = {
+        "wallet": wallet,
+        "membership": consumer_membership,
+        "consumer_bt_choice": consumer_bt_choice,
+    }
+
+    return render(request, "baskets/producer/consumer_detail.html", context=context)
+
 
 @login_required
 def consumer_wallet(request, consumer_username):

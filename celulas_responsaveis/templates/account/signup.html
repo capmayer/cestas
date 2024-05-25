@@ -5,39 +5,36 @@
 {% block head_title %}{% translate "Signup" %}{% endblock %}
 
 {% block inner %}
-
-<div class="card mt-4">
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+<div class="card mt-4 mb-3">
   <div class="col p-4">
     <img class="img-fluid" src="/static/images/home-image.png">
-
-
-  <div class="row p-3">
-    <h3 class="form text-center">Cadastrar</h3>
-  </div>
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    {% endfor %}
-  {% endif %}
-  <form class="col" id="signup_form" method="post" action="{% url 'account_signup' %}">
-    {% csrf_token %}
-    {{ form|crispy }}
-    {% if redirect_field_value %}
-    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-    {% endif %}
-    <div class="col">
-      <button class="btn btn-success" type="submit" style="width:100%;">CADASTRAR-SE</button>
+    <div class="row">
+      <h3 class="form text-center fw-bold mt-4">Cadastrar conta</h3>
     </div>
 
-  </form>
-  <div class="col">
-    <p class="col ">Já possui uma conta? <a href="{{ login_url }}">Entre aqui</a>.</p>
-  </div>
-  </div>
+    <form class="col" id="signup_form" method="post" action="{% url 'account_signup' %}">
+      {% csrf_token %}
+      {{ form|crispy }}
+      {% if redirect_field_value %}
+      <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+      {% endif %}
+      <div class="col">
+        <button class="btn btn-success" type="submit" style="width:100%;">CONTINUAR</button>
+      </div>
+    </form>
 
-
+    <div class="col mt-2">
+      <h5 class="fw-bold text-center">Já possui uma conta?</h5>
+      <a href="{{ login_url }}" class="btn btn-success w-100 mt-2">ENTRAR</a>
+    </div>
+  </div>
 </div>
 {% endblock %}

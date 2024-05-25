@@ -1,6 +1,8 @@
 from django import forms
+from django.forms import TextInput
 
-from celulas_responsaveis.cells.models import ApplicationSurvey, ProducerCellSettings, ConsumerMembership
+from celulas_responsaveis.cells.models import ApplicationSurvey, ProducerCellSettings, ConsumerMembership, Application, \
+    ApplicationAnswer
 
 
 class ConsumerCellRegistrationForm(forms.Form):
@@ -13,18 +15,43 @@ class ConsumerCellRegistrationForm(forms.Form):
     state = forms.CharField(label="Estado", max_length=50)
 
 
-class ApplicationForm(forms.Form):
+class ApplicationForm(forms.ModelForm):
+    class Meta:
+        model = Application
+        fields = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        questions_form = ApplicationSurvey.objects.filter(is_active=True)
 
-        if questions_form:
-            form = questions_form[0]
-            self.questions_instances = form.questions.all()
+        if self.instance and self.instance.survey_answers.all():
+            self.answer_instances = self.instance.survey_answers.all()
 
-            for question in self.questions_instances:
-                self.fields[question.name] = forms.CharField(max_length=255, required=True)
+            for answer in self.answer_instances:
+                self.fields[answer.question.name] = forms.CharField(
+                    max_length=255,
+                    required=True,
+                    widget=TextInput(
+                        attrs={
+                            "class": "h4",
+                        },
+                    ),
+                    initial=answer.answer,
+                )
+
+        else:
+            if survey := ApplicationSurvey.objects.filter(is_active=True).last():
+                self.questions_instances = survey.questions.all()
+
+                for question in self.questions_instances:
+                    self.fields[question.name] = forms.CharField(
+                        max_length=255,
+                        required=True,
+                        widget=TextInput(
+                            attrs={
+                                "class": "h4",
+                            },
+                        ),
+                    )
 
 
 class ProducerCellSettingsForm(forms.ModelForm):
