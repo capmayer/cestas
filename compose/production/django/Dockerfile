@@ -1,7 +1,5 @@
 ARG PYTHON_VERSION=3.10-slim-bullseye
 
-
-
 # define an alias for the specfic python version used in this file.
 FROM python:${PYTHON_VERSION} as python
 
@@ -49,11 +47,9 @@ COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
   && rm -rf /wheels/
 
-
 COPY --chown=django:django ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
-
 
 COPY --chown=django:django ./compose/production/django/start /start
 RUN sed -i 's/\r$//g' /start
@@ -62,8 +58,12 @@ RUN chmod +x /start
 # copy application code to WORKDIR
 COPY --chown=django:django . ${APP_HOME}
 
+RUN mkdir -p ${APP_HOME}/media
+
 # make django owner of the WORKDIR directory as well.
 RUN chown django:django ${APP_HOME}
+RUN chown -R django:django ${APP_HOME}/media
+RUN chmod g+s ${APP_HOME}/media
 
 USER django
 
