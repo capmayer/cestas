@@ -516,7 +516,7 @@ def approve_application(request, application_uuid: str):
         cell.save()
 
         if cell.producer_cell is not None:
-            membership = ConsumerMembership.objects.get(cell=cell, person=request.user, is_active=True)
+            membership = ConsumerMembership.objects.get(cell=cell, person=application.person, is_active=True)
             if previous_wallet := Wallet.objects.filter(
                 producer_cell=producer_membership.cell,
                 person=application.person
