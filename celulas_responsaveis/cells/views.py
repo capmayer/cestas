@@ -103,7 +103,7 @@ def consumer_cell_detail(request, cell_slug: str):
 
     if request.user.is_authenticated:
         # If user is a member we don't need to show application button.
-        cell_member_membership = ConsumerMembership.objects.filter(person=request.user, cell=cell)
+        cell_member_membership = ConsumerMembership.objects.filter(person=request.user, cell=cell, is_active=True)
         context["has_cell_membership"] = cell_member_membership.exists()
 
         organizer = Role.objects.get(name="coordenacao")
