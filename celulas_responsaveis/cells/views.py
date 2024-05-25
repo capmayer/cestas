@@ -500,7 +500,7 @@ def approve_application(request, application_uuid: str):
         application.save()
         cell = application.cell
 
-        previous_memberships = ConsumerMembership.objects.filter(person=application.person, is_active=True)
+        previous_memberships = ConsumerMembership.objects.filter(person=application.person)
         for previous_membership in previous_memberships:
             previous_membership.is_active = False
             previous_membership.save()
