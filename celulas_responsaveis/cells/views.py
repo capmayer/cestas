@@ -498,25 +498,30 @@ def approve_application(request, application_uuid: str):
         application.approved_by = request.user
 
         application.save()
+        cell = application.cell
 
         previous_memberships = ConsumerMembership.objects.filter(person=application.person, is_active=True)
         for previous_membership in previous_memberships:
             previous_membership.is_active = False
             previous_membership.save()
 
-        role = Role.objects.get(name="membro")
+        if has_member_before := previous_memberships.filter(cell=application.cell).last():
+            has_member_before.is_active = True
+            has_member_before.save()
+            membership = has_member_before
+        else:
+            role = Role.objects.get(name="membro")
 
-        membership_content = {
-            "role": role,
-            "is_active": True,
-        }
+            membership_content = {
+                "role": role,
+                "is_active": True,
+            }
 
-        cell = application.cell
-        cell.members.add(application.person, through_defaults=membership_content)
-        cell.save()
+            cell.members.add(application.person, through_defaults=membership_content)
+            cell.save()
+            membership = ConsumerMembership.objects.get(cell=cell, person=application.person, is_active=True)
 
         if cell.producer_cell is not None:
-            membership = ConsumerMembership.objects.get(cell=cell, person=application.person, is_active=True)
             if previous_wallet := Wallet.objects.filter(
                 producer_cell=producer_membership.cell,
                 person=application.person
