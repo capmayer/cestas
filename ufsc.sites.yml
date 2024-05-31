@@ -11,7 +11,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     volumes:
-      - production_django_media:/app/celulas_consumo/media
+      - production_django_media:/app/media
     depends_on:
       - postgres
     ports:
