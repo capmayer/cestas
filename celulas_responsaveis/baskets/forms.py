@@ -1,6 +1,6 @@
 import datetime
 from django import forms
-from .models import WeekCycle
+from .models import WeekCycle, MonthCycle
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -114,6 +114,16 @@ ProductsListFormSet = inlineformset_factory(
 class MonthCycleForm(forms.Form):
     begin = forms.IntegerField(label="Dia de inicio do ciclo", initial=10)
     number_of_weeks = forms.IntegerField(label="Informe o número de semanas")
+
+class StartMonthCycleForm(forms.ModelForm):
+    class Meta:
+        model = MonthCycle
+        fields = ["number_of_weeks"]
+        labels = {
+            "number_of_weeks": "Informe o número de semanas",
+        }
+
+
 
 DAYS_OF_WEEK = (
     (0, 'Segunda-feira'),

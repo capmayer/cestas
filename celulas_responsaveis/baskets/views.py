@@ -12,12 +12,14 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.timezone import make_aware
 
 from celulas_responsaveis.baskets.forms import BasketFormSet, WeekCycleForm, MonthCycleForm, \
-    ProductWithPriceForm, ConsumerBTChoiceForm
+    ProductWithPriceForm, ConsumerBTChoiceForm, StartMonthCycleForm
 from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
-    ProductWithPrice, CycleSettings, ConsumerBasketTypeChoice, OfferedBasketType, MonthlyConsumer
-from celulas_responsaveis.cells.models import ProducerMembership, ConsumerMembership, ConsumerCell, Application
+    ProductWithPrice, CycleSettings, ConsumerBasketTypeChoice, OfferedBasketType, MonthlyConsumer, PeriodType
+from celulas_responsaveis.cells.models import ProducerMembership, ConsumerMembership, ConsumerCell, Application, \
+    ProducerCellSettings
 from celulas_responsaveis.users.models import User
 from celulas_responsaveis.utils.template_message import consumer_message
 from celulas_responsaveis.wallets.models import Deposit, Wallet
@@ -68,6 +70,75 @@ def get_consumer_membership(user: User):
         raise PermissionDenied("Você precisa fazer parte de alguma CCR para realizar essa ação.")
 
     return memberships.last()
+
+@login_required
+def start_month_cycle(request):
+    producer_membership = get_producer_membership(request.user)
+    producer_cell = producer_membership.cell
+
+    current_month = producer_cell.month_cycles.last()
+    month_cycle_form = StartMonthCycleForm(instance=current_month)
+
+    has_members = len(current_month.consumers.all()) > 0
+    if has_members:
+        messages.error(request, "O ciclo atual já foi iniciado!")
+
+    consumer_cells = ConsumerCell.objects.filter(producer_cell=producer_cell, is_active=True)
+    memberships = ConsumerMembership.objects.filter(cell__in=consumer_cells, is_active=True)
+
+    membership_to_bc = {}
+    for membership in memberships:
+        if basket_choice := ConsumerBasketTypeChoice.objects.filter(person=membership.person,
+                                                                    consumer_cell=membership.cell).last():
+            membership_to_bc[membership] = basket_choice
+        else:
+            membership_to_bc[membership] = None
+
+    if request.method == "POST" and not has_members:
+        month_cycle_form = StartMonthCycleForm(request.POST, instance=current_month)
+
+        if month_cycle_form.is_valid():
+            month_cycle = month_cycle_form.save(commit=False)
+
+            offered_baskets = OfferedBasketType.objects.filter(producer_cell=producer_cell)
+            offered_basket_to_price = {basket.id: basket.price for basket in offered_baskets}
+
+            for membership in memberships:
+                if basket_choice := membership_to_bc.get(membership, None):
+                    price = offered_basket_to_price[basket_choice.offered_basket_type.id]
+                    total_price = price * month_cycle.number_of_weeks
+
+                    wallet = membership.wallet.first()
+                    wallet.withdraw(total_price)
+                    wallet.save()
+
+                    thought_values = {
+                        "consumer_basket_choice": basket_choice.offered_basket_type,
+                        "consumer_cell": membership.cell,
+                        "period": basket_choice.period,
+                        "wallet": wallet,
+                        "total_price": total_price,
+                    }
+
+                    month_cycle.consumers.add(
+                        membership.person,
+                        through_defaults=thought_values,
+                    )
+
+            month_cycle.save()
+
+            return redirect("producer:producer_home")
+
+    context = {
+        "current_month": current_month,
+        "current_month_form": month_cycle_form,
+        "memberships": memberships,
+        "membership_to_bc": membership_to_bc,
+        "has_members": has_members,
+    }
+
+    return render(request, "baskets/producer/start_month_cycle.html", context=context)
+
 
 @login_required
 def month_cycle_detail(request, month_identifier: str):
@@ -170,24 +241,37 @@ def get_week_cycle(producer_cell):
 def producer_home(request):
     producer_membership = get_producer_membership(request.user)
     producer_cell = producer_membership.cell
+    current_month = producer_cell.month_cycles.last()
     current_week = producer_cell.current_week
 
     today = timezone.now()
     today = today.replace(hour=0, minute=0)
 
-    if current_week is None or current_week.delivery_day + datetime.timedelta(days=1) <= today.date():
-        return redirect("producer:new_week_cycle")
-
-    week_cycle_infos = current_week.baskets.all().aggregate(Count('id'), Sum('total_price'))
     deposits = Deposit.objects.filter(wallet__producer_cell=producer_cell, confirmed=False).aggregate(Sum("value"))
     wallets = Wallet.objects.filter(producer_cell=producer_cell).aggregate(Sum("current_balance"))
 
     context = {
-        "week_cycle": current_week,
-        "week_cycle_infos": week_cycle_infos,
         "pending_deposits_sum": deposits["value__sum"],
         "wallets_balance": wallets["current_balance__sum"],
+        "create_new_week": False,
+        "create_new_month": False,
+        "alert_start_month_cycle": False,
     }
+
+    if current_month is None:
+        context["create_new_month"] = True
+        return render(request, "baskets/producer/home.html", context=context)
+
+    if current_month.begin.replace(day=10) < today.date() and len(current_month.consumers.all()) <= 0:
+        context["alert_start_month_cycle"] = True
+    if current_week is None or current_week.delivery_day + datetime.timedelta(days=1) < today.date():
+        context["create_new_week"] = True
+
+    if current_week:
+        context["week_cycle_infos"] = current_week.baskets.all().aggregate(Count('id'), Sum('total_price'))
+
+    context["current_month"] = current_month
+    context["week_cycle"] = current_week
 
     return render(request, "baskets/producer/home.html", context=context)
 
@@ -206,19 +290,27 @@ def producer_cycle_requests(request, month_identifier: str, week_cycle_number: i
     }
     return render(request, "baskets/producer/baskets_requested.html", context=context)
 
-def producer_edit_week_cycle(request, week_id: int):
+
+@login_required
+def producer_edit_week_cycle(request, month_identifier: str, week_cycle_number: int):
     producer_cell = get_producer_membership(request.user).cell
-    week_cycle = WeekCycle.objects.get(id = week_id)
+    month_date = datetime.datetime.strptime(month_identifier, "%m%Y")
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, begin__month=month_date.month,
+                                            begin__year=month_date.year).last()
+
+    week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
 
     if request.method == 'POST':
         cycle_form = WeekCycleForm(request.POST)
 
         if cycle_form.is_valid():
             week_cycle.number = cycle_form.cleaned_data['number']
+            request_time = cycle_form.cleaned_data['request_time']
 
             new_request_day = week_cycle.request_day - datetime.timedelta(week_cycle.request_day.weekday() - int(cycle_form.cleaned_data["request_day"]))
-            request_time = cycle_form.cleaned_data['request_time']
-            week_cycle.request_day = datetime.datetime(new_request_day.year, new_request_day.month, new_request_day.day, request_time.hour, request_time.minute)
+            new_request_day = datetime.datetime(new_request_day.year, new_request_day.month, new_request_day.day, request_time.hour, request_time.minute)
+            week_cycle.request_day = new_request_day
+
             new_delivery_day = week_cycle.delivery_day - datetime.timedelta(week_cycle.delivery_day.weekday() - int(cycle_form.cleaned_data["delivery_day"]))
             week_cycle.delivery_day = new_delivery_day
 
@@ -227,15 +319,12 @@ def producer_edit_week_cycle(request, week_id: int):
         return redirect('producer:producer_home')
     else:
         current_data = {
-            'number': week_cycle.number
+            "number": week_cycle.number,
+            "delivery_day": week_cycle.delivery_day.weekday(),
+            "request_time": week_cycle.request_day.astimezone(),
+            "request_day": week_cycle.request_day.astimezone().weekday(),
         }
-
-        current_data["delivery_day"] = week_cycle.delivery_day.weekday()
-        current_data["request_time"] = week_cycle.request_day.time()
-        current_data["request_day"] = week_cycle.request_day.weekday()
-        current_data["number"] = week_cycle.number
-
-        cycle_form = WeekCycleForm(initial = current_data)
+        cycle_form = WeekCycleForm(initial=current_data)
 
     context = {
         'cycle_form':cycle_form,
@@ -395,13 +484,19 @@ def producer_new_product(request):
 @login_required
 def new_month_cycle(request):
     producer_membership = get_producer_membership(request.user)
-    context = {}
-
-    consumer_cells = ConsumerCell.objects.filter(producer_cell=producer_membership.cell)
+    producer_cell = producer_membership.cell
+    consumer_cells = ConsumerCell.objects.filter(producer_cell=producer_cell, is_active=True)
     memberships = ConsumerMembership.objects.filter(cell__in=consumer_cells, is_active=True)
 
-    context["memberships"] = memberships
-    context["number_of_consumers"] = len(context["memberships"])
+    current_month = producer_cell.month_cycles.last()
+    month_is_over = current_month.is_over() if current_month else False
+
+    context = {
+        "memberships": memberships,
+        "number_of_consumers": len(memberships),
+        "month_is_over": month_is_over,
+    }
+    today = timezone.now()
 
     if request.method == "POST":
         month_cycle_form = MonthCycleForm(request.POST)
@@ -410,7 +505,6 @@ def new_month_cycle(request):
             month_cycle = MonthCycle()
             month_cycle.producer_cell = producer_membership.cell
 
-            today = timezone.now()
             begin_date = today.replace(day=month_cycle_form.cleaned_data["begin"])
 
             month_cycle.begin = begin_date
@@ -421,9 +515,7 @@ def new_month_cycle(request):
             offered_basket_to_price = {basket.id: basket.price for basket in offered_baskets}
 
             for membership in memberships:
-                consumer_basket_choice = ConsumerBasketTypeChoice.objects.filter(person=membership.person, consumer_cell=membership.cell)
-                if consumer_basket_choice.exists():
-                    basket_choice = consumer_basket_choice.first()
+                if basket_choice := ConsumerBasketTypeChoice.objects.filter(person=membership.person, consumer_cell=membership.cell).last():
                     price = offered_basket_to_price[basket_choice.offered_basket_type.id]
                     total_price = price * month_cycle.number_of_weeks
 
@@ -469,12 +561,19 @@ def new_week_cycle(request):
     current_month = producer_cell.month_cycles.last()
 
     today = timezone.now()
+    # Occurs only in setup producer account.
     if current_month is None:
-        return redirect("producer:new_month_cycle")
-
-    next_month = (current_month.begin.month + 1) % 12 or 12
-    if current_month.begin.replace(month=next_month) < today.date():
-        return redirect("producer:new_month_cycle")
+        current_month = MonthCycle()
+        current_month.begin = today.replace(day=10)
+        current_month.producer_cell = producer_cell
+        current_month.save()
+    else:
+        next_month = (current_month.begin.month + 1) % 12 or 12
+        if current_month.begin.replace(month=next_month) < today.date():
+            current_month = MonthCycle()
+            current_month.begin = today.replace(day=10)
+            current_month.producer_cell = producer_cell
+            current_month.save()
 
     context = {
         "month_cycle": current_month,
@@ -510,8 +609,8 @@ def new_week_cycle(request):
 
         if current_week := producer_cell.current_week:
             initial_cycle["delivery_day"] = current_week.delivery_day.weekday()
-            initial_cycle["request_time"] = current_week.request_day.time()
-            initial_cycle["request_day"] = current_week.request_day.weekday()
+            initial_cycle["request_time"] = current_week.request_day.astimezone()
+            initial_cycle["request_day"] = current_week.request_day.astimezone().weekday()
             initial_cycle["number"] = current_week.number + 1
 
         cycle_form = WeekCycleForm(initial=initial_cycle)
@@ -622,11 +721,18 @@ def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
 @login_required
 def week_cycle_baskets(request, month_identifier: str, week_cycle_number: int):
     producer_membership = get_producer_membership(request.user)
+    producer_cell = producer_membership.cell
+    producer_settings = ProducerCellSettings.objects.get(cell=producer_cell)
 
     month_date = datetime.datetime.strptime(month_identifier, "%m%Y")
     month_cycle = MonthCycle.objects.filter(producer_cell=producer_membership.cell, begin__month=month_date.month, begin__year=month_date.year).first()
 
-    monthly_consumers = MonthlyConsumer.objects.filter(month_cycle=month_cycle).order_by("consumer_cell")
+    week_cycle = month_cycle.week_cycles.filter(number=week_cycle_number).first()
+    allowed_periods = [PeriodType.Weekly]
+    if producer_settings.biweekly_baskets is True and week_cycle.number % 2 != 0:
+        allowed_periods.append(PeriodType.Biweekly)
+
+    monthly_consumers = MonthlyConsumer.objects.filter(month_cycle=month_cycle, period__in=allowed_periods).order_by("consumer_cell")
     offered_basket_types = OfferedBasketType.objects.filter(producer_cell=month_cycle.producer_cell)
 
     basket_types_sum = {}
@@ -634,10 +740,10 @@ def week_cycle_baskets(request, month_identifier: str, week_cycle_number: int):
         basket_types_sum[offered_basket_type.name] = monthly_consumers.filter(consumer_basket_choice=offered_basket_type).count()
 
     context = {
-        "offered_basket_types":offered_basket_types,
+        "offered_basket_types": offered_basket_types,
         "consumers": monthly_consumers,
-        "week_cycle": producer_membership.cell.current_week,
         "basket_types_sum": basket_types_sum,
+        "week_cycle": week_cycle,
     }
 
     return render(request, "baskets/producer/week_cycle_baskets.html", context=context)

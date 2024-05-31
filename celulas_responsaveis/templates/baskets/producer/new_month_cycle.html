@@ -5,8 +5,11 @@
 
  <div class="row mt-4">
     <div class="col col-12 col-md-8">
+      {% if not month_is_over %}
+        <h3 class="fw-bold">O mês atual ainda não acabou. Aguarde o fim do ciclo para iniciar um novo.</h3>
+      {% endif %}
       <h3 class="fw-bold">Novo ciclo mensal</h3>
-      <p>Um novo ciclo mensal se inicia.</p>
+      <p>Inicie um novo ciclo verificando os consumidores(as) que farão parte dele</p>
       <form action="{% url 'producer:new_month_cycle' %}" method="post">
         {% csrf_token %}
         <div class="card p-3">

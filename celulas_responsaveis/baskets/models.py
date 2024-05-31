@@ -51,8 +51,18 @@ class MonthCycle(models.Model):
     def get_identifier(self):
         return self.begin.strftime('%m%Y')
 
+    def is_over(self) -> bool:
+        today = timezone.now()
+        month_year = self.begin.year
+        month_month = self.begin.month
+        if (next_month := month_month + 1) > 12:
+            month_year = month_year + 1
+            next_month = 1
+
+        return self.begin.replace(month=next_month, year=month_year) < today.date()
+
     def __str__(self) -> str:
-        return f"{MONTH_TO_PORTUGUESE[self.begin.month - 1]}/{self.begin.year}"
+        return f"{MONTH_TO_PORTUGUESE[self.begin.month - 1]}"
 
 
 class BasketType(models.Model):
@@ -105,7 +115,7 @@ class ConsumerBasketTypeChoice(models.Model):
     period = models.CharField(max_length=2, choices=PeriodType.choices, default=PeriodType.Weekly)
 
     def __str__(self):
-        return f"{self.person.name} - {self.offered_basket_type} ({self.period})"
+        return f"{self.offered_basket_type} {self.period_caption()}"
 
     def period_caption(self) -> str:
         return str(PeriodType(self.period).label)
@@ -127,7 +137,7 @@ class WeekCycle(models.Model):
         return self.month_cycle.producer_cell.consumer_cells.count()
 
     def __str__(self) -> str:
-        return f"Semana {self.number} - {self.month_cycle} - {self.month_cycle.producer_cell}"
+        return f"Semana {self.number}"
 
 
 class ProductsList(models.Model):

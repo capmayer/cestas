@@ -357,7 +357,7 @@ def consumer_participation_settings(request):
     if not memberships.exists():
         raise PermissionDenied("Você precisa fazer parte de alguma CCR para realizar essa ação.")
 
-    membership = memberships.first()
+    membership = memberships.last()
     cell = membership.cell
     bt_choice = ConsumerBasketTypeChoice.objects.filter(person=request.user, consumer_cell=cell)
 

@@ -4,8 +4,8 @@
 {% block content %}
    <div class="row mt-4">
     <div class="col col-12 col-md-8">
-      <h3 class="fw-bold">Nova semana</h3>
-      <p>Ciclo mensal de {{ month_cycle }}</p>
+      <h3 class="fw-bold">Iniciar nova semana</h3>
+      <p>Ciclo de {{ month_cycle }}</p>
       <form action="{% url 'producer:new_week_cycle' %}" method="post">
         {% csrf_token %}
         <div class="card p-3">

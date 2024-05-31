@@ -3,12 +3,14 @@
 
 {% block content %}
   <div class="row mt-4">
-    <div class="col-md-10">
-      <h3 class="mb-4"> Editar ciclo: </h3>
-      <form class="card p-3" action="{% url 'producer:edit_week_cycle' week_id=week_cycle.id %}" method="post">
-        {% csrf_token %}
-        {{cycle_form|crispy}}
-        <input class="btn btn-success" type="submit" value="SALVAR">
+    <div class="col col-12 col-md-8">
+      <h3 class="fw-bold">Editar ciclo </h3>
+      <form  action="{% url 'producer:edit_week_cycle' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" method="post">
+        <div class="card p-3">
+          {% csrf_token %}
+          {{ cycle_form|crispy }}
+        </div>
+        <input class="btn btn-success w-100 mt-2" type="submit" value="SALVAR">
       </form>
     </div>
   </div>
