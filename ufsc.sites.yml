@@ -2,7 +2,7 @@ version: '3.5'
 
 volumes:
   postgres_data:
-  production_django_media:
+  app_media:
 
 
 services:
@@ -11,7 +11,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     volumes:
-      - production_django_media:/app/media
+      - app_media:/app/media
     depends_on:
       - postgres
     ports:
