@@ -17,10 +17,12 @@ urlpatterns = [
     path("", include("celulas_responsaveis.baskets.consumer_urls", namespace="baskets")),
     path("", include("celulas_responsaveis.baskets.producer_urls", namespace="producer")),
     path("", include("celulas_responsaveis.wallets.urls", namespace="wallets")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
 if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     # Static file serving when using Gunicorn + Uvicorn for local web socket development
     urlpatterns += staticfiles_urlpatterns()
+
 
 
 if settings.DEBUG:
