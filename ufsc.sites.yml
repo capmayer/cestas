@@ -59,3 +59,5 @@ services:
       - django
     volumes:
       - app_media:/app/media
+    ports:
+      80:80
