@@ -58,4 +58,4 @@ services:
     depends_on:
       - django
     volumes:
-      - app_media:/usr/share/nginx/media:ro
+      - app_media:/app/media
