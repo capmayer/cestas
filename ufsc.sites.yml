@@ -51,13 +51,3 @@ services:
       POSTGRES_USER: *db-user
       POSTGRES_PASSWORD: *db-pass
 
-  nginx:
-    build:
-      context: .
-      dockerfile: ./compose/production/nginx/Dockerfile
-    depends_on:
-      - django
-    volumes:
-      - app_media:/app/media
-    ports:
-      80:80
