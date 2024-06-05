@@ -24,7 +24,7 @@ class ApplicationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.instance and self.instance.survey_answers.all():
-            self.answer_instances = self.instance.survey_answers.all()
+            self.answer_instances = self.instance.survey_answers.order_by("id")
 
             for answer in self.answer_instances:
                 self.fields[answer.question.name] = forms.CharField(
@@ -40,7 +40,7 @@ class ApplicationForm(forms.ModelForm):
 
         else:
             if survey := ApplicationSurvey.objects.filter(is_active=True).last():
-                self.questions_instances = survey.questions.all()
+                self.questions_instances = survey.questions.order_by("id")
 
                 for question in self.questions_instances:
                     self.fields[question.name] = forms.CharField(
