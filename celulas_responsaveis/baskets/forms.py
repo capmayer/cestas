@@ -17,7 +17,7 @@ class ConsumerBTChoiceForm(forms.ModelForm):
         model = ConsumerBasketTypeChoice
         fields = ["offered_basket_type", "period"]
         labels = {
-            "period": "Periodo"
+            "period": "Frequência"
         }
 
     offered_basket_type = forms.ModelChoiceField(label="Tamanho da cesta", queryset=OfferedBasketType.objects.all(), widget=forms.Select(), initial=0)
