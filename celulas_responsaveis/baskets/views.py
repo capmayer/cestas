@@ -292,6 +292,23 @@ def producer_cycle_requests(request, month_identifier: str, week_cycle_number: i
 
 
 @login_required
+def producer_week_cycle_detail(request, month_identifier: str, week_cycle_number: int):
+    producer_cell = get_producer_membership(request.user).cell
+    month_date = datetime.datetime.strptime(month_identifier, "%m%Y")
+    month_cycle = MonthCycle.objects.filter(producer_cell=producer_cell, begin__month=month_date.month,
+                                            begin__year=month_date.year).last()
+
+    week_cycle = month_cycle.week_cycles.get(number=week_cycle_number)
+    week_info = week_cycle.baskets.all().aggregate(Count('id'), Sum('total_price'))
+
+    context = {
+        "week_cycle": week_cycle,
+        "week_cycle_info": week_info,
+    }
+    return render(request, "baskets/producer/week_cycle_detail.html", context=context)
+
+
+@login_required
 def producer_edit_week_cycle(request, month_identifier: str, week_cycle_number: int):
     producer_cell = get_producer_membership(request.user).cell
     month_date = datetime.datetime.strptime(month_identifier, "%m%Y")

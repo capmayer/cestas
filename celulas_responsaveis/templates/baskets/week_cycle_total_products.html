@@ -12,16 +12,19 @@
         {% endfor %}
       {% endif %}
       <div class="d-flex flex-row justify-content-between">
-        <h3 class="fw-bold">Produtos vendidos</h3>
+        <h3 class="fw-bold">Relatório quantidade total comercializada</h3>
         <button class="btn btn-success" type="submit" form="download-csv-form"><i class="bi bi-file-earmark-text"></i></button>
       </div>
-      <h6>{{ week_cycle.month_cycle }} - {{ week_cycle }}</h6>
-      <div class="d-flex flex-row justify-content-between">
+      <h5 class="fw-bold">{{ week_cycle }} - {{ week_cycle.month_cycle }} </h5>
+      {% if not products %}
+        <h6 class="mt-4">Nenhum pedido realizado.</h6>
+      {% endif %}
+      {% for product in products %}
+        <div class="d-flex flex-row justify-content-between">
           <div class="h4 col-4 d-flex">Nome</div>
           <div class="h4 col-3 d-flex ms-2">Quantidade</div>
           <div class="h4 col-2 d-flex ms-2">Valor Total</div>
-      </div> 
-      {% for product in products %}
+        </div>
         <div class="card">
           <div class="card-body">
             <div class="d-flex flex-row justify-content-between">

@@ -87,7 +87,7 @@
         </div>
         <div class="d-grid mt-3">
           <a href="{% url 'producer:week_cycle_report' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" class="btn btn-success mb-1">RELATÓRIO ADICIONAIS</a>
-          <a href="{% url 'producer:week_cycle_baskets' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" class="btn btn-success mb-1">RELATÓRIO CESTAS</a>
+          <a href="{% url 'producer:week_cycle_baskets' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" class="btn btn-success mb-1">RELATÓRIO CESTAS FECHADAS</a>
           <a href="{% url 'producer:week_cycle_total_products' month_identifier=week_cycle.month_cycle.get_identifier week_cycle_number=week_cycle.number %}" class="btn btn-success mb-1">RELATÓRIO PRODUTOS</a>
         </div>
       {% endif %}

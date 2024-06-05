@@ -2,7 +2,7 @@
 
 {% block content %}
   <div class="row mt-4">
-    <div class="col-md-10">
+    <div class="col col-12 col-md-8">
       <div class="row mb-4">
         <div class="col-12">
           <h3 class="fw-bold">Ciclos mensais</h3>
@@ -10,15 +10,10 @@
       </div>
       {% for cycle in month_cycles %}
         <div class="card">
-          <div class="card-body">
-            <div class="row">
-              <div class="col-10 fw-bold h5">{{ cycle }}</div>
-              <div class="col-2">
-                <div class="row float-end">
-                  <a class="stretched-link" href="{% url 'producer:month_cycle_detail' month_identifier=cycle.get_identifier %}"><i class="bi-gear"></i></a>
-                </div>
-              </div>
-            </div>
+          <a class="stretched-link" href="{% url 'producer:month_cycle_detail' month_identifier=cycle.get_identifier %}">
+          </a>
+         <div class="card-body">
+            <div class="h5 fw-bold">{{ cycle }} - {{ cycle.begin.year }}</div>
           </div>
         </div>
       {% endfor %}
