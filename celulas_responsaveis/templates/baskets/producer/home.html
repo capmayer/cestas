@@ -16,6 +16,10 @@
       <h4 class="fw-bold">Inicie o ciclo de {{ current_month }} para registrar os valores na caderneta</h4>
       <a class="btn btn-success w-100 mb-4" href="{% url 'producer:start_month_cycle' %}">INICIAR CICLO</a>
       {% endif %}
+      {% if not week_cycle.week_basket_defined %}
+        <h4 class="fw-bold">Defina os produtos da cesta fechada desta semana</h4>
+        <a class="btn btn-success w-100 mb-4" href="{% url 'producer:new_week_basket' %}">DEFINIR PRODUTOS</a>
+      {% endif %}
       {% if create_new_week and not create_new_month %}
         <h5 class="fw-bold">Atenção: semana encerrada, inicie uma nova semana para liberar os adicionais.</h5>
         <a class="btn btn-success w-100 mb-4" href="{% url 'producer:new_week_cycle' %}">INICIAR SEMANA</a>

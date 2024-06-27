@@ -7,6 +7,7 @@ urlpatterns = [
     path('produtores/', views.producer_home, name="producer_home"),
     path('produtores/nova-semana/', views.new_week_cycle, name="new_week_cycle"),
     path('produtores/novo-mes/', views.new_month_cycle, name="new_month_cycle"),
+    path('produtores/cesta-da-semana/', views.new_week_basket, name="new_week_basket"),
     path('produtores/ciclos', views.month_cycles, name="month_cycles"),
     path('produtores/ciclos/iniciar/', views.start_month_cycle, name="start_month_cycle"),
     path('produtores/ciclos/<str:month_identifier>/', views.month_cycle_detail, name="month_cycle_detail"),

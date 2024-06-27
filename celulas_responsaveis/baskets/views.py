@@ -15,9 +15,10 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 
 from celulas_responsaveis.baskets.forms import BasketFormSet, WeekCycleForm, MonthCycleForm, \
-    ProductWithPriceForm, ConsumerBTChoiceForm, StartMonthCycleForm
+    ProductWithPriceForm, ConsumerBTChoiceForm, StartMonthCycleForm, WeekBasketFormset, WeekBasketForm
 from celulas_responsaveis.baskets.models import Basket, ProductsList, MonthCycle, SoldProduct, Unit, WeekCycle, \
-    ProductWithPrice, CycleSettings, ConsumerBasketTypeChoice, OfferedBasketType, MonthlyConsumer, PeriodType
+    ProductWithPrice, CycleSettings, ConsumerBasketTypeChoice, OfferedBasketType, MonthlyConsumer, PeriodType, \
+    WeekBasket
 from celulas_responsaveis.cells.models import ProducerMembership, ConsumerMembership, ConsumerCell, Application, \
     ProducerCellSettings
 from celulas_responsaveis.users.models import User
@@ -343,9 +344,12 @@ def producer_edit_week_cycle(request, month_identifier: str, week_cycle_number: 
         }
         cycle_form = WeekCycleForm(initial=current_data)
 
+    week_basket = WeekBasket.objects.filter(week=week_cycle).first()
+
     context = {
-        'cycle_form':cycle_form,
-        'week_cycle': week_cycle
+        "cycle_form":cycle_form,
+        "week_cycle": week_cycle,
+        "week_basket": week_basket,
     }
     return render(request, "baskets/producer/edit_week_cycle.html", context=context)
 
@@ -733,6 +737,43 @@ def week_cycle_report(request, month_identifier: str, week_cycle_number: int):
     return render(request, "baskets/producer/week_cycle_report.html", context=context)
 
 
+@login_required
+def new_week_basket(request):
+    producer_membership = get_producer_membership(request.user)
+    producer_cell = producer_membership.cell
+    current_week = producer_cell.current_week
+
+    week_basket = WeekBasket.objects.filter(week=current_week).first()
+
+    if week_basket is None:
+        week_basket = WeekBasket()
+        week_basket.week = current_week
+        week_basket.save()
+
+    week_basket_form = WeekBasketForm(request.POST or None, instance=week_basket)
+    week_basket_formset = WeekBasketFormset(request.POST or None, instance=week_basket)
+
+    context = {
+        "week_basket_formset": week_basket_formset,
+        "current_week": current_week,
+    }
+
+    if request.method == "POST":
+        if week_basket_formset.is_valid() and week_basket_form.is_valid():
+            week_basket_form.save()
+            week_basket_formset.save()
+
+            current_week.week_basket_defined = True
+            current_week.save()
+
+            messages.success(request, "Produtos salvos")
+            context["week_basket_form"] = week_basket_formset
+            return render(request, "baskets/producer/new_week_basket.html", context=context)
+
+        context["week_basket_form"] = week_basket_form
+        return render(request, "baskets/producer/new_week_basket.html", context=context)
+
+    return render(request, "baskets/producer/new_week_basket.html", context=context)
 
 
 @login_required

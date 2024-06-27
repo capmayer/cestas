@@ -1,0 +1,51 @@
+{% extends "base_producer.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="row mt-4">
+    <div class="col col-12 col-md-10">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <h3 class="fw-bold">Produtos da cesta da {{ current_week }} </h3>
+      <form  action="{% url 'producer:new_week_basket' %}" method="post">
+        <div class="card p-3">
+          {% csrf_token %}
+          {{ week_basket_formset.management_form }}
+          {{ week_basket_formset.non_form_errors.as_ul }}
+          <table id="formset">
+          {% for form in week_basket_formset.forms %}
+            {% if forloop.first %}
+            <thead><tr>
+              {% for field in form.visible_fields %}
+              <th>{{ field.label|capfirst }}</th>
+              {% endfor %}
+            </tr></thead>
+            {% endif %}
+            <tr class="{% cycle row1 row2 %}">
+            {% for field in form.visible_fields %}
+              <td>
+              {# Include the hidden fields in the form #}
+              {% if forloop.first %}
+                {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+              {% endif %}
+                {{ field.errors.as_ul }}
+                {{ field }}
+              </td>
+            {% endfor %}
+            </tr>
+          {% endfor %}
+          </table>
+        </div>
+        <input class="btn btn-success w-100 mt-2" type="submit" value="SALVAR">
+      </form>
+    </div>
+  </div>
+{% endblock content %}

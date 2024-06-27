@@ -1,7 +1,8 @@
 from django.contrib import admin
 
 from celulas_responsaveis.baskets.models import Basket, MonthCycle, ProductsList, ProductWithPrice, \
-    Product, SoldProduct, Unit, WeekCycle, CycleSettings, OfferedBasketType, ConsumerBasketTypeChoice, MonthlyConsumer
+    Product, SoldProduct, Unit, WeekCycle, CycleSettings, OfferedBasketType, ConsumerBasketTypeChoice, MonthlyConsumer, \
+    WeekBasket, ProductWeekBasket, Category
 from celulas_responsaveis.cells.models import ConsumerMembership
 
 
@@ -63,7 +64,8 @@ class ConsumerBasketTypeChoiceAdmin(admin.ModelAdmin):
 class MonthlyConsumerAdmin(admin.ModelAdmin):
     list_display = ["month_cycle", "person", "number", "consumer_cell", "consumer_basket_choice", "wallet", "total_price", "created_date"]
 
-
+class ProductWeekBasketAdmin(admin.ModelAdmin):
+    list_display = ["name", "quantity", "category", "unit", "week_basket"]
 
 admin.site.register(Basket, BasketAdmin)
 admin.site.register(MonthCycle, MonthCycleAdmin)
@@ -77,3 +79,6 @@ admin.site.register(WeekCycle, WeekCycleAdmin)
 admin.site.register(OfferedBasketType, OfferedBasketTypeAdmin)
 admin.site.register(ConsumerBasketTypeChoice, ConsumerBasketTypeChoiceAdmin)
 admin.site.register(MonthlyConsumer, MonthlyConsumerAdmin)
+admin.site.register(WeekBasket)
+admin.site.register(ProductWeekBasket, ProductWeekBasketAdmin)
+admin.site.register(Category)

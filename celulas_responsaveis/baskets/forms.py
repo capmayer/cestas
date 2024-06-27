@@ -1,6 +1,6 @@
 import datetime
 from django import forms
-from .models import WeekCycle, MonthCycle
+from .models import WeekCycle, MonthCycle, WeekBasket, ProductWeekBasket
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -145,3 +145,22 @@ class WeekCycleForm(forms.Form):
     def clean(self):
         if self.cleaned_data["request_day"] > self.cleaned_data["delivery_day"]:
             raise ValidationError("Delivery day must be greater or equal to request day.")
+
+
+class ProductWeekBasketForm(forms.ModelForm):
+    class Meta:
+        model = ProductWeekBasket
+        fields = ["name", "quantity", "unit", "category"]
+        labels = {
+            "name": "Nome",
+            "quantity": "Quantidade",
+            "unit": "Unidade",
+            "category": "Categoria",
+        }
+
+class WeekBasketForm(forms.ModelForm):
+    class Meta:
+        model = WeekBasket
+        fields = []
+
+WeekBasketFormset = inlineformset_factory(WeekBasket, ProductWeekBasket, form=ProductWeekBasketForm, min_num=1, extra=0)

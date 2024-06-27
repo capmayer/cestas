@@ -114,6 +114,8 @@ class ConsumerBasketTypeChoice(models.Model):
     offered_basket_type = models.ForeignKey(OfferedBasketType, null=True, blank=True, related_name="+", on_delete=models.SET_NULL)
     period = models.CharField(max_length=2, choices=PeriodType.choices, default=PeriodType.Weekly)
 
+    last_change = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f"{self.offered_basket_type} {self.period_caption()}"
 
@@ -126,6 +128,11 @@ class WeekCycle(models.Model):
     delivery_day = models.DateField()
     request_day = models.DateTimeField()
     number = models.IntegerField()
+
+    week_basket_defined = models.BooleanField(default=False)
+
+    created_date = models.DateTimeField(auto_now_add=True)
+    last_change = models.DateTimeField(auto_now=True)
 
     def get_number_of_baskets(self):
         return self.baskets.count()
@@ -172,9 +179,17 @@ class Basket(models.Model):
     def get_absolute_url(self):
         return reverse("baskets:basket_detail", kwargs={"basket_number": self.number})
 
+
+class Category(models.Model):
+    name = models.CharField(max_length=60)
+
+    def __str__(self):
+        return f"{self.name}"
+
 class Product(models.Model):
     name = models.CharField(max_length=60)
 
+    category = models.ForeignKey(Category, related_name="+", null=True, on_delete=models.SET_NULL)
     def __str__(self) -> str:
         return f"{self.name}"
 
@@ -207,6 +222,7 @@ class SoldProduct(models.Model):
     price = models.FloatField()
     requested_quantity = models.FloatField()
 
+    category = models.ForeignKey(Category, related_name="+", null=True, on_delete=models.SET_NULL)
     basket = models.ForeignKey(Basket, related_name="products", on_delete=models.CASCADE)
 
     @property
@@ -231,6 +247,8 @@ class ProductWithPrice(models.Model):
     name = models.CharField(max_length=60)
     unit = models.ForeignKey(Unit, related_name="+", null=True, on_delete=models.SET_NULL)
     price = models.FloatField()
+
+    category = models.ForeignKey(Category, related_name="+", null=True, on_delete=models.SET_NULL)
 
     available_quantity = models.FloatField()
     is_available = models.BooleanField(default=True)
@@ -257,3 +275,24 @@ class ProductWithPrice(models.Model):
             value = value / 1000
 
         self.available_quantity = self.available_quantity + value
+
+
+class WeekBasket(models.Model):
+    week = models.ForeignKey(WeekCycle, related_name="week_basket", on_delete=models.CASCADE)
+    products_defined = models.BooleanField(default=False)
+
+    created_date = models.DateTimeField(auto_now_add=True)
+    last_change = models.DateTimeField(auto_now=True)
+
+class ProductWeekBasket(models.Model):
+    product = models.ForeignKey(Product, related_name="+", null=True, on_delete=models.SET_NULL)
+    name = models.CharField(max_length=60)
+    unit = models.CharField(max_length=15)
+    quantity = models.FloatField()
+
+    category = models.ForeignKey(Category, related_name="+", null=True, on_delete=models.SET_NULL)
+
+    week_basket = models.ForeignKey(WeekBasket, related_name="products", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.name}"
