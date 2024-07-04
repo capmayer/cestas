@@ -23,13 +23,15 @@
           <input class="btn btn-success w-100 mt-2" type="submit" value="SALVAR">
           <a class="btn btn-secondary w-100 mt-1" href="{% url 'baskets:consumer_home' %}">VOLTAR</a>
         </form>
-        <h3 class="fw-bold mt-3">Cancelar participação</h3>
-        <p>Utilize o botão abaixo para cancelar sua participação na <span class="fw-bold">CCR {{ cell }}</span>. O cancelamento deve ser realizado antes
-        do início do novo ciclo.</p>
-        <form action="{% url 'cells:consumer_stop_participation' %}" method="post">
-          {% csrf_token %}
-          <input onclick="return confirm('Confirmar cancelamento?');" class="btn btn-danger w-100 mt-1" type="submit" value="CANCELAR PARTICIPAÇÃO">
-        </form>
+        {% if membership.is_active %}
+          <h3 class="fw-bold mt-3">Cancelar participação</h3>
+          <p>Utilize o botão abaixo para cancelar sua participação na <span class="fw-bold">CCR {{ cell }}</span>. O cancelamento deve ser realizado antes
+          do início do novo ciclo.</p>
+          <form action="{% url 'cells:consumer_stop_participation' %}" method="post">
+            {% csrf_token %}
+            <input onclick="return confirm('Confirmar cancelamento?');" class="btn btn-danger w-100 mt-1" type="submit" value="CANCELAR PARTICIPAÇÃO">
+          </form>
+        {% endif %}
       </div>
 
   </div>

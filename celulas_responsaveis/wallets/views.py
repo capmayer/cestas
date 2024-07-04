@@ -78,7 +78,7 @@ def consumer_deposit_detail(request, deposit_number):
 
 @login_required
 def consumer_wallet(request):
-    consumer_membership = ConsumerMembership.objects.filter(person=request.user, is_active=True).last()
+    consumer_membership = ConsumerMembership.objects.filter(person=request.user).last()
 
     wallet = Wallet.objects.get(
         person=request.user,

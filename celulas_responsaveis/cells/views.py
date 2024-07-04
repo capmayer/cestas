@@ -359,13 +359,7 @@ def consumer_participation_settings(request):
 
     membership = memberships.last()
     cell = membership.cell
-    bt_choice = ConsumerBasketTypeChoice.objects.filter(person=request.user, consumer_cell=cell)
-
-    if bt_choice.exists():
-        bt_choice = bt_choice.first()
-    else:
-        bt_choice = None
-
+    bt_choice = ConsumerBasketTypeChoice.objects.filter(person=request.user, consumer_cell=cell).first()
 
     if request.method == "POST":
         bt_choice_form = ConsumerBTChoiceForm(request.POST, instance=bt_choice, producer_cell=cell.producer_cell)
@@ -375,6 +369,9 @@ def consumer_participation_settings(request):
             bt_choice.person = request.user
             bt_choice.save()
 
+            membership.is_active = True
+            membership.save()
+
             messages.success(request, message="Alterações salvas.")
             return redirect("baskets:consumer_home")
     else:
@@ -383,6 +380,7 @@ def consumer_participation_settings(request):
     context = {
         "cell": cell,
         "bt_choice_form": bt_choice_form,
+        "membership": membership,
     }
     return render(request, "cells/consumer_participation_settings.html", context=context)
 

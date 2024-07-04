@@ -11,7 +11,7 @@
           </div>
         {% endfor %}
       {% endif %}
-      <h3 class="fw-bold">Iniciando o ciclo de {{ current_month }}</h3>
+      <h3 class="fw-bold">Iniciar ciclo de {{ current_month }}</h3>
       <form action="{% url 'producer:start_month_cycle' %}" method="post">
         {% csrf_token %}
         <div class="card p-3">
@@ -23,13 +23,12 @@
           <input class="btn btn-success w-100 mt-2" disabled type="submit" value="INICIAR MÊS">
         {% endif %}
       </form>
-      <h3 class="fw-bold mt-3">Consumidores(as) do ciclo</h3>
-      {% for membership, basket_choice in membership_to_bc.items %}
+      <h3 class="fw-bold mt-3">Participantes do ciclo ({{ memberships|length }} pessoas)</h3>
+      {% for membership in memberships %}
         <div class="card">
           <div class="card-body d-flex justify-content-between">
             <h5 class="fw-bold">{{ membership.person.name }}</h5>
             <h5>CCR {{ membership.cell.name }}</h5>
-            <h5>{{ basket_choice }}</h5>
           </div>
         </div>
       {% endfor %}

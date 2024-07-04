@@ -87,14 +87,6 @@ def start_month_cycle(request):
     consumer_cells = ConsumerCell.objects.filter(producer_cell=producer_cell, is_active=True)
     memberships = ConsumerMembership.objects.filter(cell__in=consumer_cells, is_active=True)
 
-    membership_to_bc = {}
-    for membership in memberships:
-        if basket_choice := ConsumerBasketTypeChoice.objects.filter(person=membership.person,
-                                                                    consumer_cell=membership.cell).last():
-            membership_to_bc[membership] = basket_choice
-        else:
-            membership_to_bc[membership] = None
-
     if request.method == "POST" and not has_members:
         month_cycle_form = StartMonthCycleForm(request.POST, instance=current_month)
 
@@ -105,7 +97,9 @@ def start_month_cycle(request):
             offered_basket_to_price = {basket.id: basket.price for basket in offered_baskets}
 
             for membership in memberships:
-                if basket_choice := membership_to_bc.get(membership, None):
+
+                if basket_choice := ConsumerBasketTypeChoice.objects.filter(person=membership.person,
+                                                                    consumer_cell=membership.cell).last():
                     price = offered_basket_to_price[basket_choice.offered_basket_type.id]
                     total_price = price * month_cycle.number_of_weeks
 
@@ -134,7 +128,7 @@ def start_month_cycle(request):
         "current_month": current_month,
         "current_month_form": month_cycle_form,
         "memberships": memberships,
-        "membership_to_bc": membership_to_bc,
+        "membership_to_bc": memberships,
         "has_members": has_members,
     }
 
